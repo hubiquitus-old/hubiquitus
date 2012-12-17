@@ -1,0 +1,55 @@
+#Linux
+.*
+!.gitignore
+*~
+
+#MAC
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+#Node
+lib-cov
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+
+pids
+logs
+results
+
+npm-debug.log
+
+#Sublime text 
+# SublimeText project files
+*.sublime-workspace
+
+#Windows
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+#Vim
+.*.sw[a-z]
+*.un~
+Session.vim
+.netrwhist

@@ -62,7 +62,8 @@ describe "hActor", ->
           priority: 2
 
         hMsg.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -73,7 +74,8 @@ describe "hActor", ->
         filter = eq:
           attribut: "bad"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -87,7 +89,8 @@ describe "hActor", ->
 
         hMsg.priority = 2
         hMsg.author = config.logins[1].jid
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -101,7 +104,8 @@ describe "hActor", ->
 
         hMsg.priority = 2
         hMsg.author = config.logins[0].jid
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -113,7 +117,8 @@ describe "hActor", ->
           "payload.priority": 2
 
         hMsg.payload.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -127,7 +132,8 @@ describe "hActor", ->
           priority: 2
 
         hMsg.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -138,7 +144,8 @@ describe "hActor", ->
         filter = ne:
           attribut: "bad"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -152,7 +159,8 @@ describe "hActor", ->
 
         hMsg.priority = 3
         hMsg.author = config.logins[0].jid
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -166,7 +174,8 @@ describe "hActor", ->
 
         hMsg.priority = 3
         hMsg.author = config.logins[1].jid
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -178,7 +187,8 @@ describe "hActor", ->
           "payload.priority": 2
 
         hMsg.payload.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -192,7 +202,8 @@ describe "hActor", ->
           priority: 2
 
         hMsg.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -203,7 +214,8 @@ describe "hActor", ->
         filter = gt:
           attribut: 12
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -214,7 +226,8 @@ describe "hActor", ->
         filter = gt:
           priority: "not a number"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -228,7 +241,8 @@ describe "hActor", ->
 
         hMsg.priority = 3
         hMsg.timeout = 9999
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -241,7 +255,8 @@ describe "hActor", ->
           timeout: 10000
 
         hMsg.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -253,7 +268,8 @@ describe "hActor", ->
           "payload.priority": 2
 
         hMsg.payload.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -267,7 +283,8 @@ describe "hActor", ->
           priority: 2
 
         hMsg.priority = 1
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -278,7 +295,8 @@ describe "hActor", ->
         filter = gte:
           attribut: 12
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -289,7 +307,8 @@ describe "hActor", ->
         filter = gte:
           priority: "not a number"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -303,7 +322,8 @@ describe "hActor", ->
 
         hMsg.priority = 2
         hMsg.timeout = 9999
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -316,7 +336,8 @@ describe "hActor", ->
           timeout: 10000
 
         hMsg.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -329,7 +350,8 @@ describe "hActor", ->
 
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -343,7 +365,8 @@ describe "hActor", ->
           priority: 2
 
         hMsg.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -354,7 +377,8 @@ describe "hActor", ->
         filter = lt:
           attribut: 12
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -365,7 +389,8 @@ describe "hActor", ->
         filter = lt:
           priority: "not a number"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -379,7 +404,8 @@ describe "hActor", ->
 
         hMsg.priority = 2
         hMsg.timeout = 10001
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -393,7 +419,8 @@ describe "hActor", ->
 
         hMsg.priority = 1
         hMsg.timeout = 9999
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -406,7 +433,8 @@ describe "hActor", ->
 
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 1
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -420,7 +448,8 @@ describe "hActor", ->
           priority: 2
 
         hMsg.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -431,7 +460,8 @@ describe "hActor", ->
         filter = lte:
           attribut: 12
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -442,7 +472,8 @@ describe "hActor", ->
         filter = lte:
           priority: "not a number"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -456,7 +487,8 @@ describe "hActor", ->
 
         hMsg.priority = 1
         hMsg.timeout = 10001
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -470,7 +502,8 @@ describe "hActor", ->
 
         hMsg.priority = 1
         hMsg.timeout = 10000
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -483,7 +516,8 @@ describe "hActor", ->
 
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -496,7 +530,8 @@ describe "hActor", ->
         filter = in:
           publisher: ["u2@localhost", "u3@localhost"]
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -507,7 +542,8 @@ describe "hActor", ->
         filter = in:
           attribut: "bad"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -518,7 +554,8 @@ describe "hActor", ->
         filter = in:
           publisher: "u1@localhost"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -531,7 +568,8 @@ describe "hActor", ->
           author: ["u2@localhost"]
 
         hMsg.author = "u1@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -544,7 +582,8 @@ describe "hActor", ->
           author: ["u2@localhost"]
 
         hMsg.author = "u2@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -557,7 +596,8 @@ describe "hActor", ->
 
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -570,7 +610,8 @@ describe "hActor", ->
         filter = nin:
           publisher: ["u2@localhost", "u1@localhost"]
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -581,7 +622,8 @@ describe "hActor", ->
         filter = nin:
           attribut: ["u2@localhost", "u1@localhost"]
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -592,7 +634,8 @@ describe "hActor", ->
         filter = nin:
           publisher: "u2@localhost"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -605,7 +648,8 @@ describe "hActor", ->
           author: ["u1@localhost"]
 
         hMsg.author = "u1@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -618,7 +662,8 @@ describe "hActor", ->
           author: ["u1@localhost"]
 
         hMsg.author = "u2@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -631,7 +676,8 @@ describe "hActor", ->
 
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 4
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -649,7 +695,8 @@ describe "hActor", ->
             author: ["u2@localhost", "u1@localhost"]
         ]
         hMsg.author = "u1@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -664,7 +711,8 @@ describe "hActor", ->
           nin:
             attribut: ["u2@localhost", "u1@localhost"]
         ]
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -680,7 +728,8 @@ describe "hActor", ->
             author: ["u2@localhost", "u1@localhost"]
         ]
         hMsg.author = "u3@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -698,7 +747,8 @@ describe "hActor", ->
         hMsg.author = "u3@localhost"
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -716,7 +766,8 @@ describe "hActor", ->
             author: ["u2@localhost", "u1@localhost"]
         ]
         hMsg.author = "u1@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -731,7 +782,8 @@ describe "hActor", ->
           nin:
             attribut: ["u2@localhost", "u1@localhost"]
         ]
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -747,7 +799,8 @@ describe "hActor", ->
             author: ["u2@localhost", "u1@localhost"]
         ]
         hMsg.author = "u1@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -765,7 +818,8 @@ describe "hActor", ->
         hMsg.author = "u3@localhost"
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -783,7 +837,8 @@ describe "hActor", ->
             author: ["u2@localhost", "u1@localhost"]
         ]
         hMsg.author = "u3@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -799,7 +854,8 @@ describe "hActor", ->
             author: ["u2@localhost", "u1@localhost"]
         ]
         hMsg.author = "u1@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -817,7 +873,8 @@ describe "hActor", ->
         hMsg.author = "u2@localhost"
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -831,7 +888,8 @@ describe "hActor", ->
           in:
             publisher: ["u2@localhost", "u1@localhost"]
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -847,7 +905,8 @@ describe "hActor", ->
             priority: 2
 
         hMsg.priority = 2
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -863,7 +922,8 @@ describe "hActor", ->
             author: ["u2@localhost", "u1@localhost"]
 
         hMsg.author = "u2@localhost"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -881,7 +941,8 @@ describe "hActor", ->
         hMsg.author = "u3@localhost"
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 3
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -893,7 +954,8 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect true \"relevant\" filter", (done) ->
         filter = relevant: true
         hMsg.relevance = new Date(79, 5, 24, 11, 33, 0).getTime()
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -903,7 +965,8 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect false \"relevant\" filter", (done) ->
         filter = relevant: false
         hMsg.relevance = new Date(2024, 5, 24, 11, 33, 0).getTime()
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -912,7 +975,8 @@ describe "hActor", ->
 
       it "should return INVALID_ATTR if attribute relevance of hMessage is not set", (done) ->
         filter = relevant: false
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -922,7 +986,8 @@ describe "hActor", ->
       it "should return INVALID_ATTR if attribute relevance of hMessage is incorrect", (done) ->
         filter = relevant: false
         hMsg.relevance = "wrong date"
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -932,7 +997,8 @@ describe "hActor", ->
       it "should return OK if hMessage respect \"relevance\" filter ", (done) ->
         filter = relevant: true
         hMsg.relevance = new Date(2024, 5, 24, 11, 33, 0).getTime()
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -942,7 +1008,8 @@ describe "hActor", ->
       it "should return OK if hMessage respect false \"relevance\" filter ", (done) ->
         filter = relevant: false
         hMsg.relevance = new Date(75, 5, 24, 11, 33, 0).getTime()
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -962,7 +1029,8 @@ describe "hActor", ->
           lat: 24
           lng: 12
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -979,7 +1047,8 @@ describe "hActor", ->
           lat: 24
           lng: 12
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.INVALID_ATTR)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -997,7 +1066,8 @@ describe "hActor", ->
           lat: 24
           lng: 12
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.INVALID_ATTR)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -1015,7 +1085,8 @@ describe "hActor", ->
           lat: 12
           lng: "NaN"
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -1033,7 +1104,8 @@ describe "hActor", ->
           lat: 23
           lng: 12
 
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -1044,7 +1116,8 @@ describe "hActor", ->
     describe "#booleanFilter()", ->
       it "should return INVALID_ATTR if filter boolean = false", (done) ->
         filter = boolean: false
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
@@ -1053,7 +1126,8 @@ describe "hActor", ->
 
       it "should return OK if filter boolean = true", (done) ->
         filter = boolean: true
-        hActor.setFilter filter
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
 
         hActor.h_onMessageInternal hMsg, (hMessage) ->
           hMessage.should.have.property "type", "hResult"

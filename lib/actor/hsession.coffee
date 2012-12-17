@@ -78,12 +78,24 @@ class Session extends Actor
       if @hClient
         @hClient.socket.emit "hMessage", hMessage
     else
-      if hMessage.type is "hCommand" and hMessage.payload.cmd is "hSubscribe"
-        console.log "subs"
-        #@h_subscribe hMessage.actor, (status, result)
-      hMessage.publisher = @actor
-      @log "debug", "Session received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-      @send hMessage
+      if hMessage.type is "hCommand"
+        switch hMessage.payload.cmd
+          when "hSubscribe"
+            @h_subscribe hMessage.actor, (status, result) =>
+              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
+              cb hMessageResult
+          when "hUnsubscribe"
+            @h_unsubscribe hMessage.actor, (status, result) =>
+              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
+              cb hMessageResult
+          else
+            hMessage.publisher = @actor
+            @log "debug", "Session received a hCommand to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
+            @send hMessage
+      else
+        hMessage.publisher = @actor
+        @log "debug", "Session received a hMessage to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
+        @send hMessage
 
   ###
   Loads the hCommand module, sets the listener calls cb with the hResult.

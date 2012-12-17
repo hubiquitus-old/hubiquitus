@@ -51,7 +51,7 @@ class Actor extends EventEmitter
   #Init logger
   logger.exitOnError = false
   logger.remove(logger.transports.Console)
-  logger.add(logger.transports.Console, {handleExceptions: true, level: "INFO"})
+  logger.add(logger.transports.Console, {handleExceptions: true, level: "debug"})
   logger.add(logger.transports.File, {handleExceptions: true, filename: "#{__dirname}/../../log/hActor.log", level: "debug"})
 
   # Possible running states of an actor
@@ -76,10 +76,11 @@ class Actor extends EventEmitter
     @ressource = @actor.replace(/^.*\//, "")
     @type = "actor"
     @filter = {}
-    @setFilter properties.filter, (status, result) =>
-      unless status is codes.hResultStatus.OK
-        # TODO arreter l'acteur
-        @log "debug", "Invalid filter stopping actor"
+    if properties.filter
+      @setFilter properties.filter, (status, result) =>
+        unless status is codes.hResultStatus.OK
+          # TODO arreter l'acteur
+          @log "debug", "Invalid filter stopping actor"
     @msgToBeAnswered = {}
     @timerOutAdapter = {}
 
@@ -89,6 +90,7 @@ class Actor extends EventEmitter
     @trackers = []
     @inboundAdapters = []
     @outboundAdapters = []
+    @subscriptions = []
 
     # Registering trackers
     if _.isArray(properties.trackers) and properties.trackers.length > 0
@@ -400,7 +402,7 @@ class Actor extends EventEmitter
 
   setFilter: (hCondition, cb) ->
     if not hCondition or (hCondition not instanceof Object)
-      cb codes.hResultStatus.INVALID_ATTR, "invalid filter"
+      return cb codes.hResultStatus.INVALID_ATTR, "invalid filter"
 
     checkFormat = hFilter.checkFilterFormat(hCondition)
 
@@ -414,13 +416,40 @@ class Actor extends EventEmitter
     return hFilter.checkFilterValidity(hMessage, @filter)
 
   h_subscribe: (hChannel, cb) ->
+    for channel in @subscriptions
+      if channel is hChannel
+        return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
+
     @send @buildMessage(hChannel, "hCommand", {cmd:"hSubscribe", params:{}}, {timeout:5000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
-        channelInbound = adapters.inboundAdapter("channel", {url: hResult.payload.result, owner: @})
+        channelInbound = adapters.inboundAdapter("channel", {url: hResult.payload.result, owner: @, channel: hChannel})
         @inboundAdapters.push channelInbound
         channelInbound.start()
+        @subscriptions.push hChannel
         if cb
           cb codes.hResultStatus.OK
+      else
+        cb hResult.payload.status, hResult.payload.result
+
+  h_unsubscribe: (hChannel, cb) ->
+    index = 0
+    subs = false
+    for channel in @subscriptions
+      if channel is hChannel
+        subs = true
+        delete @subscriptions[index]
+      index++
+
+    if subs is false
+      return cb codes.hResultStatus.NOT_AVAILABLE, "user not subscribed to channel " + hChannel
+    else
+      index = 0
+      _.forEach @inboundAdapters, (inbound) =>
+        if inbound.channel is hChannel
+          inbound.stop()
+          delete @inboundAdapters[index]
+          return cb codes.hResultStatus.OK, ""
+        index++
 
 
   removePeer: (actor) ->

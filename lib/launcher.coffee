@@ -38,7 +38,7 @@ main = ->
 
   hTopology = `undefined`
   try
-    hTopology = eval("(" + fs.readFileSync("./conf/conf.json", "utf8") + ")")
+    hTopology = eval("(" + fs.readFileSync("./samples/sample1.json", "utf8") + ")")
   catch err
     console.log "erreur : ",err
   unless hTopology

@@ -95,6 +95,7 @@ class LBSocketInboundAdapter extends InboundAdapter
 class ChannelInboundAdapter extends InboundAdapter
 
   constructor: (properties) ->
+    @channel = properties.channel
     super
     if properties.url
     then @url = properties.url

@@ -73,7 +73,9 @@ class Channel extends Actor
           module = new command()
           @runCommand(hMessage, module, cb)
         when "hSetFilter"
-          @setFilter hMessage.payload.params, cb
+          @setFilter hMessage.payload.params, (status, result) =>
+            hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
+            cb hMessageResult
         else
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
           cb hMessageResult

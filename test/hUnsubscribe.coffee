@@ -24,14 +24,17 @@
 #
 should = require("should")
 config = require("./_config")
-describe "hSubscribe", ->
+
+#
+# NEEDS BEFORE hSubscribe
+#
+describe "hUnsubscribe", ->
   cmd = undefined
   hActor = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hsession")
   existingCHID = "##{config.getUUID()}@localhost"
   existingCHID2 = "##{config.getUUID()}@localhost"
-  inactiveChannel = "##{config.getUUID()}@localhost"
 
   before () ->
     topology = {
@@ -44,6 +47,7 @@ describe "hSubscribe", ->
     hActor.h_tearDown()
     hActor = null
 
+  #Create active channel
   before (done) ->
     @timeout 5000
     createCmd = config.createChannel existingCHID, [config.validJID], config.validJID, true
@@ -52,27 +56,26 @@ describe "hSubscribe", ->
       hMessage.payload.should.have.property "status", status.OK
       done()
 
+  #Subscribe to channel
   before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel existingCHID2, [config.logins[2].jid], config.validJID, true
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
+    hActor.h_subscribe existingCHID, (statusCode) ->
+      statusCode.should.be.equal(status.OK)
       done()
 
+  #Create active channel without subscribe
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel inactiveChannel, [config.validJID], config.validJID, false
+    createCmd = config.createChannel existingCHID2, [config.validJID], config.validJID, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       done()
 
   beforeEach ->
-    cmd = config.makeHMessage(existingCHID, hActor.actor, "hCommand", {})
+    cmd = config.makeHMessage(existingCHID, config.validJID, "hCommand", {})
     cmd.payload =
-      cmd: "hSubscribe"
-      params: {}
+      cmd: "hUnsubscribe"
+      params:{}
 
   it "should return hResult error MISSING_ATTR when actor is missing", (done) ->
     delete cmd.actor
@@ -101,38 +104,19 @@ describe "hSubscribe", ->
       done()
 
 
-  it "should return hResult error NOT_AUTHORIZED if not in subscribers list", (done) ->
+  it "should return hResult NOT_AUTHORIZED if not subscribed and no subscriptions", (done) ->
     cmd.actor = existingCHID2
     hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
+      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
       hMessage.payload.should.have.property("result").and.be.a "string"
       done()
-
-
-  it "should return hResult error NOT_AUTHORIZED if channel is inactive", (done) ->
-    cmd.actor = inactiveChannel
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
-      hMessage.payload.should.have.property("result").and.be.a "string"
-      done()
-
 
   it "should return hResult OK when correct", (done) ->
     cmd.actor = existingCHID
     hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
-      done()
-
-
-  it "should return hResult error if already subscribed", (done) ->
-    cmd.actor = existingCHID
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
-      hMessage.payload.should.have.property("result").and.be.a "string"
       done()
 
 

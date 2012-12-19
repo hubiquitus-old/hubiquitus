@@ -115,6 +115,7 @@ describe "hUnsubscribe", ->
   it "should return hResult OK when correct", (done) ->
     cmd.actor = existingCHID
     hActor.h_onMessageInternal cmd, (hMessage) ->
+      console.log hMessage
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       done()

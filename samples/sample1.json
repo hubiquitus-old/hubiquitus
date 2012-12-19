@@ -3,20 +3,14 @@
     "type": "htracker",
     "children": [
         {
-            "actor": "#trackChannel@localhost",
-            "type": "hchannel",
-            "method": "inproc",
-            "subscribers": [],
-            "active":true,
-            "outboundAdapters": [ { "type": "channel", "url": "tcp://127.0.0.1:2998" } ]
-        },
-        {
             "actor": "gateway@localhost",
             "type": "hgateway",
             "method": "inproc",
             "children": [],
             "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:3993" } ],
-            "socketIOPort": 8080
+            "properties": {
+                "socketIOPort": 8080
+            }
         },
         {
             "actor": "dispatcher@localhost",
@@ -26,5 +20,18 @@
             "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2992" } ]
         }
     ],
+    "properties":{
+        "channel": {
+            "actor": "#trackChannel@localhost",
+            "type": "hchannel",
+            "method": "inproc",
+            "properties": {
+                "listenOn": "tcp://127.0.0.1:1221",
+                "broadcastOn": "tcp://127.0.0.1:2998",
+                "subscribers": [],
+                "active":true
+            }
+        }
+    },
     "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2997" } ]
 }

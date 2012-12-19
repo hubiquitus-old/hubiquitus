@@ -101,14 +101,20 @@ class ChannelInboundAdapter extends InboundAdapter
     then @url = properties.url
     else throw new Error("You must provide a channel url")
     @type = "channel"
+    @filter = properties.filter or ""
     @sock = zmq.socket "sub"
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
-    @sock.on "message", (data) => @owner.emit "message", JSON.parse(data)
+    @sock.on "message", (data) =>
+      hMessage = data.toString().replace(/^.*\$/, "")
+      hMessage.actor = @owner.actor
+      console.log "hStopAlert "
+      @owner.emit "message", JSON.parse(hMessage)
 
   start: ->
     unless @started
       @sock.connect @url
-      @sock.subscribe("")
+      console.log "filter ",@filter
+      @sock.subscribe(@filter)
       @owner.log "debug", "#{@sock.identity} subscribe on #{@url}"
       super
 
@@ -236,9 +242,34 @@ class ChannelOutboundAdapter extends OutboundAdapter
     if @started
       @sock.close()
 
-  send: (message) ->
+  send: (hMessage) ->
     @start() unless @started
-    @sock.send JSON.stringify(message)
+    if hMessage.type is "hSignal" and hMessage.payload.cmd is "hStopAlert"
+      message = hMessage.payload.params+"$"+JSON.stringify(hMessage)
+      console.log "chan out ", message
+      @sock.send message
+    else
+      @sock.send JSON.stringify(message)
+
+class SocketIOAdapter extends OutboundAdapter
+
+  constructor: (properties) ->
+    super
+    @type = "socketIO"
+    @sock = properties.socket
+    @sock.identity = "socketIO_of_#{@owner.actor}"
+    @sock.on "hMessage", (hMessage) =>
+      @owner.emit "message", hMessage
+
+  start: ->
+    super
+
+  stop: ->
+    super
+
+  send: (hMessage) ->
+    @start() unless @started
+    @sock.emit "hMessage", hMessage
 
 exports.inboundAdapter = (type, properties) ->
   switch type
@@ -266,5 +297,8 @@ exports.outboundAdapter = (type, properties) ->
       new ChannelOutboundAdapter(properties)
     else
       throw new Error "Incorrect type '#{type}'"
+
+exports.socketIOAdapter = (properties) ->
+  new SocketIOAdapter(properties)
 
 exports.OutboundAdapter = OutboundAdapter

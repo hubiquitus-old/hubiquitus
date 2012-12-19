@@ -32,6 +32,8 @@ validator = require "../validator"
 codes = require "../codes"
 options = require "../options"
 hFilter = require "../hFilter"
+adapters = require "../adapters"
+
 
 class Session extends Actor
 
@@ -40,15 +42,13 @@ class Session extends Actor
     # Setting outbound adapters
     @type = 'session'
     @trackInbox = properties.trackInbox
-    @hClient = undefined
 
   touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
       @log "debug", "touching tracker #{trackerProps.trackerId}"
       if @status is "stopping"
         @trackInbox = []
-      msg = @buildMessage(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareJID(@actor), peerStatus:@status, peerInbox:@trackInbox}, {persistent:false})
-      @send(msg)
+      @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareJID(@actor), peerStatus:@status, peerInbox:@trackInbox})
 
   checkFilter: (hMessage) ->
     unless validator.getBareJID(hMessage.publisher) is validator.getBareJID(@actor)
@@ -74,14 +74,13 @@ class Session extends Actor
         else
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
           cb hMessageResult
-    if hMessage.actor is @actor
-      if @hClient
-        @hClient.socket.emit "hMessage", hMessage
+    else if hMessage.actor is @actor
+      @send hMessage
     else
       if hMessage.type is "hCommand"
         switch hMessage.payload.cmd
           when "hSubscribe"
-            @h_subscribe hMessage.actor, (status, result) =>
+            @h_subscribe hMessage.actor, "", (status, result) =>
               hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
               cb hMessageResult
           when "hUnsubscribe"
@@ -148,7 +147,8 @@ class Session extends Actor
 
   initListener: (client) =>
     delete client["hClient"]
-    @hClient = client
+    socketIOAdapter = adapters.socketIOAdapter({targetActorAid: @actor, owner: @, socket: client.socket})
+    @outboundAdapters.push socketIOAdapter
 
     @on "hStatus", (msg) ->
       client.socket.emit "hStatus", msg
@@ -160,9 +160,7 @@ class Session extends Actor
         sid: client.id
 
       #Start listening for client actions
-      client.socket.on "hMessage", (hMessage) =>
-        @log "info", "Client ID " + client.id + " sent hMessage", hMessage
-        @emit "message", hMessage
+      socketIOAdapter.start()
 
     @on "disconnect", ->
       @emit "hStatus", {status:statuses.DISCONNECTING, errorCode:errors.NO_ERROR}

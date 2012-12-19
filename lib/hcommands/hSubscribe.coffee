@@ -55,7 +55,7 @@ hSubscribe::exec = (hMessage, context, cb) ->
     result = "the channel is inactive"
 
     #Check if in subscribers list
-  else if context.properties.subscribers.indexOf(jid) < 0
+  else if context.properties.subscribers.indexOf(jid) < 0 and context.properties.subscribers.length > 0
     statusValue = status.NOT_AUTHORIZED
     result = "not allowed to subscribe to \"" + actor + "\""
 

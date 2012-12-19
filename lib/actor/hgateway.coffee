@@ -35,11 +35,8 @@ class Gateway extends Actor
     super
     # Setting outbound adapters
     @type = 'gateway'
-    if properties.socketIOPort
-      adapterProps = {}
-      adapterProps.port = properties.socketIOPort
-      adapterProps.owner = @
-      socketIO.socketIO(adapterProps)
+    if properties.properties.socketIOPort
+      socketIO.socketIO({port: properties.properties.socketIOPort, owner: @})
 
   onMessage: (hMessage) ->
     @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"

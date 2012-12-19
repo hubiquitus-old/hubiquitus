@@ -94,10 +94,14 @@ hCreateUpdateChannel::exec = (hMessage, context, cb) ->
       channel.actor = channel._id
       delete channel._id
 
-      channel.outboundAdapters = [ { "type": "channel", "url": "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+4000}" } ]
-      channel.inboundAdapters = [ { "type": "socket", "url": "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+4000}" } ]
+      channel.listenOn = "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+4000}"
+      channel.broadcastOn = inboundAdapters = "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+4000}"
+      topology =
+        actor: channel.actor
+        properties: channel
+
       log.debug "Create Child : ",channel.actor
-      context.createChild "hchannel", "inproc", channel
+      context.createChild "hchannel", "inproc", topology
       cb status.OK
     else
       cb statusCode, result

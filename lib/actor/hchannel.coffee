@@ -34,19 +34,21 @@ options = require "./../options"
 
 class Channel extends Actor
 
-  constructor: (properties) ->
+  constructor: (topology) ->
     super
-    @actor = validator.getBareJID(properties.actor)
+    @actor = validator.getBareJID(topology.actor)
     @type = "channel"
     @subscribersAlias = "#{@actor}#subscribers"
     @properties =
-      chdesc : properties.chdesc
-      priority : properties.priority or 1
-      location : properties.location
-      owner : properties.owner
-      subscribers : properties.subscribers or []
-      active : properties.active
-      headers : properties.headers
+      chdesc : topology.properties.chdesc
+      priority : topology.properties.priority or 1
+      location : topology.properties.location
+      owner : topology.properties.owner
+      subscribers : topology.properties.subscribers or []
+      active : topology.properties.active
+      headers : topology.properties.headers
+    @inboundAdapters.push adapters.inboundAdapter("socket", {url: topology.properties.listenOn, owner: @})
+    @outboundAdapters.push adapters.outboundAdapter("channel", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @subscribersAlias})
 
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
@@ -97,11 +99,17 @@ class Channel extends Actor
         hMessage.timeout = timeout
         delete hMessage._id
       #sends to all subscribers the message received
-      hMessage.publisher = @actor
-      @send @buildMessage(@subscribersAlias, hMessage.type, hMessage.payload)
+      hMessage.actor = @subscribersAlias
+      @send hMessage
       if cb and hMessage.timeout > 0
         hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, "")
         cb hMessageResult
+
+  h_onSignal: (hMessage, cb) ->
+    @log "debug", "Channel received a hSignal: #{JSON.stringify(hMessage)}"
+    if hMessage.payload.cmd is "hStopAlert"
+      hMessage.actor = @subscribersAlias
+      @send hMessage
 
   ###
   Loads the hCommand module, sets the listener calls cb with the hResult.

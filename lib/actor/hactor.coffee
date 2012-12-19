@@ -60,10 +60,6 @@ class Actor extends EventEmitter
   STATUS_STOPPING = "stopping"
   STATUS_STOPPED = "stopped"
 
-  # Commands
-  CMD_START = { cmd: "start" }
-  CMD_STOP = { cmd: "stop" }
-
   # Constructor
   constructor: (properties) ->
     # setting up instance attributes
@@ -83,6 +79,7 @@ class Actor extends EventEmitter
           @log "debug", "Invalid filter stopping actor"
     @msgToBeAnswered = {}
     @timerOutAdapter = {}
+    @timerTouch = undefined
 
     # Initializing attributs
     @status = STATUS_STOPPED
@@ -149,20 +146,18 @@ class Actor extends EventEmitter
             switch hMessage.payload.cmd
               when "start"
                 @h_init()
-                return
               when "stop"
                 @h_tearDown()
-                return
               else
-                @h_onSignal
-                return
-          #Check if hMessage respect filter
-          checkValidity = @validateFilter(hMessage)
-          if checkValidity.result is true
-            @onMessage hMessage, cb
+                @h_onSignal(hMessage, cb)
           else
-            hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, checkValidity.error)
-            cb hMessageResult
+            #Check if hMessage respect filter
+            checkValidity = @validateFilter(hMessage)
+            if checkValidity.result is true
+              @onMessage hMessage, cb
+            else
+              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, checkValidity.error)
+              cb hMessageResult
 
     catch error
       @log "warn", "An error occured while processing incoming message: "+error
@@ -187,8 +182,14 @@ class Actor extends EventEmitter
     if hMessage.type is "hCommand" and typeof hMessage.payload.params is "object"
       if hMessage.payload.cmd is "hGetLastMessages" or hMessage.payload.cmd is "hRelevantMessages" or hMessage.payload.cmd is "hGetThread" or hMessage.payload.cmd is "hGetThreads"
         hMessage.payload.params.filter = hMessage.payload.params.filter or @filter
+
     # first looking up for a cached adapter
     outboundAdapter = _.toDict( @outboundAdapters , "targetActorAid" )[hMessage.actor]
+    unless outboundAdapter
+      _.forEach @outboundAdapters, (outbound) =>
+        if validator.getBareJID(outbound.targetActorAid) is hMessage.actor
+          hMessage.actor = outbound.targetActorAid
+          outboundAdapter = outbound
     if outboundAdapter
       if @timerOutAdapter[outboundAdapter.targetActorAid]
         clearTimeout(@timerOutAdapter[outboundAdapter.targetActorAid])
@@ -196,14 +197,16 @@ class Actor extends EventEmitter
           @timerOutAdapter[outboundAdapter.targetActorAid] = null
           @removePeer(outboundAdapter.targetActorAid)
         , 90000)
-      @sending(hMessage, cb, outboundAdapter)
+      @h_sending(hMessage, cb, outboundAdapter)
     else
       if @trackers[0]
-        msg = @buildMessage(@trackers[0].trackerId, "peer-search", {actor:hMessage.actor}, {timeout:5000, persistent:false})
+        msg = @buildSignal(@trackers[0].trackerId, "peer-search", {actor:hMessage.actor}, {timeout:5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
             outboundAdapter = adapters.outboundAdapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
             @outboundAdapters.push outboundAdapter
+            @h_subscribe @trackers[0].trackerChannel, hMessage.actor, (status) ->
+              console.log "watch ", status
 
             @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(->
               @timerOutAdapter[outboundAdapter.targetActorAid] = null
@@ -211,7 +214,7 @@ class Actor extends EventEmitter
             , 90000)
 
             hMessage.actor = hResult.payload.result.targetActorAid
-            @sending hMessage, cb, outboundAdapter
+            @h_sending hMessage, cb, outboundAdapter
           else
             @log "debug", "Can't send hMessage : "+hResult.payload.result
       else
@@ -221,7 +224,7 @@ class Actor extends EventEmitter
         else
           throw new Error "Don't have any tracker for peer-searching"
 
-  sending: (hMessage, cb, outboundAdapter) ->
+  h_sending: (hMessage, cb, outboundAdapter) ->
     #Complete hCommand
     errorCode = undefined
     errorMsg = undefined
@@ -286,15 +289,14 @@ class Actor extends EventEmitter
         @outboundAdapters.push adapters.outboundAdapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
         childRef.outboundAdapters.push adapters.outboundAdapter(method, owner: childRef, targetActorAid: @actor , ref: @)
         # Starting the child
-        @send @buildMessage(properties.actor, "hSignal",  CMD_START, {persistent:false})
+        @send @buildSignal(properties.actor, "start", {})
 
       when "fork"
         childRef = forker.fork __dirname+"/childlauncher", [classname , JSON.stringify(properties)]
         @outboundAdapters.push adapters.outboundAdapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
         childRef.on "message", (msg) =>
           if msg.state is 'ready'
-            msg = @buildMessage(properties.actor, "hSignal", CMD_START, {persistent:false})
-            @send msg
+            @send @buildSignal(properties.actor, "start", {})
       else
         throw new Error "Invalid method"
 
@@ -335,7 +337,7 @@ class Actor extends EventEmitter
         if @status isnt STATUS_STOPPING
           for i in @inboundAdapters
             inboundAdapters.push {type:i.type, url:i.url}
-        @send @buildMessage(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareJID(@actor), peerStatus:@status, peerInbox:inboundAdapters}, {persistent:false})
+        @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareJID(@actor), peerStatus:@status, peerInbox:inboundAdapters})
 
 
   setStatus: (status) ->
@@ -344,12 +346,13 @@ class Actor extends EventEmitter
     switch status
       when STATUS_STARTED
         @touchTrackers()
-        interval = setInterval(=>
+        @timerTouch = setInterval(=>
           @touchTrackers()
         , 60000)
       when STATUS_STOPPING
         @touchTrackers()
-        clearInterval(interval)
+        if @timerTouch
+          clearInterval(@timerTouch)
     # advertise
     @emit status
     # Log
@@ -362,7 +365,8 @@ class Actor extends EventEmitter
     @setStatus STATUS_STARTING
     @preStart () =>
         @h_start () =>
-          @postStart()
+          @postStart () =>
+            @setStatus STATUS_STARTED
 
   preStart: (done) ->
     done()
@@ -372,33 +376,34 @@ class Actor extends EventEmitter
     _.invoke @outboundAdapters, "start"
     done()
 
-  postStart: ->
-    @setStatus STATUS_STARTED
+  postStart: (done) ->
+    done()
 
   ###*
     Function that stops the actor, including its children and adapters
   ###
   h_tearDown: () ->
+    @setStatus STATUS_STOPPING
     @preStop () =>
-      @h_stop () =>
-        @postStop()
+        @h_stop () =>
+          @postStop () =>
+            @setStatus STATUS_STOPPED
 
   preStop: (done) ->
-    @setStatus STATUS_STOPPING
     done()
 
   h_stop: (done) ->
     # Stop children first
     _.forEach @children, (childAid) =>
-      @send @buildMessage(childAid, "hSignal", CMD_STOP, {persistent:false})
+      @send @buildSignal(childAid, "stop", {})
     # Stop adapters second
     _.invoke @inboundAdapters, "stop"
     _.invoke @outboundAdapters, "stop"
     done()
 
-  postStop: ->
-    @setStatus STATUS_STOPPED
+  postStop: (done) ->
     @removeAllListeners()
+    done()
 
   setFilter: (hCondition, cb) ->
     if not hCondition or (hCondition not instanceof Object)
@@ -415,14 +420,17 @@ class Actor extends EventEmitter
   validateFilter: (hMessage) ->
     return hFilter.checkFilterValidity(hMessage, @filter)
 
-  h_subscribe: (hChannel, cb) ->
+  h_subscribe: (hChannel, filter, cb) ->
     for channel in @subscriptions
       if channel is hChannel
+        #_.forEach @inboundAdapters, (inbound) =>
+        #if inbound.channel is hChannel
+        #  inbound.sock.subscribe(filter)
         return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
 
-    @send @buildMessage(hChannel, "hCommand", {cmd:"hSubscribe", params:{}}, {timeout:5000}), (hResult) =>
+    @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:5000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
-        channelInbound = adapters.inboundAdapter("channel", {url: hResult.payload.result, owner: @, channel: hChannel})
+        channelInbound = adapters.inboundAdapter("channel", {url: hResult.payload.result, owner: @, channel: hChannel, filter: filter})
         @inboundAdapters.push channelInbound
         channelInbound.start()
         @subscriptions.push hChannel
@@ -469,7 +477,6 @@ class Actor extends EventEmitter
     hMessage.publisher = @actor
     hMessage.msgid = UUID.generate()
     hMessage.published = hMessage.published or new Date().getTime()
-    hMessage.sent = new Date().getTime()
     hMessage.actor = actor
     hMessage.ref = options.ref  if options.ref
     hMessage.convid = options.convid  if options.convid
@@ -491,21 +498,64 @@ class Actor extends EventEmitter
     hMessage.timeout = options.timeout  if options.timeout
     hMessage
 
-  buildResult: (actor, ref, status, result) ->
-    hmessage = {}
-    hmessage.msgid = @makeMsgId()
-    hmessage.actor = actor
-    hmessage.convid = hmessage.msgid
-    hmessage.ref = ref
-    hmessage.type = "hResult"
-    hmessage.priority = 0
-    hmessage.publisher = @actor
-    hmessage.published = new Date().getTime()
-    hresult = {}
-    hresult.status = status
-    hresult.result = result
-    hmessage.payload = hresult
-    hmessage
+  buildSignal: (actor, cmd, params, options) ->
+    params = params or {}
+    options = options or {}
+    options.persistent = options.persistent or false
+    throw new Error("missing cmd")  unless cmd
+    hSignal =
+      cmd: cmd
+      params: params
+
+    @buildMessage actor, "hSignal", hSignal, options
+
+  buildCommand: (actor, cmd, params, options) ->
+    params = params or {}
+    options = options or {}
+    throw new Error("missing cmd")  unless cmd
+    hCommand =
+      cmd: cmd
+      params: params
+
+    @buildMessage actor, "hCommand", hCommand, options
+
+  buildResult: (actor, ref, status, result, options) ->
+    options = options or {}
+    throw new Error("missing status")  if status is `undefined` or status is null
+    throw new Error("missing ref")  unless ref
+    hResult =
+      status: status
+      result: result
+
+    options.ref = ref
+    @buildMessage actor, "hResult", hResult, options
+
+  buildMeasure: (actor, value, unit, options) ->
+    unless value
+      throw new Error("missing value")
+    else throw new Error("missing unit")  unless unit
+    @buildMessage actor, "hMeasure", {unit: unit, value: value}, options
+
+  buildAlert: (actor, alert, options) ->
+    throw new Error("missing alert")  unless alert
+    @buildMessage actor, "hAlert", {alert: alert}, options
+
+  buildAck: (actor, ref, ack, options) ->
+    throw new Error("missing ack")  unless ack
+    unless ref
+      throw new Error("missing ref")
+    else throw new Error("ack does not match \"recv\" or \"read\"")  unless /recv|read/i.test(ack)
+    options = {}  if typeof options isnt "object"
+    options.ref = ref
+    @buildMessage actor, "hAck", {ack: ack}, options
+
+  buildConvState: (actor, convid, status, options) ->
+    unless convid
+      throw new Error("missing convid")
+    else throw new Error("missing status")  unless status
+    options = {}  unless options
+    options.convid = convid
+    @buildMessage actor, "hConvState", {status: status}, options
 
   ###
   Create a unique message id

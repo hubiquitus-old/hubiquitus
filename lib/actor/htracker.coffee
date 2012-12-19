@@ -32,30 +32,33 @@ validator = require "./../validator.coffee"
 class Tracker extends Actor
 
   constructor: (properties) ->
-    super
     #TODO check properties
     @peers = []
+    @trackerChannelAid = properties.properties.channel.actor
+    properties.children.push properties.properties.channel
+    super
     #@on "started", -> @pingChannel(properties.broadcastUrl)
 
-  onMessage: (message) ->
-    @log "debug", "Tracker received a message: #{JSON.stringify(message)}"
-    if message.type is "peer-info"
+  h_onSignal: (hMessage, cb) ->
+    @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
+    if hMessage.payload.cmd is "peer-info"
       existPeer = false
       _.forEach @peers, (peers) =>
-        if peers.peerFullId is message.publisher
+        if peers.peerFullId is hMessage.publisher
           existPeer = true
-          peers.peerStatus = message.payload.peerStatus
-          peers.peerInbox = message.payload.peerInbox
-
+          peers.peerStatus = hMessage.payload.params.peerStatus
+          peers.peerInbox = hMessage.payload.params.peerInbox
+          if peers.peerStatus is "stopping"
+            @stopAlert(hMessage.publisher)
       if existPeer isnt true
-        @peers.push {peerType:message.payload.peerType, peerFullId:message.publisher, peerId:message.payload.peerId, peerStatus:message.payload.peerStatus, peerInbox:message.payload.peerInbox}
-        outbox = @findOutbox(message.publisher)
+        @peers.push {peerType:hMessage.payload.params.peerType, peerFullId:hMessage.publisher, peerId:hMessage.payload.params.peerId, peerStatus:hMessage.payload.params.peerStatus, peerInbox:hMessage.payload.params.peerInbox}
+        outbox = @findOutbox(hMessage.publisher)
         if outbox
           @outboundAdapters.push adapters.outboundAdapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
 
-    else if message.type is "peer-search"
+    else if hMessage.payload.cmd is "peer-search"
       # TODO reflexion sur le lookup et implementation
-      outboundadapter = @findOutbox(message.payload.actor)
+      outboundadapter = @findOutbox(hMessage.payload.params.actor)
 
       if outboundadapter
         status = codes.OK
@@ -64,14 +67,14 @@ class Tracker extends Actor
         status = codes.INVALID_ATTR
         result = "Actor not found"
 
-      msg = @buildResult(message.publisher, message.msgid, status, result)
-      @send msg
+      @send @buildResult(hMessage.publisher, hMessage.msgid, status, result)
 
   initChildren: (children)->
     _.forEach children, (childProps) =>
       childProps.trackers = [{
         trackerId : @actor,
         trackerUrl : @inboundAdapters[0].url,
+        trackerChannel : @trackerChannelAid
         }]
       @createChild childProps.type, childProps.method, childProps
 
@@ -103,9 +106,12 @@ class Tracker extends Actor
         if lb_peers.peerStatus is "started"
           _.forEach lb_peers.peerInbox, (inbox) =>
             if inbox.type is "socket"
-              outboundadapter = {type: inbox.type, targetActorAid: lb_peers.peerId, url: inbox.url}
+              outboundadapter = {type: inbox.type, targetActorAid: lb_peers.peerFullId, url: inbox.url}
 
     outboundadapter
+
+  stopAlert: (actor) ->
+    @send @buildSignal(@trackerChannelAid, "hStopAlert", actor)
 
 exports.Tracker = Tracker
 exports.newActor = (properties) ->

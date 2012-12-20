@@ -106,15 +106,18 @@ class ChannelInboundAdapter extends InboundAdapter
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
       hMessage = data.toString().replace(/^.*\$/, "")
+      hMessage = JSON.parse(hMessage)
       hMessage.actor = @owner.actor
-      console.log "hStopAlert "
-      @owner.emit "message", JSON.parse(hMessage)
+      @owner.emit "message", hMessage
+
+  addFilter: (quickFilter) ->
+    @owner.log "debug", "Add quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
+    @sock.subscribe(quickFilter)
 
   start: ->
     unless @started
       @sock.connect @url
-      console.log "filter ",@filter
-      @sock.subscribe(@filter)
+      @addFilter(@filter)
       @owner.log "debug", "#{@sock.identity} subscribe on #{@url}"
       super
 
@@ -244,9 +247,8 @@ class ChannelOutboundAdapter extends OutboundAdapter
 
   send: (hMessage) ->
     @start() unless @started
-    if hMessage.type is "hSignal" and hMessage.payload.cmd is "hStopAlert"
+    if hMessage.headers.h_quickFilter and typeof hMessage.headers.h_quickFilter is "string"
       message = hMessage.payload.params+"$"+JSON.stringify(hMessage)
-      console.log "chan out ", message
       @sock.send message
     else
       @sock.send JSON.stringify(message)

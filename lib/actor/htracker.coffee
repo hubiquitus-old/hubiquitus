@@ -111,7 +111,7 @@ class Tracker extends Actor
     outboundadapter
 
   stopAlert: (actor) ->
-    @send @buildSignal(@trackerChannelAid, "hStopAlert", actor)
+    @send @buildSignal(@trackerChannelAid, "hStopAlert", actor, {headers:{h_quickFilter: actor}})
 
 exports.Tracker = Tracker
 exports.newActor = (properties) ->

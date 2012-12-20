@@ -169,7 +169,9 @@ class Actor extends EventEmitter
       cb hMessageResult
 
   h_onSignal: (hMessage, cb) ->
-    # Method to override
+    @log "debug", "Actor received a hSignal: #{JSON.stringify(hMessage)}"
+    if hMessage.payload.cmd is "hStopAlert"
+      @removePeer(hMessage.payload.params)
 
   send: (hMessage, cb) ->
     unless _.isString(hMessage.actor)
@@ -205,8 +207,8 @@ class Actor extends EventEmitter
           if hResult.payload.status is codes.hResultStatus.OK
             outboundAdapter = adapters.outboundAdapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
             @outboundAdapters.push outboundAdapter
-            @h_subscribe @trackers[0].trackerChannel, hMessage.actor, (status) ->
-              console.log "watch ", status
+            if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
+              @h_subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
 
             @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(->
               @timerOutAdapter[outboundAdapter.targetActorAid] = null
@@ -423,9 +425,9 @@ class Actor extends EventEmitter
   h_subscribe: (hChannel, filter, cb) ->
     for channel in @subscriptions
       if channel is hChannel
-        #_.forEach @inboundAdapters, (inbound) =>
-        #if inbound.channel is hChannel
-        #  inbound.sock.subscribe(filter)
+        _.forEach @inboundAdapters, (inbound) =>
+          if inbound.channel is hChannel
+            inbound.addFilter(filter)
         return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:5000}), (hResult) =>

@@ -80,6 +80,7 @@ class Actor extends EventEmitter
     @msgToBeAnswered = {}
     @timerOutAdapter = {}
     @timerTouch = undefined
+    @parent = undefined
 
     # Initializing attributs
     @status = STATUS_STOPPED
@@ -246,7 +247,7 @@ class Actor extends EventEmitter
           self = this
 
           #if no response in time we call a timeout
-          setInterval (->
+          setTimeout (->
             if self.msgToBeAnswered[hMessage.msgid]
               delete self.msgToBeAnswered[hMessage.msgid]
               errCode = codes.hResultStatus.EXEC_TIMEOUT
@@ -290,6 +291,7 @@ class Actor extends EventEmitter
         childRef = actorModule.newActor(properties)
         @outboundAdapters.push adapters.outboundAdapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
         childRef.outboundAdapters.push adapters.outboundAdapter(method, owner: childRef, targetActorAid: @actor , ref: @)
+        childRef.parent = @
         # Starting the child
         @send @buildSignal(properties.actor, "start", {})
 

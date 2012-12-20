@@ -43,6 +43,7 @@ class Tracker extends Actor
     @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
     if hMessage.payload.cmd is "peer-info"
       existPeer = false
+      index = 0
       _.forEach @peers, (peers) =>
         if peers.peerFullId is hMessage.publisher
           existPeer = true
@@ -50,6 +51,9 @@ class Tracker extends Actor
           peers.peerInbox = hMessage.payload.params.peerInbox
           if peers.peerStatus is "stopping"
             @stopAlert(hMessage.publisher)
+            delete @peers[index]
+            @removePeer(hMessage.publisher)
+        index++
       if existPeer isnt true
         @peers.push {peerType:hMessage.payload.params.peerType, peerFullId:hMessage.publisher, peerId:hMessage.payload.params.peerId, peerStatus:hMessage.payload.params.peerStatus, peerInbox:hMessage.payload.params.peerInbox}
         outbox = @findOutbox(hMessage.publisher)

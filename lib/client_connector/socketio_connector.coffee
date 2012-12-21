@@ -68,7 +68,7 @@ class SocketIO_Connector
 
   ###
   @param client - Reference to the client
-  @param data - Expected {jid, password, (host), (port)}
+  @param data - Expected {urn, password, (host), (port)}
   ###
   connect: (client, data) ->
     unless client

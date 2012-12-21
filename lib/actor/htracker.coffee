@@ -103,7 +103,7 @@ class Tracker extends Actor
     unless outboundadapter
       outTab = []
       _.forEach @peers, (peers) =>
-        if peers.peerId is validator.getBareJID(actor)
+        if peers.peerId is validator.getBareURN(actor)
           outTab.push(peers)
       if outTab.length > 0
         lb_peers = outTab[Math.floor(Math.random() * outTab.length)]

@@ -33,7 +33,7 @@ describe "hCreateUpdateChannel", ->
 
   before () ->
     topology = {
-    actor: config.logins[0].jid,
+    actor: config.logins[0].urn,
     type: "hsession"
     }
     hActor = actorModule.newActor(topology)
@@ -44,7 +44,7 @@ describe "hCreateUpdateChannel", ->
 
   beforeEach ->
     @timeout 5000
-    createCmd = config.createChannel "##{config.getUUID()}@localhost", [config.validJID], config.validJID, true
+    createCmd = config.createChannel "urn:localhost:##{config.getUUID()}", [config.validURN], config.validURN, true
 
   it "should return hResult error INVALID_ATTR without params", (done) ->
     createCmd.payload.params = null
@@ -94,15 +94,16 @@ describe "hCreateUpdateChannel", ->
 
 
   it "should return hResult error OK with actor with a different domain", (done) ->
-    createCmd.payload.params.actor = "#channel@another.domain"
+    createCmd.payload.params.actor = "urn:another.domain:#channel"
     hActor.h_onMessageInternal createCmd, (hMessage) ->
+      console.log "domain ",hMessage
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       done()
 
 
   it "should return hResult error NOT_AUTHORIZED with using hAdminChannel as actor", (done) ->
-    createCmd.payload.params.actor = "#hAdminChannel@localhost"
+    createCmd.payload.params.actor = "urn:localhost:#hAdminChannel"
     hActor.h_onMessageInternal createCmd, (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
@@ -173,7 +174,7 @@ describe "hCreateUpdateChannel", ->
       done()
 
 
-  it "should return hResult error INVALID_ATTR if owner JID is not bare", (done) ->
+  it "should return hResult error INVALID_ATTR if owner URN is not bare", (done) ->
     createCmd.payload.params.owner = createCmd.publisher + "/resource"
     hActor.h_onMessageInternal createCmd, (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
@@ -195,6 +196,7 @@ describe "hCreateUpdateChannel", ->
   it "should return hResult error INVALID_ATTR if subscribers is not an array", (done) ->
     createCmd.payload.params.subscribers = ""
     hActor.h_onMessageInternal createCmd, (hMessage) ->
+      console.log "not array", hMessage
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.be.a("string").and.match /subscriber/i
@@ -204,14 +206,15 @@ describe "hCreateUpdateChannel", ->
   it "should return hResult error INVALID_ATTR if subscribers has an element that is not a string", (done) ->
     createCmd.payload.params.subscribers = [not: "a string"]
     hActor.h_onMessageInternal createCmd, (hMessage) ->
+      console.log "not string", hMessage
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.be.a("string").and.match /subscriber/i
       done()
 
 
-  it "should return hResult error INVALID_ATTR if subscribers has an element that is not a JID", (done) ->
-    createCmd.payload.params.subscribers = ["a@b", "this is not a JID"]
+  it "should return hResult error INVALID_ATTR if subscribers has an element that is not a URN", (done) ->
+    createCmd.payload.params.subscribers = ["urn:b:a", "this is not a URN"]
     hActor.h_onMessageInternal createCmd, (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
@@ -219,8 +222,8 @@ describe "hCreateUpdateChannel", ->
       done()
 
 
-  it "should return hResult error INVALID_ATTR if subscribers has an element that is not a bare JID", (done) ->
-    createCmd.payload.params.subscribers = ["a@b", "a@b/resource"]
+  it "should return hResult error INVALID_ATTR if subscribers has an element that is not a bare URN", (done) ->
+    createCmd.payload.params.subscribers = ["urn:b:a", "urn:b:a/resource"]
     hActor.h_onMessageInternal createCmd, (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
@@ -241,6 +244,7 @@ describe "hCreateUpdateChannel", ->
   it "should return hResult error INVALID_ATTR if active is not a boolean", (done) ->
     createCmd.payload.params.active = "this is a string"
     hActor.h_onMessageInternal createCmd, (hMessage) ->
+      console.log "not boolean", hMessage
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.be.a("string").and.match /active/i
@@ -250,6 +254,7 @@ describe "hCreateUpdateChannel", ->
   it "should return hResult error INVALID_ATTR if headers is not an object", (done) ->
     createCmd.payload.params.headers = "something"
     hActor.h_onMessageInternal createCmd, (hMessage) ->
+      console.log "not object ",hMessage
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.be.a("string").and.match /header/i
@@ -257,7 +262,7 @@ describe "hCreateUpdateChannel", ->
 
 
   it "should return hResult error NOT_AUTHORIZED if owner different than sender", (done) ->
-    createCmd.payload.params.owner = "another@another.jid"
+    createCmd.payload.params.owner = "urn:localhost:other"
     hActor.h_onMessageInternal createCmd, (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
@@ -266,17 +271,17 @@ describe "hCreateUpdateChannel", ->
 
   it "should return hResult OK if publisher has resource and owner doesnt", (done) ->
     @timeout 5000
-    createCmd.publisher = config.validJID + "/resource"
-    createCmd.payload.params.owner = config.validJID
+    createCmd.publisher = config.validURN + "/resource"
+    createCmd.payload.params.owner = config.validURN
     hActor.h_onMessageInternal createCmd, (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       done()
 
 
-  it "should return hResult OK if actor is fully compliant with #chid@domain", (done) ->
+  it "should return hResult OK if actor is fully compliant with urn:localhost:#chid", (done) ->
     @timeout 5000
-    createCmd.payload.params.actor = "#actor@localhost"
+    createCmd.payload.params.actor = "urn:localhost:#chid"
     hActor.h_onMessageInternal createCmd, (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -315,11 +320,11 @@ describe "hCreateUpdateChannel", ->
   describe "#Update Channel", ->
 
     #Channel that will be created and updated
-    existingCHID = "##{config.getUUID()}@localhost"
+    existingCHID = "urn:localhost:##{config.getUUID()}"
 
     before (done) ->
       @timeout 5000
-      createCmd = config.createChannel existingCHID, [config.validJID], config.validJID, true
+      createCmd = config.createChannel existingCHID, [config.validURN], config.validURN, true
       hActor.h_onMessageInternal createCmd,  (hMessage) ->
         hMessage.should.have.property "ref", createCmd.msgid
         hMessage.payload.should.have.property "status", status.OK
@@ -328,7 +333,7 @@ describe "hCreateUpdateChannel", ->
     it "should return hResult ok if actor exists updating", (done) ->
       @timeout 5000
       createCmd.payload.params.actor = existingCHID
-      createCmd.payload.params.subscribers = ["u2@another"]
+      createCmd.payload.params.subscribers = ["urn:another:u2"]
       hActor.h_onMessageInternal createCmd, (hMessage) ->
         hMessage.should.have.property "ref", createCmd.msgid
         hMessage.payload.should.have.property "status", status.OK
@@ -340,7 +345,7 @@ describe "hCreateUpdateChannel", ->
     it "should return hResult OK if a new subscriber is added", (done) ->
       @timeout 5000
       createCmd.payload.params.actor = existingCHID
-      createCmd.payload.params.subscribers = [config.validJID, "u2@another2"]
+      createCmd.payload.params.subscribers = [config.validURN, "urn:another2:u2"]
       hActor.h_onMessageInternal createCmd, (hMessage) ->
         hMessage.should.have.property "ref", createCmd.msgid
         hMessage.payload.should.have.property "status", status.OK
@@ -350,7 +355,7 @@ describe "hCreateUpdateChannel", ->
     it "should return hResult OK if an old subscriber is removed", (done) ->
       @timeout 5000
       createCmd.payload.params.actor = existingCHID
-      createCmd.payload.params.subscribers = ["u2@another2"]
+      createCmd.payload.params.subscribers = ["urn:another2:u2"]
       hActor.h_onMessageInternal createCmd, (hMessage) ->
         hMessage.should.have.property "ref", createCmd.msgid
         hMessage.payload.should.have.property "status", status.OK
@@ -359,7 +364,7 @@ describe "hCreateUpdateChannel", ->
 
     it "should return hResult error if sender tries to update owner", (done) ->
       @timeout 5000
-      createCmd.payload.params.owner = "a@jid.different"
+      createCmd.payload.params.owner = "urn:different:a"
       createCmd.payload.params.actor = existingCHID
       hActor.h_onMessageInternal createCmd, (hMessage) ->
         hMessage.should.have.property "ref", createCmd.msgid

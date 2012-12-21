@@ -36,7 +36,7 @@ class Channel extends Actor
 
   constructor: (topology) ->
     super
-    @actor = validator.getBareJID(topology.actor)
+    @actor = validator.getBareURN(topology.actor)
     @type = "channel"
     @subscribersAlias = "#{@actor}#subscribers"
     @properties =
@@ -52,7 +52,7 @@ class Channel extends Actor
 
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
-    if hMessage.type is "hCommand" and validator.getBareJID(hMessage.actor) is validator.getBareJID(@actor)
+    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
       switch hMessage.payload.cmd
         when "hGetLastMessages"
           command = require("./../hcommands/hGetLastMessages").Command

@@ -32,7 +32,7 @@ describe "hSetFilter", ->
 
   before () ->
     topology = {
-    actor: config.logins[0].jid,
+    actor: config.logins[0].urn,
     type: "hsession"
     }
     hActor = actorModule.newActor(topology)
@@ -41,7 +41,7 @@ describe "hSetFilter", ->
     hActor.h_tearDown()
 
   beforeEach ->
-    cmd = config.makeHMessage(hActor.actor, config.logins[0].jid, "hCommand", {})
+    cmd = config.makeHMessage(hActor.actor, config.logins[0].urn, "hCommand", {})
     cmd.msgid = "testCmd"
     cmd.payload =
       cmd: "hSetFilter"

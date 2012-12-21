@@ -83,7 +83,7 @@ hGetThread::checkValidity = (hMessage, context, cb) ->
     return cb(status.INVALID_ATTR, "convid is not a string")
   unless context.properties.active
     return cb(status.NOT_AUTHORIZED, "the channel " + actor + " is inactive")
-  if context.properties.subscribers.indexOf(validator.getBareJID(hMessage.publisher)) < 0
+  if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0
     return cb(status.NOT_AUTHORIZED, "the sender is not in the channel subscribers list")
   cb()
 

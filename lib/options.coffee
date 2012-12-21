@@ -97,12 +97,6 @@ overrideOptions = (options) ->
     #websocket Namespace for events received/sent
     "socket.io.namespace": options["socket.io.namespace"] or ""
 
-    #full name of the component (ie. jid.domain)
-    "hnode.jid": options["hnode.jid"] or "hnode@localhost"
-
-    #Shared secret between the hNode component and the XMPP Server
-    "hnode.password": options["hnode.password"] or "hnode"
-
     #Host of the XMPP Server
     "hnode.host": options["hnode.host"] or ""
 

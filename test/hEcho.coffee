@@ -33,7 +33,7 @@ describe "hEcho", ->
 
   before () ->
     topology = {
-      actor: config.logins[0].jid,
+      actor: config.logins[0].urn,
       type: "hsession"
     }
     hActor = actorModule.newActor(topology)
@@ -43,7 +43,7 @@ describe "hEcho", ->
     hActor = null
 
   beforeEach (done) ->
-    echoCmd = config.makeHMessage(hActor.actor, config.logins[0].jid, "hCommand", {})
+    echoCmd = config.makeHMessage(hActor.actor, config.logins[0].urn, "hCommand", {})
     echoCmd.payload =
       cmd: "hEcho"
       params:

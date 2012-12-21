@@ -31,14 +31,14 @@ describe "hRelevantMessages", ->
   cmd = undefined
   hActor = undefined
   nbMsgs = 10
-  activeChan = "##{config.getUUID()}@localhost"
-  notInPart = "##{config.getUUID()}@localhost"
-  inactiveChan = "##{config.getUUID()}@localhost"
-  emptyChannel = "##{config.getUUID()}@localhost"
+  activeChan = "urn:localhost:##{config.getUUID()}"
+  notInPart = "urn:localhost:##{config.getUUID()}"
+  inactiveChan = "urn:localhost:##{config.getUUID()}"
+  emptyChannel = "urn:localhost:##{config.getUUID()}"
 
   before () ->
     topology = {
-      actor: config.logins[0].jid,
+      actor: config.logins[0].urn,
       type: "hsession"
     }
     hActor = actorModule.newActor(topology)
@@ -49,7 +49,7 @@ describe "hRelevantMessages", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel activeChan, [config.validJID], config.validJID, true
+    createCmd = config.createChannel activeChan, [config.validURN], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -89,7 +89,7 @@ describe "hRelevantMessages", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel emptyChannel, [config.validJID], config.validJID, true
+    createCmd = config.createChannel emptyChannel, [config.validURN], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -97,7 +97,7 @@ describe "hRelevantMessages", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel notInPart, ["other@localhost"], config.validJID, true
+    createCmd = config.createChannel notInPart, ["urn:localhost:other"], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -105,7 +105,7 @@ describe "hRelevantMessages", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel inactiveChan, [config.validJID], config.validJID, false
+    createCmd = config.createChannel inactiveChan, [config.validURN], config.validURN, false
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -136,7 +136,7 @@ describe "hRelevantMessages", ->
 
 
   it "should return hResult error NOT_AVAILABLE if channel was not found", (done) ->
-    cmd.actor = "#this channel does not exist@localhost"
+    cmd.actor = "urn:localhost:#unknow channel"
     hActor.send cmd, (hMessage) ->
       hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
       hMessage.payload.result.should.be.a "string"
@@ -188,19 +188,19 @@ describe "hRelevantMessages", ->
         publishMsg.timeout = 0
         publishMsg.persistent = true
         publishMsg.relevance = new Date(new Date().getTime() + 100000).getTime()
-        publishMsg.author = "u2@localhost"
+        publishMsg.author = "urn:localhost:u2"
         hActor.send publishMsg
         i++
 
     beforeEach ->
-      setMsg = config.makeHMessage(hActor.actor, config.logins[0].jid, "hCommand", {})
+      setMsg = config.makeHMessage(hActor.actor, config.logins[0].urn, "hCommand", {})
       setMsg.payload =
         cmd: "hSetFilter"
         params: {}
 
     it "should return Ok with messages respect filter", (done) ->
       setMsg.payload.params = in:
-        publisher: ["u1@localhost"]
+        publisher: ["urn:localhost:u1"]
 
       hActor.h_onMessageInternal setMsg, ->
 
@@ -215,7 +215,7 @@ describe "hRelevantMessages", ->
 
     it "should return Ok with only filtered messages with right quantity", (done) ->
       setMsg.payload.params = in:
-        author: ["u2@localhost"]
+        author: ["urn:localhost:u2"]
 
       hActor.h_onMessageInternal setMsg, ->
       hActor.send cmd, (hMessage) ->
@@ -226,7 +226,7 @@ describe "hRelevantMessages", ->
 
         i = 0
         while i < hMessage.payload.result.length
-          hMessage.payload.result[i].should.have.property "author", "u2@localhost"
+          hMessage.payload.result[i].should.have.property "author", "urn:localhost:u2"
           i++
         done()
 

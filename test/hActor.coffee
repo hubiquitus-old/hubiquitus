@@ -36,7 +36,7 @@ describe "hActor", ->
 
     before () ->
       topology = {
-        actor: config.logins[0].jid,
+        actor: config.logins[0].urn,
         type: "hactor"
       }
       hActor = actorModule.newActor(topology)
@@ -47,7 +47,7 @@ describe "hActor", ->
 
     beforeEach ->
       filter = {}
-      hMsg = config.makeHMessage(hActor.actor, config.logins[0].jid, "string", {})
+      hMsg = config.makeHMessage(hActor.actor, config.logins[0].urn, "string", {})
 
     it "should return Ok if empty filter", (done) ->
       hActor.h_onMessageInternal hMsg, (hMessage) ->
@@ -85,10 +85,10 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect \"eq\" filter with multiple hCondition", (done) ->
         filter = eq:
           priority: 2
-          author: config.logins[0].jid
+          author: config.logins[0].urn
 
         hMsg.priority = 2
-        hMsg.author = config.logins[1].jid
+        hMsg.author = config.logins[1].urn
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -100,10 +100,10 @@ describe "hActor", ->
       it "should return OK if hMessage respect \"eq\" filter with multiple hCondition", (done) ->
         filter = eq:
           priority: 2
-          author: config.logins[0].jid
+          author: config.logins[0].urn
 
         hMsg.priority = 2
-        hMsg.author = config.logins[0].jid
+        hMsg.author = config.logins[0].urn
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -155,10 +155,10 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect \"ne\" filter with multiple hCondition", (done) ->
         filter = ne:
           priority: 2
-          author: config.logins[0].jid
+          author: config.logins[0].urn
 
         hMsg.priority = 3
-        hMsg.author = config.logins[0].jid
+        hMsg.author = config.logins[0].urn
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -170,10 +170,10 @@ describe "hActor", ->
       it "should return OK if hMessage respect \"ne\" filter with multiple hCondition", (done) ->
         filter = ne:
           priority: 2
-          author: config.logins[0].jid
+          author: config.logins[0].urn
 
         hMsg.priority = 3
-        hMsg.author = config.logins[1].jid
+        hMsg.author = config.logins[1].urn
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -528,7 +528,7 @@ describe "hActor", ->
     describe "#inFilter()", ->
       it "should return INVALID_ATTR if hMessage don't respect \"in\" filter", (done) ->
         filter = in:
-          publisher: ["u2@localhost", "u3@localhost"]
+          publisher: ["urn:localhost:u2", "urn:localhost:u3"]
 
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -552,7 +552,7 @@ describe "hActor", ->
 
       it "should return INVALID_ATTR if the attribute is not a array", (done) ->
         filter = in:
-          publisher: "u1@localhost"
+          publisher: "urn:localhost:u1"
 
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -564,10 +564,10 @@ describe "hActor", ->
 
       it "should return INVALID_ATTR if hMessage don't respect \"in\" filter with multiple hCondition", (done) ->
         filter = in:
-          publisher: ["u1@localhost"]
-          author: ["u2@localhost"]
+          publisher: ["urn:localhost:u1"]
+          author: ["urn:localhost:u2"]
 
-        hMsg.author = "u1@localhost"
+        hMsg.author = "urn:localhost:u1"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -578,10 +578,10 @@ describe "hActor", ->
 
       it "should return OK if hMessage respect \"in\" filter with multiple hCondition", (done) ->
         filter = in:
-          publisher: ["u1@localhost"]
-          author: ["u2@localhost"]
+          publisher: ["urn:localhost:u1"]
+          author: ["urn:localhost:u2"]
 
-        hMsg.author = "u2@localhost"
+        hMsg.author = "urn:localhost:u2"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -608,7 +608,7 @@ describe "hActor", ->
     describe "#ninFilter()", ->
       it "should return INVALID_ATTR if hMessage don't respect \"nin\" filter", (done) ->
         filter = nin:
-          publisher: ["u2@localhost", "u1@localhost"]
+          publisher: ["urn:localhost:u2", "urn:localhost:u1"]
 
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -620,7 +620,7 @@ describe "hActor", ->
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = nin:
-          attribut: ["u2@localhost", "u1@localhost"]
+          attribut: ["urn:localhost:u2", "urn:localhost:u1"]
 
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -632,7 +632,7 @@ describe "hActor", ->
 
       it "should return INVALID_ATTR if the attribute is not a array", (done) ->
         filter = nin:
-          publisher: "u2@localhost"
+          publisher: "urn:localhost:u2"
 
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -644,10 +644,10 @@ describe "hActor", ->
 
       it "should return INVALID_ATTR if hMessage don't respect \"nin\" filter with multiple hCondition", (done) ->
         filter = nin:
-          publisher: ["u2@localhost"]
-          author: ["u1@localhost"]
+          publisher: ["urn:localhost:u2"]
+          author: ["urn:localhost:u1"]
 
-        hMsg.author = "u1@localhost"
+        hMsg.author = "urn:localhost:u1"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -658,10 +658,10 @@ describe "hActor", ->
 
       it "should return OK if hMessage respect \"nin\" filter with multiple hCondition", (done) ->
         filter = nin:
-          publisher: ["u2@localhost"]
-          author: ["u1@localhost"]
+          publisher: ["urn:localhost:u2"]
+          author: ["urn:localhost:u1"]
 
-        hMsg.author = "u2@localhost"
+        hMsg.author = "urn:localhost:u2"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -689,12 +689,12 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect \"and\" filter", (done) ->
         filter = and: [
           in:
-            publisher: ["u2@localhost", "u1@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u1"]
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u1@localhost"
+        hMsg.author = "urn:localhost:u1"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -706,10 +706,10 @@ describe "hActor", ->
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = and: [
           in:
-            publisher: ["u2@localhost", "u1@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u1"]
         ,
           nin:
-            attribut: ["u2@localhost", "u1@localhost"]
+            attribut: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -722,12 +722,12 @@ describe "hActor", ->
       it "should return OK if hMessage respect \"and\" filter with multiple hCondition", (done) ->
         filter = and: [
           in:
-            publisher: ["u2@localhost", "u1@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u1"]
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u3@localhost"
+        hMsg.author = "urn:localhost:u3"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -742,9 +742,9 @@ describe "hActor", ->
             "payload.params.priority": 2
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u3@localhost"
+        hMsg.author = "urn:localhost:u3"
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 2
         hActor.setFilter filter, (status) ->
@@ -760,12 +760,12 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect \"or\" filter", (done) ->
         filter = or: [
           in:
-            publisher: ["u2@localhost", "u3@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u3"]
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u1@localhost"
+        hMsg.author = "urn:localhost:u1"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -777,10 +777,10 @@ describe "hActor", ->
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = or: [
           in:
-            publisher: ["u2@localhost", "u3@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u3"]
         ,
           nin:
-            attribut: ["u2@localhost", "u1@localhost"]
+            attribut: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -793,12 +793,12 @@ describe "hActor", ->
       it "should return OK if hMessage respect \"or\" filter with multiple hCondition", (done) ->
         filter = or: [
           in:
-            publisher: ["u2@localhost", "u1@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u1"]
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u1@localhost"
+        hMsg.author = "urn:localhost:u1"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -813,9 +813,9 @@ describe "hActor", ->
             "payload.params.priority": 2
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u3@localhost"
+        hMsg.author = "urn:localhost:u3"
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 3
         hActor.setFilter filter, (status) ->
@@ -831,12 +831,12 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect \"nor\" filter", (done) ->
         filter = nor: [
           in:
-            publisher: ["u2@localhost", "u3@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u3"]
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u3@localhost"
+        hMsg.author = "urn:localhost:u3"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -848,12 +848,12 @@ describe "hActor", ->
       it "should return OK if hMessage respect \"nor\" filter with multiple hCondition", (done) ->
         filter = nor: [
           in:
-            publisher: ["u2@localhost", "u3@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u3"]
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u1@localhost"
+        hMsg.author = "urn:localhost:u1"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -868,9 +868,9 @@ describe "hActor", ->
             "payload.params.priority": 2
         ,
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
         ]
-        hMsg.author = "u2@localhost"
+        hMsg.author = "urn:localhost:u2"
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 3
         hActor.setFilter filter, (status) ->
@@ -886,7 +886,7 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect \"not\" filter", (done) ->
         filter = not:
           in:
-            publisher: ["u2@localhost", "u1@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u1"]
 
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -899,7 +899,7 @@ describe "hActor", ->
       it "should return INVALID_ATTR if hMessage don't respect \"not\" filter with multiple hCondition", (done) ->
         filter = not:
           in:
-            publisher: ["u2@localhost", "u1@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u1"]
 
           eq:
             priority: 2
@@ -916,12 +916,12 @@ describe "hActor", ->
       it "should return OK if hMessage respect \"not\" filter with multiple hCondition", (done) ->
         filter = not:
           in:
-            publisher: ["u2@localhost", "u3@localhost"]
+            publisher: ["urn:localhost:u2", "urn:localhost:u3"]
 
           nin:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
 
-        hMsg.author = "u2@localhost"
+        hMsg.author = "urn:localhost:u2"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
@@ -936,9 +936,9 @@ describe "hActor", ->
             "payload.params.priority": 2
 
           in:
-            author: ["u2@localhost", "u1@localhost"]
+            author: ["urn:localhost:u2", "urn:localhost:u1"]
 
-        hMsg.author = "u3@localhost"
+        hMsg.author = "urn:localhost:u3"
         hMsg.payload.params = {}
         hMsg.payload.params.priority = 3
         hActor.setFilter filter, (status) ->

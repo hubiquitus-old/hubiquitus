@@ -48,16 +48,16 @@ class Session extends Actor
       @log "debug", "touching tracker #{trackerProps.trackerId}"
       if @status is "stopping"
         @trackInbox = []
-      @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareJID(@actor), peerStatus:@status, peerInbox:@trackInbox})
+      @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:@trackInbox})
 
   checkFilter: (hMessage) ->
-    unless validator.getBareJID(hMessage.publisher) is validator.getBareJID(@actor)
+    unless validator.getBareURN(hMessage.publisher) is validator.getBareURN(@actor)
       return hFilter.checkFilterValidity(hMessage, @filter)
     return {result: true, error: ""}
 
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
-    if hMessage.type is "hCommand" and validator.getBareJID(hMessage.actor) is validator.getBareJID(@actor)
+    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
       switch hMessage.payload.cmd
         when "hCreateUpdateChannel"
           command = require("./../hcommands/hCreateUpdateChannel").Command

@@ -1,7 +1,7 @@
-user1Jid = 'u1@localhost'
+user1Urn = 'urn:localhost:u1'
 user1Pass = 'u1'
 
-user2Jid = 'u2@localhost'
+user2Urn = 'urn:localhost:u2'
 user2Pass = 'u2'
 
 mongoURI = 'mongodb://localhost/test'
@@ -21,7 +21,7 @@ exports.db = undefined
 exports.logins = undefined
 exports.cmdParams = undefined
 exports.mongoURI = undefined
-exports.validJID = undefined
+exports.validURN = undefined
 exports.validDomain = undefined
 
 
@@ -50,24 +50,24 @@ exports.validators = validators
 exports.db = db
 exports.codes = codes
 
-validJID = 'u1@localhost'
+validURN = 'urn:localhost:u1'
 
 # Array of logins (with params if you want) to connect to XMPP
 exports.logins = [
   {
-    jid: user1Jid,
+    urn: user1Urn,
     password: user1Pass
   },
   {
-    jid: user1Jid + '/testRessource',
+    urn: user1Urn + '/testRessource',
     password: user1Pass
   },
   {
-    jid: user2Jid,
+    urn: user2Urn,
     password: user1Pass
   },
   {
-    jid: user2Jid + '/testRessource',
+    urn: user2Urn + '/testRessource',
     password: user1Pass
   }
 ];
@@ -79,9 +79,9 @@ exports.cmdParams = {
 
 exports.mongoURI = mongoURI
 
-exports.validJID = validJID;
+exports.validURN = validURN;
 
-exports.validDomain = exports.validators.getDomainJID(validJID);
+exports.validDomain = exports.validators.getDomainURN(validURN);
 
 
 exports.makeHMessage = (actor, publisher, type, payload) ->

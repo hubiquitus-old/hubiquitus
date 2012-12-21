@@ -1,9 +1,9 @@
 {
-    "actor": "tracker@localhost",
+    "actor": "urn:localhost:tracker",
     "type": "htracker",
     "children": [
         {
-            "actor": "gateway@localhost",
+            "actor": "urn:localhost:gateway",
             "type": "hgateway",
             "method": "inproc",
             "children": [],
@@ -13,7 +13,7 @@
             }
         },
         {
-            "actor": "dispatcher@localhost",
+            "actor": "urn:localhost:dispatcher",
             "type": "hdispatcher",
             "method": "inproc",
             "workers": { "method": "fork", "type": "hactor", "nb": 2 },
@@ -22,7 +22,7 @@
     ],
     "properties":{
         "channel": {
-            "actor": "#trackChannel@localhost",
+            "actor": "urn:localhost:#trackChannel",
             "type": "hchannel",
             "method": "inproc",
             "properties": {

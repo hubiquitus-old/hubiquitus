@@ -45,7 +45,7 @@ exports.validateHChannel = (hChannel, cb) ->
     return cb(codes.INVALID_ATTR, "actor is not a string")
   unless exports.isChannel(hChannel._id)
     return cb(codes.INVALID_ATTR, "actor not valid " + hChannel._id)
-  if /^#hAdminChannel@/.test(hChannel._id)
+  if /^urn:[^:\/<>'"]+:#hAdminChannel/.test(hChannel._id)
     return cb(codes.NOT_AUTHORIZED, "using reserved keyword " + hChannel._id + " as actor")
   if hChannel.chdesc and typeof hChannel.chdesc isnt "string"
     return cb(codes.INVALID_ATTR, "chdesc is not a string")
@@ -58,17 +58,18 @@ exports.validateHChannel = (hChannel, cb) ->
     return cb(codes.INVALID_ATTR, "type attribute is not 'channel'")
   if typeof hChannel.location isnt "undefined" and (hChannel.location not instanceof Object)
     return cb(codes.INVALID_ATTR, "location not an object")
-  unless exports.validateJID(hChannel.owner)
+  unless exports.validateURN(hChannel.owner)
     return cb(codes.INVALID_ATTR, "owner is not a string")
-  if exports.splitJID(hChannel.owner)[2]
-    return cb(codes.INVALID_ATTR, "owner is not a bare jid")
+  if exports.splitURN(hChannel.owner)[2]
+    console.log "owner ", exports.splitURN(hChannel.owner)
+    return cb(codes.INVALID_ATTR, "owner is not a bare urn")
   unless hChannel.subscribers instanceof Array
     return cb(codes.INVALID_ATTR, "subscribers is not an array")
   for subscriber in hChannel.subscribers
     if typeof subscriber isnt "string"
-      return cb(codes.INVALID_ATTR, "subscriber " + i + " is not a JID")
-    if not exports.validateJID(subscriber) or exports.splitJID(subscriber)[2]
-      return cb(codes.INVALID_ATTR, "subscriber " + i + " is not a JID")
+      return cb(codes.INVALID_ATTR, "subscriber " + i + " is not a URN")
+    if not exports.validateURN(subscriber) or exports.splitURN(subscriber)[2]
+      return cb(codes.INVALID_ATTR, "subscriber " + i + " is not a URN")
   if typeof hChannel.active isnt "boolean"
     return cb(codes.INVALID_ATTR, "active is not a boolean")
   if typeof hChannel.headers isnt "undefined" and (hChannel.headers not instanceof Object)
@@ -88,7 +89,7 @@ exports.validateHMessage = (hMessage, cb) ->
     return cb(codes.MISSING_ATTR, "invalid params object received")
   unless hMessage.actor
     return cb(codes.MISSING_ATTR, "missing actor attribute in hMessage")
-  unless exports.validateJID(hMessage.actor)
+  unless exports.validateURN(hMessage.actor)
     return cb(codes.INVALID_ATTR, "hMessages actor is invalid")
   if hMessage.type and typeof hMessage.type isnt "string"
     return cb(codes.INVALID_ATTR, "hMessage type is not a string")
@@ -105,8 +106,8 @@ exports.validateHMessage = (hMessage, cb) ->
     return cb(codes.INVALID_ATTR, "hMessage persistent is not a boolean")
   if hMessage.location and (hMessage.location not instanceof Object)
     return cb(codes.INVALID_ATTR, "hMessage location is not an Object")
-  if hMessage.author and not exports.validateJID(hMessage.author)
-    return cb(codes.INVALID_ATTR, "hMessage author is not a JID")
+  if hMessage.author and not exports.validateURN(hMessage.author)
+    return cb(codes.INVALID_ATTR, "hMessage author is not a URN")
   unless hMessage.publisher
     return cb(codes.MISSING_ATTR, "hMessage missing publisher")
   if hMessage.published
@@ -124,18 +125,18 @@ exports.validateHMessage = (hMessage, cb) ->
   cb codes.OK
 
 ###
-Returns true or false if it is a valid JID following hubiquitus standards
-@param jid - the jid string to validate
+Returns true or false if it is a valid URN following hubiquitus standards
+@param urn - the urn string to validate
 ###
-exports.validateJID = (jid) ->
-  #/(^[^@\/<>'"]+(@.+|$)|^[^#@]((?!@).)*$)/.test jid
-  new RegExp("^(?:([^@/<>'\"]+)@)([^@/<>'\"]+)(?:/([^/<>'\"]*))?$").test jid
+exports.validateURN = (urn) ->
+  /(^urn:[^:\/<>'"]+:[^:\/<>'"]+\/?.+$)/.test(urn)
+
 ###
-Returns true or false if it is a valid JID with ressource following hubiquitus standards
-@param jid - the jid string to validate
+Returns true or false if it is a valid URN with ressource following hubiquitus standards
+@param urn - the urn string to validate
 ###
-exports.validateFullJID = (jid) ->
-  /(^[^@\/<>'"]+(@.+\/.*|$)|^[^#@]((?!@).)*\/.*$)/.test jid
+exports.validateFullURN = (urn) ->
+  /(^urn:[^:\/<>'"]+:[^:\/<>'"]+\/.+$)/.test(urn)
 
 ###
 Removes attributes that are strings and that are empty (ie. "") in hLocation
@@ -177,40 +178,46 @@ exports.cleanEmptyAttrs = (obj, attrs) ->
   obj #Make it chainable
 
 ###
-Tests if the given jid is that of a channel. This does not test if the channel is valid
+Tests if the given urn is that of a channel. This does not test if the channel is valid
 or the domain.
-@param jid
+@param urn
 @return {Boolean} true if it's a channel
 ###
-exports.isChannel = (jid) ->
-  /(^#[^@\/<>'"]+(@.+|$)|^[^#@]((?!@).)*$)/.test jid
+exports.isChannel = (urn) ->
+  /(^urn:[^:\/<>'"]+:#[^:\/<>'"]+$)/.test(urn)
 
 
 ###
-Splits a VALID JID in three parts: (user)(domain)(resource), the third part can be empty
-@param jid - JID to split
+Splits a VALID URN in three parts: (user)(domain)(resource), the third part can be empty
+@param urn - URN to split
 ###
-exports.splitJID = (jid) ->
-  splitted = jid.match(new RegExp("^(?:([^@/<>'\"]+)@)([^@/<>'\"]+)(?:/([^/<>'\"]*))?$"))  if typeof jid is "string"
-  (if splitted then splitted.splice(1, 3) else [`undefined`, `undefined`, `undefined`])
+exports.splitURN = (urn) ->
+  splitted = urn.split(":")  if typeof urn is "string"
+  if splitted
+    if exports.validateFullURN(urn)
+      splitted[3] = splitted[2].replace(/(^[^\/]*\/)/, "")
+      splitted[2] = splitted[2].replace(/\/.*$/g, "")
+    splitted.splice 1, 3
+  else
+    [`undefined`, `undefined`, `undefined`]
 
-exports.getBareJID = (jid) ->
-  jidParts = exports.splitJID(jid)
-  jidParts[0] + "@" + jidParts[1]
+exports.getBareURN = (urn) ->
+  urnParts = exports.splitURN(urn)
+  "urn:" + urnParts[0] + ":" + urnParts[1]
 
 
 ###
-Compares two JIDs. Can use modifiers to ignore certain parts
-@param jid1 - First JID to compare
-@param jid2 - Second JID
+Compares two URNs. Can use modifiers to ignore certain parts
+@param urn1 - First URN to compare
+@param urn2 - Second URN
 @param mod - String with modifiers. Accepted:
 r: considers resource
 @return {Boolean} true if equal.
 ###
-exports.compareJIDs = (jid1, jid2, mod) ->
-  return false  if not exports.validateJID(jid1) or not exports.validateJID(jid2)
-  j1 = exports.splitJID(jid1)
-  j2 = exports.splitJID(jid2)
+exports.compareURNs = (urn1, urn2, mod) ->
+  return false  if not exports.validateURN(urn1) or not exports.validateURN(urn2)
+  j1 = exports.splitURN(urn1)
+  j2 = exports.splitURN(urn2)
   return false  if not j1 or not j2
   if /r/.test(mod)
     j1[0] is j2[0] and j1[1] is j2[1] and j1[2] is j2[2]
@@ -219,9 +226,9 @@ exports.compareJIDs = (jid1, jid2, mod) ->
 
 
 ###
-Returns the domain from a well formed JID, or null if domain not found.
-@param jid - The bare/full JID to parse
+Returns the domain from a well formed URN, or null if domain not found.
+@param urn - The bare/full URN to parse
 @return a domain in the form of a string
 ###
-exports.getDomainJID = (jid) ->
-  exports.splitJID(jid)[1]
+exports.getDomainURN = (urn) ->
+  exports.splitURN(urn)[0]

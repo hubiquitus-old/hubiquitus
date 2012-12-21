@@ -30,15 +30,15 @@ describe "hGetThread", ->
   hActor = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hsession")
-  activeChannel = "##{config.getUUID()}@localhost"
-  inactiveChannel = "##{config.getUUID()}@localhost"
-  notInPart = "##{config.getUUID()}@localhost"
+  activeChannel = "urn:localhost:##{config.getUUID()}"
+  inactiveChannel = "urn:localhost:##{config.getUUID()}"
+  notInPart = "urn:localhost:##{config.getUUID()}"
   convid = undefined
   publishedMessages = 0
 
   before () ->
     topology = {
-      actor: config.logins[0].jid,
+      actor: config.logins[0].urn,
       type: "hsession"
     }
     hActor = actorModule.newActor(topology)
@@ -49,7 +49,7 @@ describe "hGetThread", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel activeChannel, [config.validJID], config.validJID, true
+    createCmd = config.createChannel activeChannel, [config.validURN], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -57,7 +57,7 @@ describe "hGetThread", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel inactiveChannel, [config.validJID], config.validJID, false
+    createCmd = config.createChannel inactiveChannel, [config.validURN], config.validURN, false
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -65,7 +65,7 @@ describe "hGetThread", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel notInPart, [config.logins[2].jid], config.validJID, false
+    createCmd = config.createChannel notInPart, [config.logins[2].urn], config.validURN, false
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -174,7 +174,7 @@ describe "hGetThread", ->
 
 
   it "should return hResult error NOT_AVAILABLE if the channel does not exist", (done) ->
-    cmd.actor = "#this channel does not exist@localhost"
+    cmd.actor = "urn:localhost:#unknow channel"
     hActor.send cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
@@ -269,7 +269,7 @@ describe "hGetThread", ->
         i++
 
     before (done) ->
-      filterCmd = config.makeHMessage(hActor.actor, config.logins[0].jid, "hCommand", {})
+      filterCmd = config.makeHMessage(hActor.actor, config.logins[0].urn, "hCommand", {})
       filterCmd.payload =
         cmd: "hSetFilter"
         params:

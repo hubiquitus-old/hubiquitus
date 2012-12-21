@@ -33,12 +33,12 @@ describe "hUnsubscribe", ->
   hActor = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hsession")
-  existingCHID = "##{config.getUUID()}@localhost"
-  existingCHID2 = "##{config.getUUID()}@localhost"
+  existingCHID = "urn:localhost:##{config.getUUID()}"
+  existingCHID2 = "urn:localhost:##{config.getUUID()}"
 
   before () ->
     topology = {
-    actor: config.logins[0].jid,
+    actor: config.logins[0].urn,
     type: "hsession"
     }
     hActor = actorModule.newActor(topology)
@@ -50,7 +50,7 @@ describe "hUnsubscribe", ->
   #Create active channel
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel existingCHID, [config.validJID], config.validJID, true
+    createCmd = config.createChannel existingCHID, [config.validURN], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -65,14 +65,14 @@ describe "hUnsubscribe", ->
   #Create active channel without subscribe
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel existingCHID2, [config.validJID], config.validJID, true
+    createCmd = config.createChannel existingCHID2, [config.validURN], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       done()
 
   beforeEach ->
-    cmd = config.makeHMessage(existingCHID, config.validJID, "hCommand", {})
+    cmd = config.makeHMessage(existingCHID, config.validURN, "hCommand", {})
     cmd.payload =
       cmd: "hUnsubscribe"
       params:{}
@@ -96,7 +96,7 @@ describe "hUnsubscribe", ->
 
 
   it "should return hResult error NOT_AVAILABLE when actor doesnt exist", (done) ->
-    cmd.actor = "#this channel does not exist@localhost"
+    cmd.actor = "urn:localhost:#unknow channel"
     hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.NOT_AVAILABLE

@@ -228,7 +228,7 @@ class LBSocketOutboundAdapter extends OutboundAdapter
 class ChannelOutboundAdapter extends OutboundAdapter
 
   constructor: (properties) ->
-    properties.targetActorAid = "#{validator.getBareJID(properties.owner.actor)}#subscribers"
+    properties.targetActorAid = "#{validator.getBareURN(properties.owner.actor)}#subscribers"
     super
     if properties.url
     then @url = properties.url

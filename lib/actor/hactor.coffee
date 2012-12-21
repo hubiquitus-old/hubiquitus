@@ -63,12 +63,12 @@ class Actor extends EventEmitter
   # Constructor
   constructor: (properties) ->
     # setting up instance attributes
-    if(validator.validateFullJID(properties.actor))
+    if(validator.validateFullURN(properties.actor))
       @actor = properties.actor
-    else if(validator.validateJID(properties.actor))
+    else if(validator.validateURN(properties.actor))
       @actor = "#{properties.actor}/#{UUID.generate()}"
     else
-      throw new Error "Invalid actor JID"
+      throw new Error "Invalid actor URN"
     @ressource = @actor.replace(/^.*\//, "")
     @type = "actor"
     @filter = {}
@@ -134,7 +134,7 @@ class Actor extends EventEmitter
     try
       validator.validateHMessage hMessage, (err, result) =>
         if err
-          @log "debug", "hMessage not conform : ",JSON.stringify(result)
+          @log "debug", "hMessage not conform : "+JSON.stringify(result)
         else
           #Complete missing values (msgid added later)
           hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
@@ -143,7 +143,7 @@ class Actor extends EventEmitter
           #Empty location and headers should not be sent/saved.
           validator.cleanEmptyAttrs hMessage, ["headers", "location"]
 
-          if hMessage.type is "hSignal" and validator.getBareJID(hMessage.actor) is validator.getBareJID(@actor)
+          if hMessage.type is "hSignal" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
             switch hMessage.payload.cmd
               when "start"
                 @h_init()
@@ -190,7 +190,7 @@ class Actor extends EventEmitter
     outboundAdapter = _.toDict( @outboundAdapters , "targetActorAid" )[hMessage.actor]
     unless outboundAdapter
       _.forEach @outboundAdapters, (outbound) =>
-        if validator.getBareJID(outbound.targetActorAid) is hMessage.actor
+        if validator.getBareURN(outbound.targetActorAid) is hMessage.actor
           hMessage.actor = outbound.targetActorAid
           outboundAdapter = outbound
     if outboundAdapter
@@ -319,13 +319,13 @@ class Actor extends EventEmitter
     # TODO properly configure logging system
     switch type
       when "debug"
-        logger.debug "#{validator.getBareJID(@actor)} | #{message}"
+        logger.debug "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "info"
-        logger.info "#{validator.getBareJID(@actor)} | #{message}"
+        logger.info "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "warn"
-        logger.warn "#{validator.getBareJID(@actor)} | #{message}"
+        logger.warn "#{validator.getBareURN(@actor)} | #{message}"
         break
 
   initChildren: (children)->
@@ -341,7 +341,7 @@ class Actor extends EventEmitter
         if @status isnt STATUS_STOPPING
           for i in @inboundAdapters
             inboundAdapters.push {type:i.type, url:i.url}
-        @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareJID(@actor), peerStatus:@status, peerInbox:inboundAdapters})
+        @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:inboundAdapters})
 
 
   setStatus: (status) ->

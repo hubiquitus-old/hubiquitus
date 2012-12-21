@@ -29,13 +29,13 @@ describe "hSubscribe", ->
   hActor = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hsession")
-  existingCHID = "##{config.getUUID()}@localhost"
-  existingCHID2 = "##{config.getUUID()}@localhost"
-  inactiveChannel = "##{config.getUUID()}@localhost"
+  existingCHID = "urn:localhost:##{config.getUUID()}"
+  existingCHID2 = "urn:localhost:##{config.getUUID()}"
+  inactiveChannel = "urn:localhost:##{config.getUUID()}"
 
   before () ->
     topology = {
-    actor: config.logins[0].jid,
+    actor: config.logins[0].urn,
     type: "hsession"
     }
     hActor = actorModule.newActor(topology)
@@ -46,7 +46,7 @@ describe "hSubscribe", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel existingCHID, [config.validJID], config.validJID, true
+    createCmd = config.createChannel existingCHID, [config.validURN], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -54,7 +54,7 @@ describe "hSubscribe", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel existingCHID2, [config.logins[2].jid], config.validJID, true
+    createCmd = config.createChannel existingCHID2, [config.logins[2].urn], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -62,7 +62,7 @@ describe "hSubscribe", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel inactiveChannel, [config.validJID], config.validJID, false
+    createCmd = config.createChannel inactiveChannel, [config.validURN], config.validURN, false
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -93,7 +93,7 @@ describe "hSubscribe", ->
 
 
   it "should return hResult error NOT_AVAILABLE when actor doesnt exist", (done) ->
-    cmd.actor = "#this channel does not exist@localhost"
+    cmd.actor = "urn:localhost:#unknow channel"
     hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.NOT_AVAILABLE

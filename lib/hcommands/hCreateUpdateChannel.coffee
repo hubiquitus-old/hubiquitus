@@ -49,7 +49,7 @@ hCreateUpdateChannel::exec = (hMessage, context, cb) ->
     return cb status.INVALID_ATTR, "invalid params object received"
 
   #Test owner against publisher (ignore resources)
-  if channel.owner and not validators.compareJIDs(hMessage.publisher, channel.owner)
+  if channel.owner and not validators.compareURNs(hMessage.publisher, channel.owner)
     return cb status.NOT_AUTHORIZED, "owner does not match sender"
   if channel.actor is `undefined`
     return cb status.MISSING_ATTR, "Missing actor in params"

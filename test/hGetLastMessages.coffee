@@ -29,16 +29,16 @@ describe "hGetLastMessages", ->
   hActor = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hsession")
-  existingCHID = "##{config.getUUID()}@localhost"
-  chanWithHeader = "##{config.getUUID()}@localhost"
-  inactiveChan = "##{config.getUUID()}@localhost"
-  subsChan = "##{config.getUUID()}@localhost"
+  existingCHID = "urn:localhost:##{config.getUUID()}"
+  chanWithHeader = "urn:localhost:##{config.getUUID()}"
+  inactiveChan = "urn:localhost:##{config.getUUID()}"
+  subsChan = "urn:localhost:##{config.getUUID()}"
   DateTab = []
   maxMsgRetrieval = 6
 
   before () ->
     topology = {
-      actor: config.logins[0].jid,
+      actor: config.logins[0].urn,
       type: "hsession"
     }
     hActor = actorModule.newActor(topology)
@@ -49,7 +49,7 @@ describe "hGetLastMessages", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel existingCHID, [config.validJID, config.logins[2].jid], config.validJID, true
+    createCmd = config.createChannel existingCHID, [config.validURN, config.logins[2].urn], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -57,7 +57,7 @@ describe "hGetLastMessages", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel inactiveChan, [config.validJID, config.logins[2].jid], config.validJID, false
+    createCmd = config.createChannel inactiveChan, [config.validURN, config.logins[2].urn], config.validURN, false
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -65,7 +65,7 @@ describe "hGetLastMessages", ->
 
   before (done) ->
     @timeout 10000
-    createCmd = config.createChannel chanWithHeader, [config.validJID, config.logins[2].jid], config.validJID, true
+    createCmd = config.createChannel chanWithHeader, [config.validURN, config.logins[2].urn], config.validURN, true
     createCmd.payload.params.headers = {}
     createCmd.payload.params.headers =
       MAX_MSG_RETRIEVAL: "" + maxMsgRetrieval
@@ -88,7 +88,7 @@ describe "hGetLastMessages", ->
 
   before (done) ->
     @timeout 5000
-    createCmd = config.createChannel subsChan, [config.logins[2].jid], config.validJID, true
+    createCmd = config.createChannel subsChan, [config.logins[2].urn], config.validURN, true
     hActor.h_onMessageInternal createCmd,  (hMessage) ->
       hMessage.should.have.property "ref", createCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
@@ -152,7 +152,7 @@ describe "hGetLastMessages", ->
 
 
     it "should return hResult error NOT_AVAILABLE if channel does not exist", (done) ->
-      cmd.actor = "#this channel does not exist@localhost"
+      cmd.actor = "urn:localhost:#unknow channel"
       hActor.send cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
@@ -261,14 +261,14 @@ describe "hGetLastMessages", ->
           publishMsg.timeout = 0
           publishMsg.persistent = true
           publishMsg.published = DateTab[count]
-          publishMsg.author = "u2@localhost"
+          publishMsg.author = "urn:localhost:u2"
           hActor.send publishMsg
 
           count++
           i++
 
       beforeEach ->
-        setMsg = config.makeHMessage(hActor.actor, config.logins[0].jid, "hCommand", {})
+        setMsg = config.makeHMessage(hActor.actor, config.logins[0].urn, "hCommand", {})
         setMsg.payload =
           cmd: "hSetFilter"
           params: {}
@@ -277,7 +277,7 @@ describe "hGetLastMessages", ->
         delete cmd.payload.params.nbLastMsg
 
         setMsg.payload.params = in:
-          publisher: ["u1@localhost"]
+          publisher: ["urn:localhost:u1"]
 
         hActor.h_onMessageInternal setMsg, ->
 
@@ -293,7 +293,7 @@ describe "hGetLastMessages", ->
       it "should return Ok with only filtered messages with right quantity", (done) ->
         cmd.payload.params.nbLastMsg = 3
         setMsg.payload.params = in:
-          author: ["u2@localhost"]
+          author: ["urn:localhost:u2"]
 
         hActor.h_onMessageInternal setMsg, ->
         hActor.send cmd, (hMessage) ->
@@ -304,7 +304,7 @@ describe "hGetLastMessages", ->
 
           i = 0
           while i < hMessage.payload.result.length
-            hMessage.payload.result[i].should.have.property "author", "u2@localhost"
+            hMessage.payload.result[i].should.have.property "author", "urn:localhost:u2"
             i++
           done()
 
@@ -312,7 +312,7 @@ describe "hGetLastMessages", ->
       it "should return Ok with only filtered messages with less quantity if demanded does not exist.", (done) ->
         cmd.payload.params.nbLastMsg = 1000
         setMsg.payload.params = in:
-          author: ["u2@localhost"]
+          author: ["urn:localhost:u2"]
 
         hActor.h_onMessageInternal setMsg, ->
 
@@ -324,7 +324,7 @@ describe "hGetLastMessages", ->
 
           i = 0
           while i < hMessage.payload.result.length
-            hMessage.payload.result[i].should.have.property "author", "u2@localhost"
+            hMessage.payload.result[i].should.have.property "author", "urn:localhost:u2"
             i++
           done()
 

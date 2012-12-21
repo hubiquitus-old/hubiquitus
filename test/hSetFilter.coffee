@@ -122,7 +122,7 @@ describe "hSetFilter", ->
       done()
 
 
-  it "should return hResult INVALID_ATTR if filter with operand not is an valid object", (done) ->
+  it "should return hResult INVALID_ATTR if filter with operand not is an invalid object", (done) ->
     cmd.payload.params = not: [attribut: false]
     hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
@@ -131,7 +131,7 @@ describe "hSetFilter", ->
       done()
 
 
-  it "should return hResult INVALID_ATTR if filter with operand \"not\" not contain valid operand", (done) ->
+  it "should return hResult INVALID_ATTR if filter with operand \"not\" doesn't contain valid operand", (done) ->
     cmd.payload.params = not:
       bad:
         attribut: false

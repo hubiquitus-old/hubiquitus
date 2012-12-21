@@ -80,7 +80,7 @@ class Session extends Actor
       if hMessage.type is "hCommand"
         switch hMessage.payload.cmd
           when "hSubscribe"
-            @h_subscribe hMessage.actor, "", (status, result) =>
+            @subscribe hMessage.actor, "", (status, result) =>
               hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
               cb hMessageResult
           when "hUnsubscribe"

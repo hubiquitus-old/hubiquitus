@@ -144,7 +144,7 @@ class Actor extends EventEmitter
           validator.cleanEmptyAttrs hMessage, ["headers", "location"]
 
           if hMessage.type is "hSignal" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
-            switch hMessage.payload.cmd
+            switch hMessage.payload.name
               when "start"
                 @h_init()
               when "stop"
@@ -171,7 +171,7 @@ class Actor extends EventEmitter
 
   h_onSignal: (hMessage, cb) ->
     @log "debug", "Actor received a hSignal: #{JSON.stringify(hMessage)}"
-    if hMessage.payload.cmd is "hStopAlert"
+    if hMessage.payload.name is "hStopAlert"
       @removePeer(hMessage.payload.params)
 
   send: (hMessage, cb) ->
@@ -209,7 +209,7 @@ class Actor extends EventEmitter
             outboundAdapter = adapters.outboundAdapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
             @outboundAdapters.push outboundAdapter
             if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
-              @h_subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
+              @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
 
             @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(->
               @timerOutAdapter[outboundAdapter.targetActorAid] = null
@@ -424,17 +424,23 @@ class Actor extends EventEmitter
   validateFilter: (hMessage) ->
     return hFilter.checkFilterValidity(hMessage, @filter)
 
-  h_subscribe: (hChannel, filter, cb) ->
+  subscribe: (hChannel, quickFilter, cb) ->
+    if typeof quickFilter is "function"
+      cb = quickFilter
+      quickFilter = ""
+    if quickFilter is undefined or quickFilter is null
+      quickFilter = ""
+
     for channel in @subscriptions
       if channel is hChannel
         _.forEach @inboundAdapters, (inbound) =>
           if inbound.channel is hChannel
-            inbound.addFilter(filter)
+            inbound.addFilter(quickFilter)
         return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:5000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
-        channelInbound = adapters.inboundAdapter("channel", {url: hResult.payload.result, owner: @, channel: hChannel, filter: filter})
+        channelInbound = adapters.inboundAdapter("channel", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
         @inboundAdapters.push channelInbound
         channelInbound.start()
         @subscriptions.push hChannel
@@ -502,13 +508,13 @@ class Actor extends EventEmitter
     hMessage.timeout = options.timeout  if options.timeout
     hMessage
 
-  buildSignal: (actor, cmd, params, options) ->
+  buildSignal: (actor, name, params, options) ->
     params = params or {}
     options = options or {}
     options.persistent = options.persistent or false
-    throw new Error("missing cmd")  unless cmd
+    throw new Error("missing cmd")  unless name
     hSignal =
-      cmd: cmd
+      name: name
       params: params
 
     @buildMessage actor, "hSignal", hSignal, options

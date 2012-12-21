@@ -41,7 +41,7 @@ class Tracker extends Actor
 
   h_onSignal: (hMessage, cb) ->
     @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
-    if hMessage.payload.cmd is "peer-info"
+    if hMessage.payload.name is "peer-info"
       existPeer = false
       index = 0
       _.forEach @peers, (peers) =>
@@ -60,7 +60,7 @@ class Tracker extends Actor
         if outbox
           @outboundAdapters.push adapters.outboundAdapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
 
-    else if hMessage.payload.cmd is "peer-search"
+    else if hMessage.payload.name is "peer-search"
       # TODO reflexion sur le lookup et implementation
       outboundadapter = @findOutbox(hMessage.payload.params.actor)
 

@@ -107,7 +107,7 @@ class Channel extends Actor
 
   h_onSignal: (hMessage, cb) ->
     @log "debug", "Channel received a hSignal: #{JSON.stringify(hMessage)}"
-    if hMessage.payload.cmd is "hStopAlert"
+    if hMessage.payload.name is "hStopAlert"
       hMessage.actor = @subscribersAlias
       @send hMessage
 

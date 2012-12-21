@@ -58,7 +58,7 @@ describe "hUnsubscribe", ->
 
   #Subscribe to channel
   before (done) ->
-    hActor.h_subscribe existingCHID, "",(statusCode) ->
+    hActor.subscribe existingCHID, "",(statusCode) ->
       statusCode.should.be.equal(status.OK)
       done()
 

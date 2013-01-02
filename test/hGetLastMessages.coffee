@@ -80,13 +80,12 @@ describe "hGetLastMessages", ->
         count++
       i++
 
-    it "should return hResult error INVALID_ATTR with actor not a channel", (done) ->
+    it "should return hResult error NOT_AVAILABLE with actor not a channel", (done) ->
       hActor.createChild "hactor", "inproc", {actor: config.logins[0].urn}, (child) =>
         cmd.actor = child.actor
         child.h_onMessageInternal cmd, (hMessage) ->
           hMessage.should.have.property "ref", cmd.msgid
           hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-          hMessage.payload.should.have.property('result').and.match(/Command/)
           done()
 
 
@@ -118,7 +117,7 @@ describe "hGetLastMessages", ->
         done()
 
 
-    it "should return hResult ok with 10 messages if not default in channel or cmd", (done) ->
+    it "should return hResult ok with 10 messages if not specified in cmd", (done) ->
       delete cmd.payload.params.nbLastMsg
       hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
@@ -147,7 +146,7 @@ describe "hGetLastMessages", ->
           i++
         done()
 
-    it "should return hResult ok with nb of msgs in cmd if specified with headers", (done) ->
+    it "should return hResult ok with nb of msgs in cmd", (done) ->
       length = 4
       cmd.payload.params.nbLastMsg = length
       hActor.h_onMessageInternal cmd, (hMessage) ->

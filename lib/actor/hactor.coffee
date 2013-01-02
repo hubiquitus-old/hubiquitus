@@ -51,7 +51,7 @@ class Actor extends EventEmitter
   #Init logger
   logger.exitOnError = false
   logger.remove(logger.transports.Console)
-  logger.add(logger.transports.Console, {handleExceptions: true, level: "INFO"})
+  logger.add(logger.transports.Console, {handleExceptions: true, level: "debug"})
   logger.add(logger.transports.File, {handleExceptions: true, filename: "#{__dirname}/../../log/hActor.log", level: "debug"})
 
   # Possible running states of an actor
@@ -168,11 +168,7 @@ class Actor extends EventEmitter
   onMessage: (hMessage, cb) ->
     @log "info", "Message reveived: #{JSON.stringify(hMessage)}"
     if hMessage.timeout > 0
-      if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
-        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
-        cb hMessageResult
-      else
-        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, "")
+        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
         cb hMessageResult
 
   h_onSignal: (hMessage, cb) ->

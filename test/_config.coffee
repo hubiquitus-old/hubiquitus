@@ -100,18 +100,6 @@ exports.makeHMessage = (actor, publisher, type, payload) ->
   hMessage.convid = hMessage.msgid
   hMessage
 
-exports.createChannel = (actor, subscribers, owner, active) ->
-  payload =
-    cmd: "hCreateUpdateChannel"
-    params:
-      type: "channel"
-      actor: actor
-      active: active
-      owner: owner
-      subscribers: subscribers
-
-  exports.makeHMessage(owner, owner, "hCommand", payload)
-
 exports.getUUID = () ->
   UUID.generate()
 

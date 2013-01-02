@@ -1,0 +1,122 @@
+#
+# * Copyright (c) Novedia Group 2012.
+# *
+# *    This file is part of Hubiquitus
+# *
+# *    Permission is hereby granted, free of charge, to any person obtaining a copy
+# *    of this software and associated documentation files (the "Software"), to deal
+# *    in the Software without restriction, including without limitation the rights
+# *    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# *    of the Software, and to permit persons to whom the Software is furnished to do so,
+# *    subject to the following conditions:
+# *
+# *    The above copyright notice and this permission notice shall be included in all copies
+# *    or substantial portions of the Software.
+# *
+# *    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# *    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+# *    PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+# *    FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# *    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# *
+# *    You should have received a copy of the MIT License along with Hubiquitus.
+# *    If not, see <http://opensource.org/licenses/mit-license.php>.
+#
+
+{Actor} = require "./hactor"
+adapters = require "./../adapters"
+_ = require "underscore"
+codes = require("./../codes.coffee").hResultStatus
+validator = require "./../validator.coffee"
+
+class Tracker extends Actor
+
+  constructor: (properties) ->
+    #TODO check properties
+    @peers = []
+    @trackerChannelAid = properties.properties.channel.actor
+    properties.children.push properties.properties.channel
+    super
+    #@on "started", -> @pingChannel(properties.broadcastUrl)
+
+  h_onSignal: (hMessage, cb) ->
+    @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
+    if hMessage.payload.name is "peer-info"
+      existPeer = false
+      index = 0
+      _.forEach @peers, (peers) =>
+        if peers.peerFullId is hMessage.publisher
+          existPeer = true
+          peers.peerStatus = hMessage.payload.params.peerStatus
+          peers.peerInbox = hMessage.payload.params.peerInbox
+          if peers.peerStatus is "stopping"
+            @stopAlert(hMessage.publisher)
+            delete @peers[index]
+            @removePeer(hMessage.publisher)
+        index++
+      if existPeer isnt true
+        @peers.push {peerType:hMessage.payload.params.peerType, peerFullId:hMessage.publisher, peerId:hMessage.payload.params.peerId, peerStatus:hMessage.payload.params.peerStatus, peerInbox:hMessage.payload.params.peerInbox}
+        outbox = @findOutbox(hMessage.publisher)
+        if outbox
+          @outboundAdapters.push adapters.outboundAdapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
+
+    else if hMessage.payload.name is "peer-search"
+      # TODO reflexion sur le lookup et implementation
+      outboundadapter = @findOutbox(hMessage.payload.params.actor)
+
+      if outboundadapter
+        status = codes.OK
+        result = outboundadapter
+      else
+        status = codes.INVALID_ATTR
+        result = "Actor not found"
+
+      @send @buildResult(hMessage.publisher, hMessage.msgid, status, result)
+
+  initChildren: (children)->
+    _.forEach children, (childProps) =>
+      childProps.trackers = [{
+        trackerId : @actor,
+        trackerUrl : @inboundAdapters[0].url,
+        trackerChannel : @trackerChannelAid
+        }]
+      @createChild childProps.type, childProps.method, childProps
+
+  pingChannel: (broadcastUrl) ->
+    #@log "debug", "Starting a channel broadcasting on #{broadcastUrl}"
+    #@trackerChannelAid = @createChild "hchannel", "inproc",
+    #  { actor: "channel", outboundAdapters: [ { type: "channel", url: broadcastUrl } ] }
+    #interval = setInterval(=>
+    #    @send @buildMessage(@trackerChannelAid, "msg", "New event pusblished by tracker #{@actor}")
+    #  , 3000)
+    #@on "stopping", -> clearInterval(interval)
+
+  findOutbox: (actor) ->
+    outboundadapter = undefined
+    _.forEach @peers, (peers) =>
+      if peers.peerFullId is actor
+        unless outboundadapter
+          if peers.peerStatus is "started"
+            _.forEach peers.peerInbox, (inbox) =>
+              if inbox.type is "socket"
+                outboundadapter = {type: inbox.type, targetActorAid: actor, url: inbox.url}
+    unless outboundadapter
+      outTab = []
+      _.forEach @peers, (peers) =>
+        if peers.peerId is validator.getBareURN(actor)
+          outTab.push(peers)
+      if outTab.length > 0
+        lb_peers = outTab[Math.floor(Math.random() * outTab.length)]
+        if lb_peers.peerStatus is "started"
+          _.forEach lb_peers.peerInbox, (inbox) =>
+            if inbox.type is "socket"
+              outboundadapter = {type: inbox.type, targetActorAid: lb_peers.peerFullId, url: inbox.url}
+
+    outboundadapter
+
+  stopAlert: (actor) ->
+    @send @buildSignal(@trackerChannelAid, "hStopAlert", actor, {headers:{h_quickFilter: actor}})
+
+exports.Tracker = Tracker
+exports.newActor = (properties) ->
+  new Tracker(properties)

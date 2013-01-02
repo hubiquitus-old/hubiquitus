@@ -1,0 +1,30 @@
+{
+  "name": "hactor",
+  "author": "Alexis Lesage",
+  "description": "Actor model for Hubiquitus",
+  "version": "0.1.0",
+  "homepage": "www.hubiquitus.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hubiquitus/hubiquitus-node"
+  },
+  "maintainers": [{"name": "Alexis Lesage"
+		 ,"email":"alexislesage@gmail.com"
+		 }],
+  "bin": { "hengine": "./bin/hengine"},
+  "engines": {
+    "node": ">0.8.0"
+  },
+  "dependencies": {
+      "underscore": ">=1.3.3",
+      "zmq": ">=2.1.0",
+      "winston" : ">=0.6.2",
+      "socket.io" : "=0.9.10",
+      "mongodb" : "=1.1.4"
+  },
+  "devDependencies": {
+      "should" : "=1.1.0",
+      "mocha" : "=1.3.2",
+      "coffee-script" : "1.4.0"
+  }
+}

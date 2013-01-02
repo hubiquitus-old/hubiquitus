@@ -64,14 +64,8 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
   sender = hMessage.publisher.replace(/\/.*/, "")
   quant = @quant
 
-  if context.properties.active is false
-    return cb status.NOT_AUTHORIZED, "the channel is inactive"
-
-  if context.properties.subscribers.indexOf(sender) > -1 and context.properties.active is true
-    if context.properties.headers
-      quant = params.nbLastMsg or context.properties.headers["MAX_MSG_RETRIEVAL"] or quant #In case header mal format
-    else
-      quant = params.nbLastMsg or quant
+  if context.properties.subscribers.indexOf(sender) > -1
+    quant = params.nbLastMsg or quant
 
     #Test if quant field by the user is a number
     quant = parseInt(quant)
@@ -83,7 +77,7 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
       stream.on "data", (localhMessage) ->
         hMessages.actor = localhMessage._id
         delete localhMessage._id
-
+        console.log params.filter
         if localhMessage and hFilter.checkFilterValidity(localhMessage, params.filter).result
           hMessages.push localhMessage
           stream.destroy()  if --quant is 0

@@ -51,7 +51,7 @@ class Actor extends EventEmitter
   #Init logger
   logger.exitOnError = false
   logger.remove(logger.transports.Console)
-  logger.add(logger.transports.Console, {handleExceptions: true, level: "debug"})
+  logger.add(logger.transports.Console, {handleExceptions: true, level: "INFO"})
   logger.add(logger.transports.File, {handleExceptions: true, filename: "#{__dirname}/../../log/hActor.log", level: "debug"})
 
   # Possible running states of an actor
@@ -135,6 +135,8 @@ class Actor extends EventEmitter
       validator.validateHMessage hMessage, (err, result) =>
         if err
           @log "debug", "hMessage not conform : "+JSON.stringify(result)
+          hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "actor is missing")
+          cb hMessageResult
         else
           #Complete missing values (msgid added later)
           hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
@@ -166,8 +168,12 @@ class Actor extends EventEmitter
   onMessage: (hMessage, cb) ->
     @log "info", "Message reveived: #{JSON.stringify(hMessage)}"
     if hMessage.timeout > 0
-      hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, "")
-      cb hMessageResult
+      if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
+        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
+        cb hMessageResult
+      else
+        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, "")
+        cb hMessageResult
 
   h_onSignal: (hMessage, cb) ->
     @log "debug", "Actor received a hSignal: #{JSON.stringify(hMessage)}"

@@ -28,8 +28,7 @@
             "properties": {
                 "listenOn": "tcp://127.0.0.1:1221",
                 "broadcastOn": "tcp://127.0.0.1:2998",
-                "subscribers": [],
-                "active":true
+                "subscribers": []
             }
         }
     },

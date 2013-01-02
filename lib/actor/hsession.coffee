@@ -59,10 +59,6 @@ class Session extends Actor
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
       switch hMessage.payload.cmd
-        when "hCreateUpdateChannel"
-          command = require("./../hcommands/hCreateUpdateChannel").Command
-          module = new command()
-          @runCommand(hMessage, module, cb)
         when "hEcho"
           command = require("./../hcommands/hEcho").Command
           module = new command()

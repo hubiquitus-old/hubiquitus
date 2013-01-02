@@ -40,13 +40,7 @@ class Channel extends Actor
     @type = "channel"
     @subscribersAlias = "#{@actor}#subscribers"
     @properties =
-      chdesc : topology.properties.chdesc
-      priority : topology.properties.priority or 1
-      location : topology.properties.location
-      owner : topology.properties.owner
       subscribers : topology.properties.subscribers or []
-      active : topology.properties.active
-      headers : topology.properties.headers
     @inboundAdapters.push adapters.inboundAdapter("socket", {url: topology.properties.listenOn, owner: @})
     @outboundAdapters.push adapters.outboundAdapter("channel", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @subscribersAlias})
 

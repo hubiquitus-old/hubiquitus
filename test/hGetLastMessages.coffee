@@ -28,18 +28,20 @@ describe "hGetLastMessages", ->
   cmd = undefined
   hActor = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hsession")
+  actorModule = require("../lib/actor/hchannel")
   existingCHID = "urn:localhost:##{config.getUUID()}"
-  chanWithHeader = "urn:localhost:##{config.getUUID()}"
-  inactiveChan = "urn:localhost:##{config.getUUID()}"
-  subsChan = "urn:localhost:##{config.getUUID()}"
   DateTab = []
   maxMsgRetrieval = 6
 
   before () ->
     topology = {
-      actor: config.logins[0].urn,
-      type: "hsession"
+      actor: existingCHID,
+      type: "hchannel",
+      properties: {
+        subscribers:[existingCHID, config.logins[2].urn],
+        listenOn: "tcp://127.0.0.1:1221",
+        broadcastOn: "tcp://127.0.0.1:2998"
+      }
     }
     hActor = actorModule.newActor(topology)
 
@@ -48,51 +50,20 @@ describe "hGetLastMessages", ->
     hActor = null
 
   before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel existingCHID, [config.validURN, config.logins[2].urn], config.validURN, true
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
+    i = 0
+    nbOfPublish = 0
+    while i < 11
+      publishMsg = config.makeHMessage existingCHID, hActor.actor, "string", {}
+      publishMsg.timeout = 1000
+      publishMsg.persistent = true
+      hActor.h_onMessageInternal publishMsg, (hMessage) ->
+        hMessage.should.have.property "ref", publishMsg.msgid
+        hMessage.payload.should.have.property "status", status.OK
 
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel inactiveChan, [config.validURN, config.logins[2].urn], config.validURN, false
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
-
-  before (done) ->
-    @timeout 10000
-    createCmd = config.createChannel chanWithHeader, [config.validURN, config.logins[2].urn], config.validURN, true
-    createCmd.payload.params.headers = {}
-    createCmd.payload.params.headers =
-      MAX_MSG_RETRIEVAL: "" + maxMsgRetrieval
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-
-      i = 0
-      nbOfPublish = 0
-      while i < 11
-        publishMsg = config.makeHMessage chanWithHeader, hActor.actor, "string", {}
-        publishMsg.timeout = 0
-        publishMsg.persistent = true
-        hActor.send publishMsg
-
-        nbOfPublish += 1
-        if nbOfPublish is 10
-          done()
-        i++
-
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel subsChan, [config.logins[2].urn], config.validURN, true
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
+      nbOfPublish += 1
+      if nbOfPublish is 10
+        done()
+      i++
 
   beforeEach ->
     cmd = config.makeHMessage(existingCHID, hActor.actor, "hCommand", {})
@@ -100,9 +71,10 @@ describe "hGetLastMessages", ->
       cmd: "hGetLastMessages"
       params:
         nbLastMsg: 5
+        filter: {}
 
   it "should return hResult ok if there are no hMessages stored", (done) ->
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.should.have.property('result').and.be.an.instanceof(Array);
@@ -120,22 +92,23 @@ describe "hGetLastMessages", ->
         publishMsg.timeout = 0
         publishMsg.persistent = true
         publishMsg.published = DateTab[count]
-        hActor.send publishMsg
+        hActor.h_onMessageInternal publishMsg
         count++
       i++
 
     it "should return hResult error INVALID_ATTR with actor not a channel", (done) ->
-      cmd.actor = hActor.actor
-      hActor.h_onMessageInternal cmd, (hMessage) ->
-        hMessage.should.have.property "ref", cmd.msgid
-        hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-        hMessage.payload.should.have.property('result').and.match(/Command/)
-        done()
+      hActor.createChild "hactor", "inproc", {actor: config.logins[0].urn}, (child) =>
+        cmd.actor = child.actor
+        child.h_onMessageInternal cmd, (hMessage) ->
+          hMessage.should.have.property "ref", cmd.msgid
+          hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
+          hMessage.payload.should.have.property('result').and.match(/Command/)
+          done()
 
 
     it "should return hResult error MISSING_ATTR if no channel is passed", (done) ->
       delete cmd.actor
-      hActor.send cmd, (hMessage) ->
+      hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.MISSING_ATTR
         hMessage.payload.should.have.property('result').and.be.a('string');
@@ -143,36 +116,17 @@ describe "hGetLastMessages", ->
 
 
     it "should return hResult error NOT_AUTHORIZED if publisher not in subscribers list", (done) ->
-      cmd.actor = subsChan
-      hActor.send cmd, (hMessage) ->
+      hActor.properties.subscribers = [config.logins[2].urn]
+      hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
         hMessage.payload.should.have.property('result').and.be.a('string')
+        hActor.properties.subscribers = [existingCHID, config.logins[2].urn]
         done()
 
-
-    it "should return hResult error NOT_AVAILABLE if channel does not exist", (done) ->
-      cmd.actor = "urn:localhost:#unknow channel"
-      hActor.send cmd, (hMessage) ->
-        hMessage.should.have.property "ref", cmd.msgid
-        hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-        hMessage.payload.should.have.property('result').and.be.a('string')
-        done()
-
-
-    it "should return hResult error NOT_AUTHORIZED if channel inactive", (done) ->
-      cmd.actor = inactiveChan
-      hActor.send cmd, (hMessage) ->
-        hMessage.should.have.property "ref", cmd.msgid
-        hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
-        hMessage.payload.should.have.property('result').and.be.a('string')
-        done()
-
-
-    it "should return hResult ok with 10 msgs if not header in chan and cmd quant not a number", (done) ->
+    it "should return hResult ok with 10 msgs if cmd quant not a number", (done) ->
       cmd.payload.params.nbLastMsg = "not a number"
-      cmd.actor = existingCHID
-      hActor.send cmd, (hMessage) ->
+      hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -182,9 +136,7 @@ describe "hGetLastMessages", ->
 
     it "should return hResult ok with 10 messages if not default in channel or cmd", (done) ->
       delete cmd.payload.params.nbLastMsg
-
-      cmd.actor = existingCHID
-      hActor.send cmd, (hMessage) ->
+      hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -194,9 +146,7 @@ describe "hGetLastMessages", ->
 
     it "should return hResult ok with 10 last messages", (done) ->
       delete cmd.payload.params.nbLastMsg
-
-      cmd.actor = existingCHID
-      hActor.send cmd, (hMessage) ->
+      hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -213,35 +163,10 @@ describe "hGetLastMessages", ->
           i++
         done()
 
-
-    it "should return hResult ok with default messages of channel if not specified", (done) ->
-      delete cmd.payload.params.nbLastMsg
-
-      cmd.actor = chanWithHeader
-      hActor.send cmd, (hMessage) ->
-        hMessage.should.have.property "ref", cmd.msgid
-        hMessage.payload.should.have.property "status", status.OK
-        hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
-        hMessage.payload.result.length.should.be.equal(maxMsgRetrieval)
-        done()
-
-
     it "should return hResult ok with nb of msgs in cmd if specified with headers", (done) ->
       length = 4
       cmd.payload.params.nbLastMsg = length
-      hActor.send cmd, (hMessage) ->
-        hMessage.should.have.property "ref", cmd.msgid
-        hMessage.payload.should.have.property "status", status.OK
-        hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
-        hMessage.payload.result.length.should.be.equal(length)
-        done()
-
-
-    it "should return hResult ok with nb of msgs in cmd if specified if header specified", (done) ->
-      length = 4
-      cmd.payload.params.nbLastMsg = length
-      cmd.actor = chanWithHeader
-      hActor.send cmd, (hMessage) ->
+      hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -249,7 +174,6 @@ describe "hGetLastMessages", ->
         done()
 
     describe "#FilterMessage()", ->
-      setMsg = undefined
 
       before ->
         i = 0
@@ -262,26 +186,18 @@ describe "hGetLastMessages", ->
           publishMsg.persistent = true
           publishMsg.published = DateTab[count]
           publishMsg.author = "urn:localhost:u2"
-          hActor.send publishMsg
+          hActor.h_onMessageInternal publishMsg
 
           count++
           i++
 
-      beforeEach ->
-        setMsg = config.makeHMessage(hActor.actor, config.logins[0].urn, "hCommand", {})
-        setMsg.payload =
-          cmd: "hSetFilter"
-          params: {}
 
       it "should return Ok with default messages of channel if not specified and message respect filter", (done) ->
         delete cmd.payload.params.nbLastMsg
+        cmd.payload.params.filter = in:
+          publisher: [hActor.actor]
 
-        setMsg.payload.params = in:
-          publisher: ["urn:localhost:u1"]
-
-        hActor.h_onMessageInternal setMsg, ->
-
-        hActor.send cmd, (hMessage) ->
+        hActor.h_onMessageInternal cmd, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", status.OK
           hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -292,11 +208,10 @@ describe "hGetLastMessages", ->
 
       it "should return Ok with only filtered messages with right quantity", (done) ->
         cmd.payload.params.nbLastMsg = 3
-        setMsg.payload.params = in:
+        cmd.payload.params.filter = in:
           author: ["urn:localhost:u2"]
 
-        hActor.h_onMessageInternal setMsg, ->
-        hActor.send cmd, (hMessage) ->
+        hActor.h_onMessageInternal cmd, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", status.OK
           hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -311,12 +226,10 @@ describe "hGetLastMessages", ->
 
       it "should return Ok with only filtered messages with less quantity if demanded does not exist.", (done) ->
         cmd.payload.params.nbLastMsg = 1000
-        setMsg.payload.params = in:
+        cmd.payload.params.filter = in:
           author: ["urn:localhost:u2"]
 
-        hActor.h_onMessageInternal setMsg, ->
-
-        hActor.send cmd, (hMessage) ->
+        hActor.h_onMessageInternal cmd, (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", status.OK
           hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)

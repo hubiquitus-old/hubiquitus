@@ -1,0 +1,36 @@
+{
+    "actor": "urn:localhost:tracker",
+    "type": "htracker",
+    "children": [
+        {
+            "actor": "urn:localhost:gateway",
+            "type": "hgateway",
+            "method": "inproc",
+            "children": [],
+            "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:3993" } ],
+            "properties": {
+                "socketIOPort": 8080
+            }
+        },
+        {
+            "actor": "urn:localhost:dispatcher",
+            "type": "hdispatcher",
+            "method": "inproc",
+            "workers": { "method": "fork", "type": "hactor", "nb": 2 },
+            "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2992" } ]
+        }
+    ],
+    "properties":{
+        "channel": {
+            "actor": "urn:localhost:#trackChannel",
+            "type": "hchannel",
+            "method": "inproc",
+            "properties": {
+                "listenOn": "tcp://127.0.0.1:1221",
+                "broadcastOn": "tcp://127.0.0.1:2998",
+                "subscribers": []
+            }
+        }
+    },
+    "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2997" } ]
+}

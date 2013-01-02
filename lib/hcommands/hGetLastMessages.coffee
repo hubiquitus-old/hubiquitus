@@ -59,8 +59,6 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
   #Test for missing actor
   unless actor
     return cb(status.MISSING_ATTR, "command missing actor")
-  if validator.isChannel(actor) is false
-    return cb(status.INVALID_ATTR, "actor is not a channel")
   sender = hMessage.publisher.replace(/\/.*/, "")
   quant = @quant
 
@@ -77,7 +75,7 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
       stream.on "data", (localhMessage) ->
         hMessages.actor = localhMessage._id
         delete localhMessage._id
-        console.log params.filter
+
         if localhMessage and hFilter.checkFilterValidity(localhMessage, params.filter).result
           hMessages.push localhMessage
           stream.destroy()  if --quant is 0

@@ -51,11 +51,13 @@ hGetThread::exec = (hMessage, context, cb) ->
         stream = dbInstance.get(actor).find(convid: convid).sort(published: sort).skip(0).stream()
         firstElement = true
         stream.on "data", (localhMessage) ->
+          console.log localhMessage
           localhMessage.actor = actor
           localhMessage.msgid = localhMessage._id
           delete localhMessage._id
 
-          stream.destroy()  if firstElement and hFilter.checkFilterValidity(localhMessage, hCommand.params.filter).result is false
+          if firstElement and hFilter.checkFilterValidity(localhMessage, hCommand.params.filter).result is false
+            stream.destroy()
           firstElement = false
           hMessages.push localhMessage
 
@@ -77,12 +79,8 @@ hGetThread::checkValidity = (hMessage, context, cb) ->
     return cb(status.MISSING_ATTR, "missing actor")
   unless convid
     return cb(status.MISSING_ATTR, "missing convid")
-  unless validator.isChannel(actor)
-    return cb(status.INVALID_ATTR, "actor is not a channel")
   unless typeof convid is "string"
     return cb(status.INVALID_ATTR, "convid is not a string")
-  unless context.properties.active
-    return cb(status.NOT_AUTHORIZED, "the channel " + actor + " is inactive")
   if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0
     return cb(status.NOT_AUTHORIZED, "the sender is not in the channel subscribers list")
   cb()

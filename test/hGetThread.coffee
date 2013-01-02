@@ -29,17 +29,19 @@ describe "hGetThread", ->
   cmd = undefined
   hActor = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hsession")
-  activeChannel = "urn:localhost:##{config.getUUID()}"
-  inactiveChannel = "urn:localhost:##{config.getUUID()}"
-  notInPart = "urn:localhost:##{config.getUUID()}"
+  actorModule = require("../lib/actor/hchannel")
+  existingCHID = "urn:localhost:##{config.getUUID()}"
   convid = undefined
   publishedMessages = 0
 
   before () ->
     topology = {
-      actor: config.logins[0].urn,
-      type: "hsession"
+      actor: existingCHID,
+      type: "hchannel",
+      properties: {
+        subscribers:[existingCHID],
+        broadcastOn: "tcp://127.0.0.1:2998"
+      }
     }
     hActor = actorModule.newActor(topology)
 
@@ -47,61 +49,38 @@ describe "hGetThread", ->
     hActor.h_tearDown()
     hActor = null
 
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel activeChannel, [config.validURN], config.validURN, true
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
-
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel inactiveChannel, [config.validURN], config.validURN, false
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
-
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel notInPart, [config.logins[2].urn], config.validURN, false
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
-
   #Publish first message to get a valid convid and following ones with same convid
   before ->
-    publishMsg = config.makeHMessage activeChannel, hActor.actor, "string", {}
+    publishMsg = config.makeHMessage existingCHID, hActor.actor, "string", {}
     publishMsg.timeout = 0
     publishMsg.persistent = true
     publishMsg.published = new Date().getTime()
     convid = publishMsg.msgid
-    hActor.send publishMsg
+    hActor.h_onMessageInternal publishMsg
     publishedMessages++
 
     i = 0
     while i < 4
-      publishMsg = config.makeHMessage activeChannel, hActor.actor, "string", {}
+      publishMsg = config.makeHMessage existingCHID, hActor.actor, "string", {}
       publishMsg.timeout = 0
       publishMsg.persistent = true
       publishMsg.published = new Date().getTime()
       publishMsg.convid = convid
-      hActor.send publishMsg
+      hActor.h_onMessageInternal publishMsg
       publishedMessages++
       i++
 
   beforeEach ->
-    cmd = config.makeHMessage(activeChannel, hActor.actor, "hCommand", {})
+    cmd = config.makeHMessage(existingCHID, hActor.actor, "hCommand", {})
     cmd.payload =
       cmd: "hGetThread"
       params:
         convid: convid
+        filter: {}
 
   it "should return hResult error INVALID_ATTR without params", (done) ->
     delete cmd.payload.params
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.be.a "string"
@@ -110,7 +89,7 @@ describe "hGetThread", ->
 
   it "should return hResult error INVALID_ATTR with params not an object", (done) ->
     cmd.payload.params = "string"
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.be.a "string"
@@ -118,27 +97,19 @@ describe "hGetThread", ->
 
 
   it "should return hResult error NOT_AUTHORIZED if the sender is not a subscriber", (done) ->
-    cmd.actor = notInPart
-    hActor.send cmd, (hMessage) ->
+    hActor.properties.subscribers = [config.logins[2].urn]
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
-      hMessage.payload.should.have.property("result").and.be.a "string"
-      done()
-
-
-  it "should return hResult error NOT_AUTHORIZED if the channel is inactive", (done) ->
-    cmd.actor = inactiveChannel
-    hActor.send cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
-      hMessage.payload.should.have.property("result").and.match /inactive/
+      hMessage.payload.should.have.property('result').and.be.a('string')
+      hActor.properties.subscribers = [existingCHID]
       done()
 
 
   it "should return hResult error MISSING_ATTR if actor is not provided", (done) ->
     delete cmd.actor
 
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.MISSING_ATTR
       hMessage.payload.should.have.property("result").and.match /actor/
@@ -146,18 +117,19 @@ describe "hGetThread", ->
 
 
   it "should return hResult error INVALID_ATTR with actor not a channel", (done) ->
-    cmd.actor = hActor.actor
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-      hMessage.payload.should.have.property("result").and.match /Command/
-      done()
+    hActor.createChild "hactor", "inproc", {actor: config.logins[0].urn}, (child) =>
+      cmd.actor = child.actor
+      child.h_onMessageInternal cmd, (hMessage) ->
+        hMessage.should.have.property "ref", cmd.msgid
+        hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
+        hMessage.payload.should.have.property('result').and.match(/Command/)
+        done()
 
 
   it "should return hResult error MISSING_ATTR if convid is not provided", (done) ->
     delete cmd.payload.params.convid
 
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.MISSING_ATTR
       hMessage.payload.should.have.property("result").and.match /convid/
@@ -166,25 +138,16 @@ describe "hGetThread", ->
 
   it "should return hResult error INVALID_ATTR with convid not a string", (done) ->
     cmd.payload.params.convid = []
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.match /convid/
       done()
 
 
-  it "should return hResult error NOT_AVAILABLE if the channel does not exist", (done) ->
-    cmd.actor = "urn:localhost:#unknow channel"
-    hActor.send cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-      hMessage.payload.should.have.property("result").and.be.a "string"
-      done()
-
-
   it "should return hResult OK with an empty [] if no messages found matching convid", (done) ->
     cmd.payload.params.convid = config.getUUID()
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.result.should.be.an.instanceof(Array)
@@ -193,7 +156,7 @@ describe "hGetThread", ->
 
 
   it "should return hResult OK with an [] containing all messages with same convid sort older to newer", (done) ->
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.result.should.be.an.instanceof(Array)
@@ -204,10 +167,10 @@ describe "hGetThread", ->
       diff.should.be.below 0
       done()
 
-
+###
   it "should return hResult OK with an [] containing all messages with same convid sort newer to older when invalid params sort", (done) ->
     cmd.payload.params.sort = "hello"
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.result.should.be.an.instanceof(Array)
@@ -221,7 +184,7 @@ describe "hGetThread", ->
 
   it "should return hResult OK with an [] containing all messages with same convid sort newer to older", (done) ->
     cmd.payload.params.sort = -1
-    hActor.send cmd, (hMessage) ->
+    hActor.h_onMessageInternal cmd, (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.result.should.be.an.instanceof(Array)
@@ -238,51 +201,42 @@ describe "hGetThread", ->
     convid2 = config.getUUID()
 
     before () ->
-      publishMsg = config.makeHMessage activeChannel, hActor.actor, "a type", {}
+      publishMsg = config.makeHMessage existingCHID, hActor.actor, "a type", {}
       publishMsg.timeout = 0
       publishMsg.persistent = true
       publishMsg.published = new Date().getTime()
       publishMsg.convid = convid
-      hActor.send publishMsg
+      hActor.h_onMessageInternal publishMsg
       publishedMessages++
 
       i = 0
       while i < 3
-        publishMsg = config.makeHMessage activeChannel, hActor.actor, "a type", {}
+        publishMsg = config.makeHMessage existingCHID, hActor.actor, "a type", {}
         publishMsg.timeout = 0
         publishMsg.persistent = true
         publishMsg.published = new Date().getTime()
         publishMsg.convid = convid2
-        hActor.send publishMsg
+        hActor.h_onMessageInternal publishMsg
         filterMessagesPublished++
         i++
 
       i = 0
       while i < 3
-        publishMsg = config.makeHMessage activeChannel, hActor.actor, "another type", {}
+        publishMsg = config.makeHMessage existingCHID, hActor.actor, "another type", {}
         publishMsg.timeout = 0
         publishMsg.persistent = true
         publishMsg.published = new Date().getTime()
         publishMsg.convid = convid2
-        hActor.send publishMsg
+        hActor.h_onMessageInternal publishMsg
         filterMessagesPublished++
         i++
 
-    before (done) ->
-      filterCmd = config.makeHMessage(hActor.actor, config.logins[0].urn, "hCommand", {})
-      filterCmd.payload =
-        cmd: "hSetFilter"
-        params:
-          eq:
-            type: "a type"
-
-      hActor.h_onMessageInternal filterCmd, (hMessage) ->
-        hMessage.payload.should.have.property "status", status.OK
-        done()
-
+    before  ->
+      cmd.payload.params.filter = eq:
+        type: "a type"
 
     it "should not return msgs if a msg OTHER than the first one pass the filter", (done) ->
-      hActor.send cmd, (hMessage) ->
+      hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.result.should.be.an.instanceof(Array)
@@ -292,12 +246,12 @@ describe "hGetThread", ->
 
     it "should return ALL convid msgs if the first one complies with the filter", (done) ->
       cmd.payload.params.convid = convid2
-      hActor.send cmd, (hMessage) ->
+      hActor.h_onMessageInternal cmd, (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.result.should.be.an.instanceof(Array)
         hMessage.payload.result.length.should.be.equal(filterMessagesPublished);
         done()
 
-
+###
 

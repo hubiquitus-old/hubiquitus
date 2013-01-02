@@ -87,7 +87,7 @@ exports.validDomain = exports.validators.getDomainURN(validURN);
 exports.makeHMessage = (actor, publisher, type, payload) ->
   hMessage =
     msgid: UUID.generate()
-    convid: @msgid
+    convid: undefined
     actor: actor
     type: type
     priority: 0
@@ -97,6 +97,7 @@ exports.makeHMessage = (actor, publisher, type, payload) ->
     timeout: 30000
     payload: payload
 
+  hMessage.convid = hMessage.msgid
   hMessage
 
 exports.createChannel = (actor, subscribers, owner, active) ->

@@ -38,11 +38,10 @@ class Channel extends Actor
     super
     @actor = validator.getBareURN(topology.actor)
     @type = "channel"
-    @subscribersAlias = "#{@actor}#subscribers"
     @properties =
       subscribers : topology.properties.subscribers or []
     @inboundAdapters.push adapters.inboundAdapter("socket", {url: topology.properties.listenOn, owner: @})
-    @outboundAdapters.push adapters.outboundAdapter("channel", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @subscribersAlias})
+    @outboundAdapters.push adapters.outboundAdapter("channel", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
 
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
@@ -85,7 +84,9 @@ class Channel extends Actor
         delete hMessage.msgid
         delete hMessage.timeout
 
+        console.log "persist ",hMessage
         dbPool.getDb "admin", (dbInstance) ->
+          console.log "save ",hMessage
           dbInstance.saveHMessage hMessage
 
         hMessage.persistent = true
@@ -93,7 +94,7 @@ class Channel extends Actor
         hMessage.timeout = timeout
         delete hMessage._id
       #sends to all subscribers the message received
-      hMessage.actor = @subscribersAlias
+      hMessage.actor = @actor
       @send hMessage
       if cb and hMessage.timeout > 0
         hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, "")
@@ -102,7 +103,7 @@ class Channel extends Actor
   h_onSignal: (hMessage, cb) ->
     @log "debug", "Channel received a hSignal: #{JSON.stringify(hMessage)}"
     if hMessage.payload.name is "hStopAlert"
-      hMessage.actor = @subscribersAlias
+      hMessage.actor = @actor
       @send hMessage
 
   ###

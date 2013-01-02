@@ -49,22 +49,6 @@ describe "hGetLastMessages", ->
     hActor.h_tearDown()
     hActor = null
 
-  before (done) ->
-    i = 0
-    nbOfPublish = 0
-    while i < 11
-      publishMsg = config.makeHMessage existingCHID, hActor.actor, "string", {}
-      publishMsg.timeout = 1000
-      publishMsg.persistent = true
-      hActor.h_onMessageInternal publishMsg, (hMessage) ->
-        hMessage.should.have.property "ref", publishMsg.msgid
-        hMessage.payload.should.have.property "status", status.OK
-
-      nbOfPublish += 1
-      if nbOfPublish is 10
-        done()
-      i++
-
   beforeEach ->
     cmd = config.makeHMessage(existingCHID, hActor.actor, "hCommand", {})
     cmd.payload =

@@ -75,12 +75,10 @@ class DbPool extends EventEmitter
 
       #Start connection to Mongo
       newInstance.connect uri, (db) ->
-        i = 0
         if newInstance.queue
-          while i < newInstance.queue.length
+          while newInstance.queue.length > 0
             cb = newInstance.queue.pop()
             cb db
-            i++
 
       newInstance  unless cb
 

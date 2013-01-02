@@ -106,13 +106,12 @@ describe "hRelevantMessages", ->
         done()
 
 
-    it "should return hResult error INVALID_ATTR with actor not a channel", (done) ->
+    it "should return hResult error NOT_AVAILABLE with actor not a channel", (done) ->
       hActor.createChild "hactor", "inproc", {actor: config.logins[0].urn}, (child) =>
         cmd.actor = child.actor
         child.h_onMessageInternal cmd, (hMessage) ->
           hMessage.should.have.property "ref", cmd.msgid
           hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-          hMessage.payload.should.have.property('result').and.match(/Command/)
           done()
 
 

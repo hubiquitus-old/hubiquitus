@@ -84,9 +84,7 @@ class Channel extends Actor
         delete hMessage.msgid
         delete hMessage.timeout
 
-        console.log "persist ",hMessage
         dbPool.getDb "admin", (dbInstance) ->
-          console.log "save ",hMessage
           dbInstance.saveHMessage hMessage
 
         hMessage.persistent = true

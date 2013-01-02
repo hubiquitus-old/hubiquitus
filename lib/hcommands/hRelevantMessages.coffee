@@ -65,10 +65,6 @@ hRelevantMessages::validateCmd = (hMessage, context, cb) ->
   actor = hMessage.actor
   unless actor
     return cb(status.MISSING_ATTR, "missing actor")
-  unless validator.isChannel(actor)
-    return cb(status.INVALID_ATTR, "actor is not a channel")
-  unless context.properties.active
-    return cb(status.NOT_AUTHORIZED, "the channel actor is inactive")
   if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0
     return cb(status.NOT_AUTHORIZED, "error recovering messages with current credentials")
   cb()

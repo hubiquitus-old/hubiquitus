@@ -51,7 +51,6 @@ hGetThread::exec = (hMessage, context, cb) ->
         stream = dbInstance.get(actor).find(convid: convid).sort(published: sort).skip(0).stream()
         firstElement = true
         stream.on "data", (localhMessage) ->
-          console.log localhMessage
           localhMessage.actor = actor
           localhMessage.msgid = localhMessage._id
           delete localhMessage._id

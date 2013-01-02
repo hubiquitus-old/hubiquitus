@@ -167,7 +167,7 @@ describe "hGetThread", ->
       diff.should.be.below 0
       done()
 
-###
+
   it "should return hResult OK with an [] containing all messages with same convid sort newer to older when invalid params sort", (done) ->
     cmd.payload.params.sort = "hello"
     hActor.h_onMessageInternal cmd, (hMessage) ->
@@ -231,7 +231,7 @@ describe "hGetThread", ->
         filterMessagesPublished++
         i++
 
-    before  ->
+    beforeEach  ->
       cmd.payload.params.filter = eq:
         type: "a type"
 
@@ -253,5 +253,5 @@ describe "hGetThread", ->
         hMessage.payload.result.length.should.be.equal(filterMessagesPublished);
         done()
 
-###
+
 

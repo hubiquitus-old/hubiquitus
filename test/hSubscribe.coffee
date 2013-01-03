@@ -24,6 +24,8 @@
 #
 should = require("should")
 config = require("./_config")
+_ = require "underscore"
+
 describe "hSubscribe", ->
   cmd = undefined
   hActor = undefined
@@ -86,9 +88,16 @@ describe "hSubscribe", ->
       done()
 
   it "should return hResult OK if correctly add a quickfilter", (done) ->
+    find = false
     hActor.subscribe existingCHID, "quickfilter1", (statuses, result) ->
       statuses.should.be.equal(status.OK)
       result.should.be.equal("QuickFilter added")
-      done()
+      _.forEach hActor.inboundAdapters, (inbound) =>
+        if inbound.channel is existingCHID
+          for filter in inbound.listQuickFilter
+            if filter is ""
+              find = true
+      unless find
+        done()
 
 

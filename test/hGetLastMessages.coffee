@@ -31,7 +31,6 @@ describe "hGetLastMessages", ->
   actorModule = require("../lib/actor/hchannel")
   existingCHID = "urn:localhost:##{config.getUUID()}"
   DateTab = []
-  maxMsgRetrieval = 6
 
   before () ->
     topology = {
@@ -55,7 +54,7 @@ describe "hGetLastMessages", ->
       cmd: "hGetLastMessages"
       params:
         nbLastMsg: 5
-        filter: {}
+      filter: {}
 
   it "should return hResult ok if there are no hMessages stored", (done) ->
     hActor.h_onMessageInternal cmd, (hMessage) ->
@@ -177,7 +176,7 @@ describe "hGetLastMessages", ->
 
       it "should return Ok with default messages of channel if not specified and message respect filter", (done) ->
         delete cmd.payload.params.nbLastMsg
-        cmd.payload.params.filter = in:
+        cmd.payload.filter = in:
           publisher: [hActor.actor]
 
         hActor.h_onMessageInternal cmd, (hMessage) ->
@@ -191,7 +190,7 @@ describe "hGetLastMessages", ->
 
       it "should return Ok with only filtered messages with right quantity", (done) ->
         cmd.payload.params.nbLastMsg = 3
-        cmd.payload.params.filter = in:
+        cmd.payload.filter = in:
           author: ["urn:localhost:u2"]
 
         hActor.h_onMessageInternal cmd, (hMessage) ->
@@ -209,7 +208,7 @@ describe "hGetLastMessages", ->
 
       it "should return Ok with only filtered messages with less quantity if demanded does not exist.", (done) ->
         cmd.payload.params.nbLastMsg = 1000
-        cmd.payload.params.filter = in:
+        cmd.payload.filter = in:
           author: ["urn:localhost:u2"]
 
         hActor.h_onMessageInternal cmd, (hMessage) ->

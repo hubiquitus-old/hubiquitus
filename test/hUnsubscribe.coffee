@@ -31,30 +31,36 @@ config = require("./_config")
 describe "hUnsubscribe", ->
   cmd = undefined
   hActor = undefined
+  hChannel = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hsession")
+  actorModule = require("../lib/actor/hactor")
   existingCHID = "urn:localhost:##{config.getUUID()}"
   existingCHID2 = "urn:localhost:##{config.getUUID()}"
 
   before () ->
     topology = {
-    actor: config.logins[0].urn,
-    type: "hsession"
+      actor: config.logins[0].urn,
+      type: "hactor"
     }
     hActor = actorModule.newActor(topology)
+
+    properties =
+      listenOn: "tcp://127.0.0.1:1221",
+      broadcastOn: "tcp://127.0.0.1:2998",
+      subscribers: [config.logins[0].urn]
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
+      hChannel = child
+
+    properties =
+      listenOn: "tcp://127.0.0.1:2112",
+      broadcastOn: "tcp://127.0.0.1:8992",
+      subscribers: [config.logins[0].urn]
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
+      hChannel = child
 
   after () ->
     hActor.h_tearDown()
     hActor = null
-
-  #Create active channel
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel existingCHID, [config.validURN], config.validURN, true
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
 
   #Subscribe to channel
   before (done) ->
@@ -62,61 +68,52 @@ describe "hUnsubscribe", ->
       statusCode.should.be.equal(status.OK)
       done()
 
-  #Create active channel without subscribe
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel existingCHID2, [config.validURN], config.validURN, true
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
-
-  beforeEach ->
-    cmd = config.makeHMessage(existingCHID, config.validURN, "hCommand", {})
-    cmd.payload =
-      cmd: "hUnsubscribe"
-      params:{}
-
   it "should return hResult error MISSING_ATTR when actor is missing", (done) ->
-    delete cmd.actor
-    hActor.send cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.MISSING_ATTR
-      hMessage.payload.should.have.property("result").and.be.a "string"
+    hActor.unsubscribe undefined, (statuses, result) ->
+      statuses.should.be.equal(status.MISSING_ATTR)
+      result.should.match(/channel/)
       done()
 
 
-  it "should return hResult error INVALID_ATTR with actor not a channel", (done) ->
-    cmd.actor = hActor.actor
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-      hMessage.payload.should.have.property("result").and.match /actor/
+  it "should return hResult error NOT_AVAILABLE with actor not a channel", (done) ->
+    hActor.unsubscribe hActor.actor, (statuses, result) ->
+      statuses.should.be.equal(status.NOT_AVAILABLE)
       done()
 
 
-  it "should return hResult error NOT_AVAILABLE when actor doesnt exist", (done) ->
-    cmd.actor = "urn:localhost:#unknow channel"
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-      hMessage.payload.should.have.property("result").and.be.a "string"
-      done()
-
-
-  it "should return hResult NOT_AUTHORIZED if not subscribed and no subscriptions", (done) ->
-    cmd.actor = existingCHID2
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-      hMessage.payload.should.have.property("result").and.be.a "string"
+  it "should return hResult NOT_AVAILABLE if not subscribed and no subscriptions", (done) ->
+    hActor.unsubscribe existingCHID2, (statuses, result) ->
+      statuses.should.be.equal(status.NOT_AVAILABLE)
+      result.should.match(/not subscribed/)
       done()
 
   it "should return hResult OK when correct", (done) ->
-    cmd.actor = existingCHID
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
+    hActor.unsubscribe existingCHID, (statuses, result) ->
+      statuses.should.be.equal(status.OK)
       done()
+
+  describe "hUnsubscribe with quickFilter", ->
+    #Subscribe to channel with quickfilter
+    before (done) ->
+      hActor.subscribe existingCHID, "quickfilter1",(statusCode) ->
+        statusCode.should.be.equal(status.OK)
+        done()
+
+    before (done) ->
+      hActor.subscribe existingCHID, "quickfilter2",(statusCode) ->
+        statusCode.should.be.equal(status.OK)
+        done()
+
+    it "should return hResult OK if removed correctly a quickfilter", (done) ->
+      hActor.unsubscribe existingCHID, "quickfilter1", (statuses, result) ->
+        statuses.should.be.equal(status.OK)
+        result.should.be.equal("QuickFilter removed")
+        done()
+
+    it "should return hResult OK if unsubscribe after removed the last quickfilter", (done) ->
+      hActor.unsubscribe existingCHID, "quickfilter2", (statuses, result) ->
+        statuses.should.be.equal(status.OK)
+        result.should.be.equal("Unsubscribe from channel")
+        done()
 
 

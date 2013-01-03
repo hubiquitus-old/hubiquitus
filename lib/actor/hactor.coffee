@@ -184,10 +184,6 @@ class Actor extends EventEmitter
       else
         throw new Error "'aid' parameter must be a string"
 
-    if hMessage.type is "hCommand" and typeof hMessage.payload.params is "object"
-      if hMessage.payload.cmd is "hGetLastMessages" or hMessage.payload.cmd is "hRelevantMessages" or hMessage.payload.cmd is "hGetThread" or hMessage.payload.cmd is "hGetThreads"
-        hMessage.payload.params.filter = hMessage.payload.params.filter or @filter
-
     # first looking up for a cached adapter
     outboundAdapter = _.toDict( @outboundAdapters , "targetActorAid" )[hMessage.actor]
     unless outboundAdapter

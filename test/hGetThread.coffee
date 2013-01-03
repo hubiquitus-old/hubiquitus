@@ -76,7 +76,7 @@ describe "hGetThread", ->
       cmd: "hGetThread"
       params:
         convid: convid
-        filter: {}
+      filter: {}
 
   it "should return hResult error INVALID_ATTR without params", (done) ->
     delete cmd.payload.params
@@ -231,7 +231,7 @@ describe "hGetThread", ->
         i++
 
     beforeEach  ->
-      cmd.payload.params.filter = eq:
+      cmd.payload.filter = eq:
         type: "a type"
 
     it "should not return msgs if a msg OTHER than the first one pass the filter", (done) ->

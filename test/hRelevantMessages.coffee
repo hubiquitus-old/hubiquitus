@@ -53,8 +53,8 @@ describe "hRelevantMessages", ->
     cmd = config.makeHMessage(activeChan, hActor.actor, "hCommand", {})
     cmd.payload =
       cmd: "hRelevantMessages"
-      params:
-        filter: {}
+      params: {}
+      filter: {}
 
   it "should return hResult OK with an empty array if no matching msgs found", (done) ->
     hActor.h_onMessageInternal cmd, (hMessage) ->
@@ -150,7 +150,7 @@ describe "hRelevantMessages", ->
           i++
 
       it "should return Ok with messages respect filter", (done) ->
-        cmd.payload.params.filter = in:
+        cmd.payload.filter = in:
           publisher: [activeChan]
 
         hActor.h_onMessageInternal cmd, (hMessage) ->
@@ -162,7 +162,7 @@ describe "hRelevantMessages", ->
 
 
       it "should return Ok with only filtered messages with right quantity", (done) ->
-        cmd.payload.params.filter = in:
+        cmd.payload.filter = in:
           author: ["urn:localhost:u2"]
 
         hActor.h_onMessageInternal cmd, (hMessage) ->

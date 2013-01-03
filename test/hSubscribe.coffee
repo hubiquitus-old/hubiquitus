@@ -67,7 +67,6 @@ describe "hSubscribe", ->
   it "should return hResult error NOT_AUTHORIZED if not in subscribers list", (done) ->
     hChannel.properties.subscribers = [config.logins[2].urn]
     hActor.subscribe existingCHID, "", (statuses, result) ->
-      console.log result
       statuses.should.be.equal(status.NOT_AUTHORIZED)
       result.should.be.a('string')
       hChannel.properties.subscribers = [config.logins[0].urn]
@@ -84,6 +83,12 @@ describe "hSubscribe", ->
     hActor.subscribe existingCHID, "", (statuses, result) ->
       statuses.should.be.equal(status.NOT_AUTHORIZED)
       result.should.be.a "string"
+      done()
+
+  it "should return hResult OK if correctly add a quickfilter", (done) ->
+    hActor.subscribe existingCHID, "quickfilter1", (statuses, result) ->
+      statuses.should.be.equal(status.OK)
+      result.should.be.equal("QuickFilter added")
       done()
 
 

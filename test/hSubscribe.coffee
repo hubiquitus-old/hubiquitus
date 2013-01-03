@@ -27,112 +27,63 @@ config = require("./_config")
 describe "hSubscribe", ->
   cmd = undefined
   hActor = undefined
+  hChannel = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hsession")
+  actorModule = require("../lib/actor/hactor")
   existingCHID = "urn:localhost:##{config.getUUID()}"
-  existingCHID2 = "urn:localhost:##{config.getUUID()}"
-  inactiveChannel = "urn:localhost:##{config.getUUID()}"
 
   before () ->
     topology = {
-    actor: config.logins[0].urn,
-    type: "hsession"
+      actor: config.logins[0].urn,
+      type: "hactor"
     }
     hActor = actorModule.newActor(topology)
+
+    properties =
+      listenOn: "tcp://127.0.0.1:1221",
+      broadcastOn: "tcp://127.0.0.1:2998",
+      subscribers: [config.logins[0].urn]
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
+      hChannel = child
 
   after () ->
     hActor.h_tearDown()
     hActor = null
 
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel existingCHID, [config.validURN], config.validURN, true
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
-
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel existingCHID2, [config.logins[2].urn], config.validURN, true
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
-
-  before (done) ->
-    @timeout 5000
-    createCmd = config.createChannel inactiveChannel, [config.validURN], config.validURN, false
-    hActor.h_onMessageInternal createCmd,  (hMessage) ->
-      hMessage.should.have.property "ref", createCmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
-      done()
-
-  beforeEach ->
-    cmd = config.makeHMessage(existingCHID, hActor.actor, "hCommand", {})
-    cmd.payload =
-      cmd: "hSubscribe"
-      params: {}
-
   it "should return hResult error MISSING_ATTR when actor is missing", (done) ->
-    delete cmd.actor
-    hActor.send cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.MISSING_ATTR
-      hMessage.payload.should.have.property("result").and.be.a "string"
+    try
+      hActor.subscribe undefined, "", (statuses, result) ->
+    catch error
+      should.exist error.message
       done()
-
 
   it "should return hResult error INVALID_ATTR with actor not a channel", (done) ->
-    cmd.actor = hActor.actor
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-      hMessage.payload.should.have.property("result").and.match /actor/
-      done()
-
-
-  it "should return hResult error NOT_AVAILABLE when actor doesnt exist", (done) ->
-    cmd.actor = "urn:localhost:#unknow channel"
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-      hMessage.payload.should.have.property("result").and.be.a "string"
+    hActor.subscribe hActor.actor, "", (statuses, result) ->
+      statuses.should.be.equal(status.NOT_AVAILABLE)
+      result.should.match(/actor/)
       done()
 
 
   it "should return hResult error NOT_AUTHORIZED if not in subscribers list", (done) ->
-    cmd.actor = existingCHID2
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
-      hMessage.payload.should.have.property("result").and.be.a "string"
-      done()
-
-
-  it "should return hResult error NOT_AUTHORIZED if channel is inactive", (done) ->
-    cmd.actor = inactiveChannel
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
-      hMessage.payload.should.have.property("result").and.be.a "string"
+    hChannel.properties.subscribers = [config.logins[2].urn]
+    hActor.subscribe existingCHID, "", (statuses, result) ->
+      console.log result
+      statuses.should.be.equal(status.NOT_AUTHORIZED)
+      result.should.be.a('string')
+      hChannel.properties.subscribers = [config.logins[0].urn]
       done()
 
 
   it "should return hResult OK when correct", (done) ->
-    cmd.actor = existingCHID
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.OK
+    hActor.subscribe existingCHID, "", (statuses, result) ->
+      statuses.should.be.equal(status.OK)
       done()
 
 
   it "should return hResult error if already subscribed", (done) ->
-    cmd.actor = existingCHID
-    hActor.h_onMessageInternal cmd, (hMessage) ->
-      hMessage.should.have.property "ref", cmd.msgid
-      hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
-      hMessage.payload.should.have.property("result").and.be.a "string"
+    hActor.subscribe existingCHID, "", (statuses, result) ->
+      statuses.should.be.equal(status.NOT_AUTHORIZED)
+      result.should.be.a "string"
       done()
 
 

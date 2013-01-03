@@ -228,7 +228,7 @@ class LBSocketOutboundAdapter extends OutboundAdapter
 class ChannelOutboundAdapter extends OutboundAdapter
 
   constructor: (properties) ->
-    properties.targetActorAid = "#{validator.getBareURN(properties.owner.actor)}#subscribers"
+    properties.targetActorAid = "#{validator.getBareURN(properties.owner.actor)}"
     super
     if properties.url
     then @url = properties.url
@@ -247,11 +247,11 @@ class ChannelOutboundAdapter extends OutboundAdapter
 
   send: (hMessage) ->
     @start() unless @started
-    if hMessage.headers.h_quickFilter and typeof hMessage.headers.h_quickFilter is "string"
+    if hMessage.headers and hMessage.headers.h_quickFilter and typeof hMessage.headers.h_quickFilter is "string"
       message = hMessage.payload.params+"$"+JSON.stringify(hMessage)
       @sock.send message
     else
-      @sock.send JSON.stringify(message)
+      @sock.send JSON.stringify(hMessage)
 
 class SocketIOAdapter extends OutboundAdapter
 

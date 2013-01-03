@@ -101,6 +101,7 @@ class ChannelInboundAdapter extends InboundAdapter
     then @url = properties.url
     else throw new Error("You must provide a channel url")
     @type = "channel"
+    @listQuickFilter = []
     @filter = properties.filter or ""
     @sock = zmq.socket "sub"
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
@@ -113,6 +114,20 @@ class ChannelInboundAdapter extends InboundAdapter
   addFilter: (quickFilter) ->
     @owner.log "debug", "Add quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
     @sock.subscribe(quickFilter)
+    @listQuickFilter.push quickFilter
+
+  removeFilter: (quickFilter, cb) ->
+    @owner.log "debug", "Remove quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
+    @sock.unsubscribe(quickFilter)
+    index = 0
+    for qckFilter in @listQuickFilter
+      if qckFilter is quickFilter
+        @listQuickFilter.splice(index,1)
+      index++
+    if @listQuickFilter.length is 0
+      cb true
+    else
+      cb false
 
   start: ->
     unless @started

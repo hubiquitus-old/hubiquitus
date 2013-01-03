@@ -40,6 +40,10 @@ describe "hActor", ->
         type: "hactor"
       }
       hActor = actorModule.newActor(topology)
+      hActor.onMessage = (hMessage, cb) ->
+        if hMessage.timeout > 0
+          hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, hResultStatus.OK, "")
+          cb hMessageResult
 
     after () ->
       hActor.h_tearDown()

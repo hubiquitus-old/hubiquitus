@@ -51,7 +51,7 @@ class Actor extends EventEmitter
   #Init logger
   logger.exitOnError = false
   logger.remove(logger.transports.Console)
-  logger.add(logger.transports.Console, {handleExceptions: true, level: "debug"})
+  logger.add(logger.transports.Console, {handleExceptions: true, level: "INFO"})
   logger.add(logger.transports.File, {handleExceptions: true, filename: "#{__dirname}/../../log/hActor.log", level: "debug"})
 
   # Possible running states of an actor
@@ -183,10 +183,6 @@ class Actor extends EventEmitter
         return
       else
         throw new Error "'aid' parameter must be a string"
-
-    if hMessage.type is "hCommand" and typeof hMessage.payload.params is "object"
-      if hMessage.payload.cmd is "hGetLastMessages" or hMessage.payload.cmd is "hRelevantMessages" or hMessage.payload.cmd is "hGetThread" or hMessage.payload.cmd is "hGetThreads"
-        hMessage.payload.params.filter = hMessage.payload.params.filter or @filter
 
     # first looking up for a cached adapter
     outboundAdapter = _.toDict( @outboundAdapters , "targetActorAid" )[hMessage.actor]
@@ -427,6 +423,8 @@ class Actor extends EventEmitter
     return hFilter.checkFilterValidity(hMessage, @filter)
 
   subscribe: (hChannel, quickFilter, cb) ->
+    status = undefined
+    result = undefined
     if typeof quickFilter is "function"
       cb = quickFilter
       quickFilter = ""
@@ -437,8 +435,24 @@ class Actor extends EventEmitter
       if channel is hChannel
         _.forEach @inboundAdapters, (inbound) =>
           if inbound.channel is hChannel
-            inbound.addFilter(quickFilter)
-        return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
+            findfilter = false
+            findglobalfilter = false
+            for qckFilter in inbound.listQuickFilter
+              if qckFilter is quickFilter
+                findfilter = true
+              if qckFilter is ""
+                findglobalfilter = true
+            if findfilter is false
+              inbound.addFilter(quickFilter)
+              if findglobalfilter
+                inbound.removeFilter "", ()->
+              status = codes.hResultStatus.OK
+              result = "QuickFilter added"
+              return
+        if status isnt undefined
+          return cb status, result
+        else
+          return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:5000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
@@ -451,24 +465,39 @@ class Actor extends EventEmitter
       else
         cb hResult.payload.status, hResult.payload.result
 
-  h_unsubscribe: (hChannel, cb) ->
+  unsubscribe: (hChannel, quickFilter, cb) ->
+    if typeof quickFilter is "function"
+      cb = quickFilter
+      quickFilter = undefined
+
+    unless hChannel
+      return cb codes.hResultStatus.MISSING_ATTR, "Missing channel"
+
     index = 0
     subs = false
     for channel in @subscriptions
       if channel is hChannel
         subs = true
-        delete @subscriptions[index]
+        if quickFilter is undefined
+          delete @subscriptions[index]
       index++
 
     if subs is false
-      return cb codes.hResultStatus.NOT_AVAILABLE, "user not subscribed to channel " + hChannel
+      return cb codes.hResultStatus.NOT_AVAILABLE, "user not subscribed to " + hChannel
     else
       index = 0
       _.forEach @inboundAdapters, (inbound) =>
         if inbound.channel is hChannel
-          inbound.stop()
-          delete @inboundAdapters[index]
-          return cb codes.hResultStatus.OK, ""
+          if quickFilter
+            inbound.removeFilter quickFilter, (result) =>
+              if result
+                @unsubscribe hChannel, cb
+              else
+                return cb codes.hResultStatus.OK, "QuickFilter removed"
+          else
+            inbound.stop()
+            delete @inboundAdapters[index]
+            return cb codes.hResultStatus.OK, "Unsubscribe from channel"
         index++
 
 
@@ -479,6 +508,9 @@ class Actor extends EventEmitter
       if outbound.targetActorAid is actor
         outbound.stop()
         delete @outboundAdapters[index]
+        if @trackers[0]
+          @unsubscribe @trackers[0].trackerChannel, actor, () ->
+
       index++
 
   buildMessage: (actor, type, payload, options) ->

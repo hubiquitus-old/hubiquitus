@@ -18,6 +18,16 @@
             "method": "inproc",
             "workers": { "method": "fork", "type": "hactor", "nb": 2 },
             "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2992" } ]
+        },
+        {
+            "actor": "urn:localhost:channel",
+            "type": "hchannel",
+            "method": "inproc",
+            "properties": {
+                "listenOn": "tcp://127.0.0.1:2112",
+                "broadcastOn": "tcp://127.0.0.1:8992",
+                "subscribers": []
+            }
         }
     ],
     "properties":{

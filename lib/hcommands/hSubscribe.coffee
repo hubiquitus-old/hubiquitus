@@ -45,24 +45,19 @@ hSubscribe::exec = (hMessage, context, cb) ->
   actor = hMessage.actor
   unless actor
     return cb(status.MISSING_ATTR, "missing actor")
-  unless validators.isChannel(actor)
-    return cb(status.INVALID_ATTR, "actor is not a channel")
 
   #Convert sender to bare urn
   urn = hMessage.publisher.replace(/\/.*/, "")
-  if context.properties.active is false
-    statusValue = status.NOT_AUTHORIZED
-    result = "the channel is inactive"
 
-    #Check if in subscribers list
-  else if context.properties.subscribers.indexOf(urn) < 0 and context.properties.subscribers.length > 0
+  #Check if in subscribers list
+  if context.properties.subscribers.indexOf(urn) < 0 and context.properties.subscribers.length > 0
     statusValue = status.NOT_AUTHORIZED
     result = "not allowed to subscribe to \"" + actor + "\""
 
   else
     statusValue = status.OK
     _.forEach context.outboundAdapters, (outbound) =>
-      if outbound.targetActorAid is context.subscribersAlias
+      if outbound.targetActorAid is context.actor
         result = outbound.url
 
   cb statusValue, result

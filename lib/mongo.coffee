@@ -60,7 +60,6 @@ class Db extends EventEmitter
     @status = codes.mongoCodes.DISCONNECTED
 
     # static Collections that are created at startup
-    @_staticCol = ["hSubscriptions", "hChannels", "hMessages"]
     @collections = {}
 
     #Caches
@@ -100,29 +99,19 @@ class Db extends EventEmitter
       #Connect to Mongo
       @db.open (err, db) ->
         unless err
+          self.status = codes.mongoCodes.CONNECTED
+          self.emit "connect"
+          if cb
+            cb self
 
-          #load static collections
-          for staticCol in self._staticCol
-            self.collections[staticCol] = db.collection(staticCol)
-            self.collections[staticCol].required = {}
-            self.collections[staticCol].validators = []
-            self.collections[staticCol].onSave = []
-
-          #Init validators for collections and tell everyone that we are ready to go
-          self._initDefaultCollections ->
-            self.status = codes.mongoCodes.CONNECTED
-            self.emit "connect"
-            if cb
-              cb self
-
-          #Error opening database
+        #Error opening database
         else
           self.emit "error",
             code: codes.mongoCodes.TECH_ERROR
             msg: "could not open database"
 
 
-      #Invalid URI
+    #Invalid URI
     else
       @emit "error",
         code: codes.mongoCodes.INVALID_URI
@@ -147,27 +136,6 @@ class Db extends EventEmitter
       @emit "disconnect"
 
 
-  ###
-  Initializes static hubiquitus collections
-  @param cb - When initialization is finished the callback will be called.
-  @private
-  ###
-  _initDefaultCollections: (cb) ->
-    @collections.hChannels.validators.push validators.validateHChannel
-
-    #Ensure there is an index for hChannel _id
-    #    this.collections.hChannels.ensureIndex('_id', {unique: true});
-
-    #Set up cache invalidation
-    self = this
-
-    #Symbolically create hMessages
-    @get "VirtualHMessages"
-    stream = @collections.hChannels.find({}).streamRecords()
-    stream.on "data", (hChannel) ->
-      self.cache.hChannels[hChannel._id] = hChannel
-
-    stream.on "end", cb
   ###
   Saves an object to a collection.
   @param collection a db recovered collection (db.collection())
@@ -243,77 +211,15 @@ class Db extends EventEmitter
 
 
   ###
-  Tests the validators for a document
-  @param doc - The document to validate
-  @param validators - Array of validator functions to execute
-  @param cb - Callback (err, msg) with error being a constant from hResult.status
-  @private
-  ###
-  _testValidators: (doc, validators, cb) ->
-    counter = 0
-    first = true
-
-    #In case we don't validate anything
-    cb()  if validators.length is 0
-
-    for validator in validators
-      validator doc, (err, msg) ->
-        if err and first
-          first = false
-          cb err, msg
-        else cb()  if ++counter is validators.length
-
-
-
-  ###
-  Saves a hChannel to the database. If the channel given has an id existing in the database
-  already it will be updated.
-  @param hChannel - hChannel to create or update
-  @param useValidators - [Optional] Boolean to use or not validators (useful when creating channels as admin).
-  Defaults to true
-  @param cb - [Optional] Callback that receives (err, result)
-  ###
-  saveHChannel: (hChannel, useValidators, cb) ->
-    if typeof useValidators is "function"
-      cb = useValidators
-      useValidators = true
-    self = this
-    callback = (err, msg) ->
-      if err
-        (if typeof cb is "function" then cb(err, msg) else null)
-      else
-        self._saver self.collections.hChannels, hChannel, cb
-
-    if useValidators
-      @_testValidators hChannel, @collections.hChannels.validators, callback
-    else
-      callback()
-
-  ###
-  Remove a hChannel to the database.
-  @param hChannel - hChannel to remove
-  @param cb - [Optional] Callback that receives (err, result)
-  ###
-  removeHChannel: (hChannel, cb) ->
-    #Use 'virtual' hMessages collection to test requirements. But when saving use real collection
-    collection = @get("hChannels")
-
-    collection.remove {_id: hChannel}, cb
-
-
-  ###
   Saves a hMessage to the correct collection in the database. The CHID of the hMessage will *not*
   be checked to see if the channel exists. A collection with the chid given will be created.
   @param hMessage - hMessage to create in the database
   @param cb [Optional] Callback that receives (err, result)
   ###
-  saveHMessage: (hMessage, cb) ->
-
-    #If the actor is that of a client, save it to a collection called hMessages, else to the channel's collection
-    collection = (if validators.isChannel(hMessage.actor) then hMessage.actor else "hMessages")
+  saveHMessage: (hMessage, collection, cb) ->
 
     #Use 'virtual' hMessages collection to test requirements. But when saving use real collection
-    @_saver @get(collection), hMessage, virtual: @get("VirtualHMessages"), cb
+    @_saver @get(collection), hMessage, cb
 
 
   ###
@@ -333,11 +239,5 @@ class Db extends EventEmitter
     @collections[collection]
 
 
-  ###
-  Creates a valid Primary key that can be used in mongo. The returned value can be considered a UUID
-  @return String - PK that can be used as UUID _id in documents.
-  ###
-  createPk: () ->
-    "" + mongo.ObjectID.createPk()
 
 exports.db = Db

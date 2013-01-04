@@ -35,11 +35,15 @@ options = require "./../options"
 class Channel extends Actor
 
   constructor: (topology) ->
+    #TODO Stop actor and send error when all mandatory attribut is not in topology
     super
     @actor = validator.getBareURN(topology.actor)
     @type = "channel"
     @properties =
       subscribers : topology.properties.subscribers or []
+      db :
+        dbName : topology.properties.db.dbName
+        dbCollection : topology.properties.db.dbCollection
     @inboundAdapters.push adapters.inboundAdapter("socket", {url: topology.properties.listenOn, owner: @})
     @outboundAdapters.push adapters.outboundAdapter("channel", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
 
@@ -84,13 +88,14 @@ class Channel extends Actor
         delete hMessage.msgid
         delete hMessage.timeout
 
-        dbPool.getDb "admin", (dbInstance) ->
-          dbInstance.saveHMessage hMessage
+        dbPool.getDb @properties.db.dbName, (dbInstance) =>
+          dbInstance.saveHMessage hMessage, @properties.db.dbCollection
 
         hMessage.persistent = true
         hMessage.msgid = hMessage._id
         hMessage.timeout = timeout
         delete hMessage._id
+
       #sends to all subscribers the message received
       hMessage.actor = @actor
       @send hMessage

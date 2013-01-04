@@ -94,6 +94,7 @@ class Actor extends EventEmitter
     @parent = undefined
 
     # Initializing attributs
+    @properties = properties.properties or {}
     @status = STATUS_STOPPED
     @children = []
     @trackers = []

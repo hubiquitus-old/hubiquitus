@@ -24,26 +24,42 @@
 #
 
 {Actor} = require "./hactor"
-socketIO = require "../client_connector/socketio_connector"
 zmq = require "zmq"
 _ = require "underscore"
-validator = require "./../validator"
+statuses = require("../codes").statuses
+errors = require("../codes").errors
+validator = require "../validator"
+codes = require "../codes"
 
-class Gateway extends Actor
+
+class Auth extends Actor
 
   constructor: (properties) ->
     super
-    # Setting outbound adapters
-    @type = 'gateway'
-    if properties.properties.socketIOPort
-      socketIO.socketIO({port: properties.properties.socketIOPort, owner: @})
+    @type = 'auth'
 
-  onMessage: (hMessage) ->
-    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
-      @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-      @send hMessage
+  onMessage: (hMessage, cb) ->
+    if not hMessage or not hMessage.payload or hMessage.type isnt "hAuth"
+      cb codes.errors.AUTH_FAILED, "missing message"
+      return
+    @auth hMessage.payload.login, hMessage.payload.password, hMessage.payload.context, (actor, errorCode, errorMsg) =>
+      authResponse = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, {actor : actor, errorCode : errorCode, errorMsg: errorMsg}
+      @send authResponse
+
+  # Should be overrided to implement own auth system.
+  # context : extra data
+  # cb
+  #   status : authentification status. If ok it should be NO_ERROR
+  #   result : if ok, it should be user urn, else if should be error message
+  auth: (login, password, context, cb) ->
+    if(login is password)
+      @log "debug", "Login successful for user #{login}"
+      cb login, codes.errors.NO_ERROR
+    else
+      @log "debug", "Invalid login for user #{login}"
+      cb undefined, codes.errors.AUTH_FAILED, "invalid publisher or password"
 
 
-exports.Gateway = Gateway
+exports.Auth = Auth
 exports.newActor = (properties) ->
-  new Gateway(properties)
+  new Auth(properties)

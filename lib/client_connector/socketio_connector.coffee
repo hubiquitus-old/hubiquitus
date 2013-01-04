@@ -26,6 +26,8 @@
 log = require("winston")
 clients = {}
 options = require("../options").sioConnector
+validator = require "../validator"
+codes = require "../codes"
 
 class SocketIO_Connector
   ###
@@ -75,24 +77,44 @@ class SocketIO_Connector
       log.warn "A client sent an invalid ID with data", data
       return
     log.info "Client ID " + client.id + " sent connection data", data
-    if not data or not data.publisher or not data.password
+    if not data or not data.login or not data.password
       log.info "Client ID " + client.id + " is trying to connect without mandatory attribute", data
       return
 
-    #Authentification
+    # Authentification
+    authTimeout = @owner.properties.authTimeout or 3000
+    authMsg = @owner.buildMessage @owner.properties.authActor, "hAuth", {login: data.login, password: data.password, context: data.context},{timeout: authTimeout}
+    @owner.send authMsg, (authResponse) =>
+      if not authResponse or not authResponse.payload or not authResponse.payload.result
+        client.socket.emit 'hStatus', {status: codes.statuses.DISCONNECTING, errorCode: codes.errors.TECH_ERROR, errorMsg: "invalid response"}
+        @disconnect client
+        return
 
-    client.hClient = @owner
-    inboundAdapters = []
-    for inboundAdapter in @owner.inboundAdapters
-      inboundAdapters.push {type:inboundAdapter.type, url:inboundAdapter.url}
+      authResult = authResponse.payload.result
 
-    data.trackInbox = inboundAdapters
-    data.actor = data.publisher
-    data.inboundAdapters
-    client.hClient.createChild "hsession", "inproc", data, (child) =>
-      #Relay all server status messages
-      child.initListener(client)
-      client.child = child.actor
+      if authResult.errorCode isnt codes.errors.NO_ERROR
+        client.socket.emit 'hStatus', { status: codes.statuses.DISCONNECTING, errorCode: authResult.errorCode, errorMsg: authResult.errorMsg}
+        @disconnect client
+        return
+
+      if not validator.validateURN authResult.actor
+        log.debug "Disconnecting with error Client " + client.publish
+        client.socket.emit 'hStatus', { status: codes.statuses.DISCONNECTING, errorCode: codes.errors.URN_MALFORMAT}
+        @disconnect client
+        return
+
+      client.hClient = @owner
+      inboundAdapters = []
+      for inboundAdapter in @owner.inboundAdapters
+        inboundAdapters.push {type:inboundAdapter.type, url:inboundAdapter.url}
+
+      data.trackInbox = inboundAdapters
+      data.actor = authResponse.actor
+      data.inboundAdapters
+      client.hClient.createChild "hsession", "inproc", data, (child) =>
+        #Relay all server status messages
+        child.initListener(client)
+        client.child = child.actor
 
   ###
   Disconnects the current session and socket.
@@ -107,7 +129,7 @@ class SocketIO_Connector
       client.socket.disconnect()  if client.socket
       delete clients[client.id]
 
-    @owner.send @owner.buildSignal(client.child, "stop", {})
+    @owner.send @owner.buildSignal(client.child, "stop", {}) if client.child
 
 
   start: ->

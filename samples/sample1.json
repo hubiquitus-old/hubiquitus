@@ -6,10 +6,18 @@
             "actor": "urn:localhost:gateway",
             "type": "hgateway",
             "method": "inproc",
-            "children": [],
+            "children": [
+                {
+                    "actor": "urn:localhost:auth",
+                    "type": "hauth",
+                    "method": "inproc"
+                }
+            ],
             "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:3993" } ],
             "properties": {
-                "socketIOPort": 8080
+                "socketIOPort": 8080,
+                "authActor": "urn:localhost:auth",
+                "authTimeout": 3000
             }
         },
         {

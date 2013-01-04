@@ -27,57 +27,6 @@ codes = require("./codes.coffee").hResultStatus
 log = require("winston")
 dbPool = require("./dbPool.coffee").getDbPool()
 
-exports.validateHChannel = (hChannel, cb) ->
-  i = undefined
-  required = ["type", "_id", "owner", "subscribers", "active"]
-
-  #Test if object exists
-  unless hChannel instanceof Object
-    return cb(codes.INVALID_ATTR, "invalid object received")
-
-  #Test required attributes
-  for attribute in required
-    if not hChannel[attribute]? or hChannel[attribute] is `undefined`
-      return cb(codes.MISSING_ATTR, "missing attribute " + attribute)
-
-  #Test if correct format/ correct values
-  if hChannel._id and typeof hChannel._id isnt "string"
-    return cb(codes.INVALID_ATTR, "actor is not a string")
-  unless exports.isChannel(hChannel._id)
-    return cb(codes.INVALID_ATTR, "actor not valid " + hChannel._id)
-  if /^urn:[^:\/<>'"]+:#hAdminChannel/.test(hChannel._id)
-    return cb(codes.NOT_AUTHORIZED, "using reserved keyword " + hChannel._id + " as actor")
-  if hChannel.chdesc and typeof hChannel.chdesc isnt "string"
-    return cb(codes.INVALID_ATTR, "chdesc is not a string")
-  if typeof hChannel.priority isnt "undefined"
-    if typeof hChannel.priority isnt "number"
-      return cb(codes.INVALID_ATTR, "priority not a number")
-    if hChannel.priority < 0 or hChannel.priority > 5
-      return cb(codes.INVALID_ATTR, "priority is has not a valid value")
-  if hChannel.type isnt "channel"
-    return cb(codes.INVALID_ATTR, "type attribute is not 'channel'")
-  if typeof hChannel.location isnt "undefined" and (hChannel.location not instanceof Object)
-    return cb(codes.INVALID_ATTR, "location not an object")
-  unless exports.validateURN(hChannel.owner)
-    return cb(codes.INVALID_ATTR, "owner is not a string")
-  if exports.splitURN(hChannel.owner)[2]
-    console.log "owner ", exports.splitURN(hChannel.owner)
-    return cb(codes.INVALID_ATTR, "owner is not a bare urn")
-  unless hChannel.subscribers instanceof Array
-    return cb(codes.INVALID_ATTR, "subscribers is not an array")
-  for subscriber in hChannel.subscribers
-    if typeof subscriber isnt "string"
-      return cb(codes.INVALID_ATTR, "subscriber " + i + " is not a URN")
-    if not exports.validateURN(subscriber) or exports.splitURN(subscriber)[2]
-      return cb(codes.INVALID_ATTR, "subscriber " + i + " is not a URN")
-  if typeof hChannel.active isnt "boolean"
-    return cb(codes.INVALID_ATTR, "active is not a boolean")
-  if typeof hChannel.headers isnt "undefined" and (hChannel.headers not instanceof Object)
-    return cb(codes.INVALID_ATTR, "invalid headers object received")
-  if hChannel.actor isnt hChannel.publisher
-    return cb status.NOT_AUTHORIZED, "You cannot create a channel for this actor"
-  cb codes.OK
-
 ###
 Checks if an hMessage is correctly formatted and has all the correct attributes
 @param hMessage - hMessage to validate
@@ -129,14 +78,14 @@ Returns true or false if it is a valid URN following hubiquitus standards
 @param urn - the urn string to validate
 ###
 exports.validateURN = (urn) ->
-  /(^urn:[^:\/<>'"]+:[^:\/<>'"]+\/?.+$)/.test(urn)
+  /(^urn:[a-z0-9]{1}[a-z0-9\-]{1,31}:[a-z0-9_,:=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/.test(urn)
 
 ###
 Returns true or false if it is a valid URN with ressource following hubiquitus standards
 @param urn - the urn string to validate
 ###
 exports.validateFullURN = (urn) ->
-  /(^urn:[^:\/<>'"]+:[^:\/<>'"]+\/.+$)/.test(urn)
+  /(^urn:[a-z0-9]{1}[a-z0-9\-]{1,31}:[a-z0-9_,:=@;!'%/#\(\)\+\-\.\$\*\?]+\/.+$)/.test(urn)
 
 ###
 Removes attributes that are strings and that are empty (ie. "") in hLocation
@@ -176,16 +125,6 @@ exports.cleanEmptyAttrs = (obj, attrs) ->
       delete obj[attr]
 
   obj #Make it chainable
-
-###
-Tests if the given urn is that of a channel. This does not test if the channel is valid
-or the domain.
-@param urn
-@return {Boolean} true if it's a channel
-###
-exports.isChannel = (urn) ->
-  /(^urn:[^:\/<>'"]+:#[^:\/<>'"]+$)/.test(urn)
-
 
 ###
 Splits a VALID URN in three parts: (user)(domain)(resource), the third part can be empty

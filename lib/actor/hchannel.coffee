@@ -30,7 +30,7 @@ _ = require "underscore"
 validator = require "./../validator"
 dbPool = require("./../dbPool.coffee").getDbPool()
 codes = require "./../codes"
-options = require "./../options"
+options = require("./../options").options
 
 class Channel extends Actor
 
@@ -131,7 +131,7 @@ class Channel extends Actor
     if hCommand.params and typeof hCommand.params isnt "object"
       cb self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Params is settled but not an object")
       return
-    commandTimeout = module.timeout or options.commandController.timeout
+    commandTimeout = module.timeout or options["hcommands.timeout"]
 
     onResult = (status, result) ->
       #If callback is called after the timer ignore it

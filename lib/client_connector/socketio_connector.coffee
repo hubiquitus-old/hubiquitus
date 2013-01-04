@@ -33,7 +33,6 @@ class SocketIO_Connector
   @param args - {
   logLevel : DEBUG, INFO, WARN or ERROR
   port : int
-  namespace : string
   commandOptions : {} Command Controller Options
   }
   ###

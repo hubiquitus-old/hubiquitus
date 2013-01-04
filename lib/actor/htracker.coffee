@@ -31,11 +31,11 @@ validator = require "./../validator.coffee"
 
 class Tracker extends Actor
 
-  constructor: (properties) ->
+  constructor: (topology) ->
     #TODO check properties
     @peers = []
-    @trackerChannelAid = properties.properties.channel.actor
-    properties.children.push properties.properties.channel
+    @trackerChannelAid = topology.properties.channel.actor
+    topology.children.push topology.properties.channel
     super
     #@on "started", -> @pingChannel(properties.broadcastUrl)
 
@@ -117,5 +117,5 @@ class Tracker extends Actor
     @send @buildSignal(@trackerChannelAid, "hStopAlert", actor, {headers:{h_quickFilter: actor}})
 
 exports.Tracker = Tracker
-exports.newActor = (properties) ->
-  new Tracker(properties)
+exports.newActor = (topology) ->
+  new Tracker(topology)

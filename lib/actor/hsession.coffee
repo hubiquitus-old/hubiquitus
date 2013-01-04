@@ -37,11 +37,11 @@ adapters = require "../adapters"
 
 class Session extends Actor
 
-  constructor: (properties) ->
+  constructor: (topology) ->
     super
     # Setting outbound adapters
     @type = 'session'
-    @trackInbox = properties.trackInbox
+    @trackInbox = topology.trackInbox
 
   touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
@@ -169,5 +169,5 @@ class Session extends Actor
     @emit "connect"
 
 exports.Session = Session
-exports.newActor = (properties) ->
-  new Session(properties)
+exports.newActor = (topology) ->
+  new Session(topology)

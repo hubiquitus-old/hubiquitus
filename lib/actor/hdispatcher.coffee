@@ -30,11 +30,11 @@ validator = require "./../validator"
 
 class Dispatcher extends Actor
 
-  constructor: (properties) ->
+  constructor: (topology) ->
     super
     @workersAlias = "#{@actor}#workers"
-    @addWorkers(properties.workers)
-    @nbWorkers = properties.workers.nb
+    @addWorkers(topology.properties.workers)
+    @nbWorkers = topology.properties.workers.nb
 
   addWorkers : (workerProps) ->
     dispatchingUrl = "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+3000}"
@@ -53,5 +53,5 @@ class Dispatcher extends Actor
     @send msg
 
 exports.Dispatcher = Dispatcher
-exports.newActor = (properties) ->
-  new Dispatcher(properties)
+exports.newActor = (topology) ->
+  new Dispatcher(topology)

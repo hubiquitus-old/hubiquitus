@@ -61,19 +61,19 @@ class Actor extends EventEmitter
   STATUS_STOPPED = "stopped"
 
   # Constructor
-  constructor: (properties) ->
+  constructor: (topology) ->
     # setting up instance attributes
-    if(validator.validateFullURN(properties.actor))
-      @actor = properties.actor
-    else if(validator.validateURN(properties.actor))
-      @actor = "#{properties.actor}/#{UUID.generate()}"
+    if(validator.validateFullURN(topology.actor))
+      @actor = topology.actor
+    else if(validator.validateURN(topology.actor))
+      @actor = "#{topology.actor}/#{UUID.generate()}"
     else
       throw new Error "Invalid actor URN"
     @ressource = @actor.replace(/^.*\//, "")
     @type = "actor"
     @filter = {}
-    if properties.filter
-      @setFilter properties.filter, (status, result) =>
+    if topology.filter
+      @setFilter topology.filter, (status, result) =>
         unless status is codes.hResultStatus.OK
           # TODO arreter l'acteur
           @log "debug", "Invalid filter stopping actor"
@@ -91,8 +91,8 @@ class Actor extends EventEmitter
     @subscriptions = []
 
     # Registering trackers
-    if _.isArray(properties.trackers) and properties.trackers.length > 0
-      _.forEach properties.trackers, (trackerProps) =>
+    if _.isArray(topology.trackers) and topology.trackers.length > 0
+      _.forEach topology.trackers, (trackerProps) =>
         @log "debug", "registering tracker #{trackerProps.trackerId}"
         @trackers.push trackerProps
         @outboundAdapters.push adapters.adapter("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
@@ -100,7 +100,7 @@ class Actor extends EventEmitter
       @log "debug", "no tracker was provided"
 
     # Setting adapters
-    _.forEach properties.adapters, (adapterProps) =>
+    _.forEach topology.adapters, (adapterProps) =>
       adapterProps.owner = @
       adapter = adapters.adapter(adapterProps.type, adapterProps)
       if adapter.direction is "in"
@@ -125,7 +125,7 @@ class Actor extends EventEmitter
 
     # Adding children once started
     @on "started", ->
-      @initChildren(properties.children)
+      @initChildren(topology.children)
 
   h_onMessageInternal: (hMessage, cb) ->
     @log "debug", "onMessage :"+JSON.stringify(hMessage)
@@ -631,6 +631,6 @@ UUID._ha = (a, b) ->
   c
 
 exports.Actor = Actor
-exports.newActor = (properties) ->
-  new Actor(properties)
+exports.newActor = (topology) ->
+  new Actor(topology)
 

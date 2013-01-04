@@ -51,7 +51,7 @@ class Actor extends EventEmitter
   #Init logger
   logger.exitOnError = false
   logger.remove(logger.transports.Console)
-  logger.add(logger.transports.Console, {handleExceptions: true, level: "INFO"})
+  logger.add(logger.transports.Console, {handleExceptions: true, level: "debug"})
   logger.add(logger.transports.File, {handleExceptions: true, filename: "#{__dirname}/../../log/hActor.log", level: "debug"})
 
   # Possible running states of an actor
@@ -59,6 +59,17 @@ class Actor extends EventEmitter
   STATUS_STARTED = "started"
   STATUS_STOPPING = "stopping"
   STATUS_STOPPED = "stopped"
+
+  # Native Actors provided by hubiquitus. If forked they will be used
+  H_ACTORS = {
+    hauth: true,
+    hchannel: true,
+    hdispatcher: true,
+    hgateway: true,
+    hsession: true,
+    htracker: true,
+    hactor: true
+  }
 
   # Constructor
   constructor: (properties) ->
@@ -283,9 +294,12 @@ class Actor extends EventEmitter
     unless classname is "hchannel"
       properties.actor = "#{properties.actor}/#{UUID.generate()}"
 
+    if H_ACTORS[classname]
+      classname = "#{__dirname}/#{classname}"
+
     switch method
       when "inproc"
-        actorModule = require "#{__dirname}/#{classname}"
+        actorModule = require "#{classname}"
         childRef = actorModule.newActor(properties)
         @outboundAdapters.push adapters.outboundAdapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
         childRef.outboundAdapters.push adapters.outboundAdapter(method, owner: childRef, targetActorAid: @actor , ref: @)

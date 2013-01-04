@@ -68,7 +68,7 @@ class SocketIO_Connector
 
   ###
   @param client - Reference to the client
-  @param data - Expected {urn, password, (host), (port)}
+  @param data - Expected {urn, password}
   ###
   connect: (client, data) ->
     unless client
@@ -78,10 +78,13 @@ class SocketIO_Connector
     if not data or not data.publisher or not data.password
       log.info "Client ID " + client.id + " is trying to connect without mandatory attribute", data
       return
+
+    #Authentification
+
     client.hClient = @owner
     inboundAdapters = []
-    for i in @owner.inboundAdapters
-      inboundAdapters.push {type:i.type, url:i.url}
+    for inboundAdapter in @owner.inboundAdapters
+      inboundAdapters.push {type:inboundAdapter.type, url:inboundAdapter.url}
 
     data.trackInbox = inboundAdapters
     data.actor = data.publisher
@@ -92,8 +95,7 @@ class SocketIO_Connector
       client.child = child.actor
 
   ###
-  Disconnects the current session and socket. The socket is closed but not
-  the XMPP Connection (for reattaching). It will be closed after timeout.
+  Disconnects the current session and socket.
   @param client - Reference to the client to close
   ###
   disconnect: (client) ->

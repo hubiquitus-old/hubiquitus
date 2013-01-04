@@ -28,7 +28,7 @@ main = ->
   args = process.argv.slice(2)
 
   actorProps = JSON.parse args[1]
-  actorModule = require "#{__dirname}/#{args[0]}"
+  actorModule = require "#{args[0]}"
 
   actor = actorModule.newActor(actorProps);
 

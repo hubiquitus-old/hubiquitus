@@ -58,7 +58,7 @@ class Tracker extends Actor
         @peers.push {peerType:hMessage.payload.params.peerType, peerFullId:hMessage.publisher, peerId:hMessage.payload.params.peerId, peerStatus:hMessage.payload.params.peerStatus, peerInbox:hMessage.payload.params.peerInbox}
         outbox = @findOutbox(hMessage.publisher)
         if outbox
-          @outboundAdapters.push adapters.outboundAdapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
+          @outboundAdapters.push adapters.adapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
 
     else if hMessage.payload.name is "peer-search"
       # TODO reflexion sur le lookup et implementation
@@ -98,8 +98,8 @@ class Tracker extends Actor
         unless outboundadapter
           if peers.peerStatus is "started"
             _.forEach peers.peerInbox, (inbox) =>
-              if inbox.type is "socket"
-                outboundadapter = {type: inbox.type, targetActorAid: actor, url: inbox.url}
+              if inbox.type is "socket_in"
+                outboundadapter = {type: "socket_out", targetActorAid: actor, url: inbox.url}
     unless outboundadapter
       outTab = []
       _.forEach @peers, (peers) =>
@@ -109,9 +109,8 @@ class Tracker extends Actor
         lb_peers = outTab[Math.floor(Math.random() * outTab.length)]
         if lb_peers.peerStatus is "started"
           _.forEach lb_peers.peerInbox, (inbox) =>
-            if inbox.type is "socket"
-              outboundadapter = {type: inbox.type, targetActorAid: lb_peers.peerFullId, url: inbox.url}
-
+            if inbox.type is "socket_in"
+              outboundadapter = {type: "socket_out", targetActorAid: lb_peers.peerFullId, url: inbox.url}
     outboundadapter
 
   stopAlert: (actor) ->

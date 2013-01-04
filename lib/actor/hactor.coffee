@@ -95,20 +95,18 @@ class Actor extends EventEmitter
       _.forEach properties.trackers, (trackerProps) =>
         @log "debug", "registering tracker #{trackerProps.trackerId}"
         @trackers.push trackerProps
-        #@inboundAdapters.push adapters.inboundAdapter("channel",  {owner: @, url: trackerProps.broadcastUrl})
-        @outboundAdapters.push adapters.outboundAdapter("socket", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
+        @outboundAdapters.push adapters.adapter("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
     else
       @log "debug", "no tracker was provided"
 
-    # Setting inbound adapters
-    _.forEach properties.inboundAdapters, (adapterProps) =>
+    # Setting adapters
+    _.forEach properties.adapters, (adapterProps) =>
       adapterProps.owner = @
-      @inboundAdapters.push adapters.inboundAdapter(adapterProps.type, adapterProps)
-
-    # Setting outbound adapters
-    _.forEach properties.outboundAdapters, (adapterProps) =>
-      adapterProps.owner = @
-      @outboundAdapters.push adapters.outboundAdapter(adapterProps.type, adapterProps)
+      adapter = adapters.adapter(adapterProps.type, adapterProps)
+      if adapter.direction is "in"
+        @inboundAdapters.push adapter
+      else if adapter.direction is "out"
+        @outboundAdapters.push adapter
 
     # registering callbacks on events
     @on "message", (hMessage) =>
@@ -205,7 +203,7 @@ class Actor extends EventEmitter
         msg = @buildSignal(@trackers[0].trackerId, "peer-search", {actor:hMessage.actor}, {timeout:5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
-            outboundAdapter = adapters.outboundAdapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
+            outboundAdapter = adapters.adapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
             @outboundAdapters.push outboundAdapter
             if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
               @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
@@ -289,15 +287,15 @@ class Actor extends EventEmitter
       when "inproc"
         actorModule = require "#{__dirname}/#{classname}"
         childRef = actorModule.newActor(properties)
-        @outboundAdapters.push adapters.outboundAdapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
-        childRef.outboundAdapters.push adapters.outboundAdapter(method, owner: childRef, targetActorAid: @actor , ref: @)
+        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
+        childRef.outboundAdapters.push adapters.adapter(method, owner: childRef, targetActorAid: @actor , ref: @)
         childRef.parent = @
         # Starting the child
         @send @buildSignal(properties.actor, "start", {})
 
       when "fork"
         childRef = forker.fork __dirname+"/childlauncher", [classname , JSON.stringify(properties)]
-        @outboundAdapters.push adapters.outboundAdapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
+        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
         childRef.on "message", (msg) =>
           if msg.state is 'ready'
             @send @buildSignal(properties.actor, "start", {})
@@ -458,7 +456,7 @@ class Actor extends EventEmitter
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:5000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
-        channelInbound = adapters.inboundAdapter("channel", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
+        channelInbound = adapters.adapter("channel_in", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
         @inboundAdapters.push channelInbound
         channelInbound.start()
         @subscriptions.push hChannel

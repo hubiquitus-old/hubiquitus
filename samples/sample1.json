@@ -7,7 +7,7 @@
             "type": "hgateway",
             "method": "inproc",
             "children": [],
-            "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:3993" } ],
+            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:3993" } ],
             "properties": {
                 "socketIOPort": 8080
             }
@@ -17,7 +17,7 @@
             "type": "hdispatcher",
             "method": "inproc",
             "workers": { "method": "fork", "type": "hactor", "nb": 2 },
-            "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2992" } ]
+            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:2992" } ]
         },
         {
             "actor": "urn:localhost:channel",
@@ -50,5 +50,5 @@
             }
         }
     },
-    "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2997" } ]
+    "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:2997" } ]
 }

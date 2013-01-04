@@ -44,6 +44,7 @@ class Adapter
 class InboundAdapter extends Adapter
 
   constructor: (properties) ->
+    @direction = "in"
     super
 
   genListenPort: ->
@@ -54,7 +55,7 @@ class SocketInboundAdapter extends InboundAdapter
   constructor: (properties) ->
     super
     if properties.url then @url = properties.url else @url = "tcp://127.0.0.1:#{@genListenPort}"
-    @type = "socket"
+    @type = "socket_in"
     @sock = zmq.socket "pull"
     @sock.identity = "SocketIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
@@ -76,7 +77,7 @@ class LBSocketInboundAdapter extends InboundAdapter
   constructor: (properties) ->
     super
     if properties.url then @url = properties.url else @url = "tcp://127.0.0.1:#{@genListenPort}"
-    @type = "lb_socket"
+    @type = "lb_socket_in"
     @sock = zmq.socket "pull"
     @sock.identity = "LBSocketIA_of_#{@owner.actor}"
     @sock.on "message", (data) => @owner.emit "message", JSON.parse(data)
@@ -100,7 +101,7 @@ class ChannelInboundAdapter extends InboundAdapter
     if properties.url
     then @url = properties.url
     else throw new Error("You must provide a channel url")
-    @type = "channel"
+    @type = "channel_in"
     @listQuickFilter = []
     @filter = properties.filter or ""
     @sock = zmq.socket "sub"
@@ -144,6 +145,7 @@ class ChannelInboundAdapter extends InboundAdapter
 class OutboundAdapter extends Adapter
 
   constructor: (properties) ->
+    @direction = "out"
     if properties.targetActorAid
       @targetActorAid = properties.targetActorAid
     else
@@ -288,34 +290,28 @@ class SocketIOAdapter extends OutboundAdapter
     @start() unless @started
     @sock.emit "hMessage", hMessage
 
-exports.inboundAdapter = (type, properties) ->
+exports.adapter = (type, properties) ->
   switch type
-    when "socket"
+    when "socket_in"
       new SocketInboundAdapter(properties)
-    when "lb_socket"
+    when "lb_socket_in"
       new LBSocketInboundAdapter(properties)
-    when "channel"
+    when "channel_in"
       new ChannelInboundAdapter(properties)
-    else
-      throw new Error "Incorrect type '#{type}'"
-
-exports.outboundAdapter = (type, properties) ->
-
-  switch type
     when "inproc"
       new LocalOutboundAdapter(properties)
     when "fork"
       new ChildprocessOutboundAdapter(properties)
-    when "socket"
+    when "socket_out"
       new SocketOutboundAdapter(properties)
-    when "lb_socket"
+    when "lb_socket_out"
       new LBSocketOutboundAdapter(properties)
-    when "channel"
+    when "channel_out"
       new ChannelOutboundAdapter(properties)
+    when "socketIO"
+      new SocketIOAdapter(properties)
     else
       throw new Error "Incorrect type '#{type}'"
 
-exports.socketIOAdapter = (properties) ->
-  new SocketIOAdapter(properties)
 
 exports.OutboundAdapter = OutboundAdapter

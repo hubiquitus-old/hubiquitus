@@ -143,7 +143,7 @@ class Session extends Actor
 
   initListener: (client) =>
     delete client["hClient"]
-    socketIOAdapter = adapters.socketIOAdapter({targetActorAid: @actor, owner: @, socket: client.socket})
+    socketIOAdapter = adapters.adapter("socketIO", {targetActorAid: @actor, owner: @, socket: client.socket})
     @outboundAdapters.push socketIOAdapter
 
     @on "hStatus", (msg) ->

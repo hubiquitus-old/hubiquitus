@@ -38,11 +38,11 @@ class Dispatcher extends Actor
 
   addWorkers : (workerProps) ->
     dispatchingUrl = "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+3000}"
-    @outboundAdapters.push adapters.outboundAdapter("lb_socket", { targetActorAid: @workersAlias, owner: @, url: dispatchingUrl })
+    @outboundAdapters.push adapters.adapter("lb_socket_out", { targetActorAid: @workersAlias, owner: @, url: dispatchingUrl })
     #@inboundAdapters.push adapters.inboundAdapter("lb_socket", { owner: @, url: dispatchingUrl })
     for i in [1..workerProps.nb]
       @log "debug", "Adding a new worker #{i}"
-      @createChild workerProps.type, workerProps.method, actor: "urn:localhost:worker#{i}", inboundAdapters: [ { type: "lb_socket", url: dispatchingUrl }, { type: "socket", url: "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+3000}" }], #{type: "channel", url: "tcp://*:2998"} ]
+      @createChild workerProps.type, workerProps.method, actor: "urn:localhost:worker#{i}", adapters: [ { type: "lb_socket_in", url: dispatchingUrl }, { type: "socket_in", url: "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+3000}" }],
 
   onMessage: (hMessage) ->
     @log "Dispatcher received a hMessage to send to workers: #{JSON.stringify(hMessage)}"

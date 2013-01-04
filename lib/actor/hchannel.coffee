@@ -44,8 +44,8 @@ class Channel extends Actor
       db :
         dbName : topology.properties.db.dbName
         dbCollection : topology.properties.db.dbCollection
-    @inboundAdapters.push adapters.inboundAdapter("socket", {url: topology.properties.listenOn, owner: @})
-    @outboundAdapters.push adapters.outboundAdapter("channel", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
+    @inboundAdapters.push adapters.adapter("socket_in", {url: topology.properties.listenOn, owner: @})
+    @outboundAdapters.push adapters.adapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
 
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it

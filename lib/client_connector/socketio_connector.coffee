@@ -86,20 +86,20 @@ class SocketIO_Connector
     authMsg = @owner.buildMessage @owner.properties.authActor, "hAuth", {login: data.login, password: data.password, context: data.context},{timeout: authTimeout}
     @owner.send authMsg, (authResponse) =>
       if not authResponse or not authResponse.payload or not authResponse.payload.result
-        client.socket.emit 'hStatus', {status: codes.statuses.DISCONNECTING, errorCode: codes.errors.TECH_ERROR, errorMsg: "invalid response"}
+        client.socket.emit 'hStatus', {status: codes.statuses.DISCONNECTED, errorCode: codes.errors.TECH_ERROR, errorMsg: "invalid response"}
         @disconnect client
         return
 
       authResult = authResponse.payload.result
 
       if authResult.errorCode isnt codes.errors.NO_ERROR
-        client.socket.emit 'hStatus', { status: codes.statuses.DISCONNECTING, errorCode: authResult.errorCode, errorMsg: authResult.errorMsg}
+        client.socket.emit 'hStatus', { status: codes.statuses.DISCONNECTED, errorCode: authResult.errorCode, errorMsg: authResult.errorMsg}
         @disconnect client
         return
 
       if not validator.validateURN authResult.actor
         log.debug "Disconnecting with error Client " + client.publish
-        client.socket.emit 'hStatus', { status: codes.statuses.DISCONNECTING, errorCode: codes.errors.URN_MALFORMAT}
+        client.socket.emit 'hStatus', { status: codes.statuses.DISCONNECTED, errorCode: codes.errors.URN_MALFORMAT}
         @disconnect client
         return
 

@@ -51,7 +51,7 @@ class Actor extends EventEmitter
   #Init logger
   logger.exitOnError = false
   logger.remove(logger.transports.Console)
-  logger.add(logger.transports.Console, {handleExceptions: true, level: "INFO"})
+  logger.add(logger.transports.Console, {handleExceptions: true, level: "debug"})
   logger.add(logger.transports.File, {handleExceptions: true, filename: "#{__dirname}/../../log/hActor.log", level: "debug"})
 
   # Possible running states of an actor
@@ -195,7 +195,8 @@ class Actor extends EventEmitter
       if @timerOutAdapter[outboundAdapter.targetActorAid]
         clearTimeout(@timerOutAdapter[outboundAdapter.targetActorAid])
         @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
-          @timerOutAdapter[outboundAdapter.targetActorAid] = null
+          delete @timerOutAdapter[outboundAdapter.targetActorAid]
+          @unsubscribe @trackers[0].trackerChannel, outboundAdapter.targetActorAid, () ->
           @removePeer(outboundAdapter.targetActorAid)
         , 90000)
       @h_sending(hMessage, cb, outboundAdapter)
@@ -209,8 +210,9 @@ class Actor extends EventEmitter
             if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
               @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
 
-            @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(->
-              @timerOutAdapter[outboundAdapter.targetActorAid] = null
+            @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
+              delete @timerOutAdapter[outboundAdapter.targetActorAid]
+              @unsubscribe @trackers[0].trackerChannel, outboundAdapter.targetActorAid, () ->
               @removePeer(outboundAdapter.targetActorAid)
             , 90000)
 

@@ -28,7 +28,7 @@ adapters = require "./adapters"
 {Actor} = require "./actor/hactor"
 os = require "os"
 _ = require "underscore"
-opts = require "./options.coffee"
+opts = require("./options.coffee").options
 
 createActor = (properties) ->
   actorModule = require "#{__dirname}/actor/#{properties.type}"
@@ -38,7 +38,7 @@ main = ->
 
   hTopology = `undefined`
   try
-    hTopology = eval("(" + fs.readFileSync("./samples/sample1.json", "utf8") + ")")
+    hTopology = eval("(" + fs.readFileSync(opts["topology.path"], "utf8") + ")")
   catch err
     console.log "erreur : ",err
   unless hTopology

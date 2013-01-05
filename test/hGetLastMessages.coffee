@@ -29,7 +29,7 @@ describe "hGetLastMessages", ->
   hActor = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hchannel")
-  existingCHID = "urn:localhost:##{config.getUUID()}"
+  existingCHID = "urn:localhost:#{config.getUUID()}"
   DateTab = []
 
   before () ->
@@ -39,7 +39,11 @@ describe "hGetLastMessages", ->
       properties: {
         subscribers:[existingCHID, config.logins[2].urn],
         listenOn: "tcp://127.0.0.1:1221",
-        broadcastOn: "tcp://127.0.0.1:2998"
+        broadcastOn: "tcp://127.0.0.1:2998",
+        db:{
+          dbName: "test",
+          dbCollection: existingCHID
+        }
       }
     }
     hActor = actorModule.newActor(topology)

@@ -31,12 +31,12 @@ validator = require "./../validator"
 
 class Gateway extends Actor
 
-  constructor: (properties) ->
+  constructor: (topology) ->
     super
     # Setting outbound adapters
     @type = 'gateway'
-    if properties.properties.socketIOPort
-      socketIO.socketIO({port: properties.properties.socketIOPort, owner: @})
+    if topology.properties.socketIOPort
+      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @})
 
   onMessage: (hMessage) ->
     if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
@@ -45,5 +45,5 @@ class Gateway extends Actor
 
 
 exports.Gateway = Gateway
-exports.newActor = (properties) ->
-  new Gateway(properties)
+exports.newActor = (topology) ->
+  new Gateway(topology)

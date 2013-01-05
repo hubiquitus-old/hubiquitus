@@ -34,8 +34,8 @@ describe "hUnsubscribe", ->
   hChannel = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hactor")
-  existingCHID = "urn:localhost:##{config.getUUID()}"
-  existingCHID2 = "urn:localhost:##{config.getUUID()}"
+  existingCHID = "urn:localhost:#{config.getUUID()}"
+  existingCHID2 = "urn:localhost:#{config.getUUID()}"
 
   before () ->
     topology = {
@@ -47,14 +47,22 @@ describe "hUnsubscribe", ->
     properties =
       listenOn: "tcp://127.0.0.1:1221",
       broadcastOn: "tcp://127.0.0.1:2998",
-      subscribers: [config.logins[0].urn]
+      subscribers: [config.logins[0].urn],
+      db:{
+        dbName: "test",
+        dbCollection: existingCHID
+      }
     hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
       hChannel = child
 
     properties =
       listenOn: "tcp://127.0.0.1:2112",
       broadcastOn: "tcp://127.0.0.1:8992",
-      subscribers: [config.logins[0].urn]
+      subscribers: [config.logins[0].urn],
+      db:{
+        dbName: "test",
+        dbCollection: existingCHID2
+      }
     hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
       hChannel = child
 

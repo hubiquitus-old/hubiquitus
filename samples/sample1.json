@@ -7,13 +7,13 @@
             "type": "hgateway",
             "method": "inproc",
             "children": [
-                {
+            	{
                     "actor": "urn:localhost:auth",
                     "type": "hauth",
                     "method": "inproc"
                 }
             ],
-            "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:3993" } ],
+            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:3993" } ],
             "properties": {
                 "socketIOPort": 8080,
                 "authActor": "urn:localhost:auth",
@@ -24,8 +24,10 @@
             "actor": "urn:localhost:dispatcher",
             "type": "hdispatcher",
             "method": "inproc",
-            "workers": { "method": "fork", "type": "hactor", "nb": 2 },
-            "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2992" } ]
+            "properties": {
+                "workers": { "method": "fork", "type": "hactor", "nb": 2 }
+            },
+            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:2992" } ]
         },
         {
             "actor": "urn:localhost:channel",
@@ -34,21 +36,29 @@
             "properties": {
                 "listenOn": "tcp://127.0.0.1:2112",
                 "broadcastOn": "tcp://127.0.0.1:8992",
-                "subscribers": []
+                "subscribers": [],
+                "db":{
+                    "dbName": "admin",
+                    "dbCollection": "channel"
+                }
             }
         }
     ],
     "properties":{
         "channel": {
-            "actor": "urn:localhost:#trackChannel",
+            "actor": "urn:localhost:trackChannel",
             "type": "hchannel",
             "method": "inproc",
             "properties": {
                 "listenOn": "tcp://127.0.0.1:1221",
                 "broadcastOn": "tcp://127.0.0.1:2998",
-                "subscribers": []
+                "subscribers": [],
+                "db":{
+                    "dbName": "admin",
+                    "dbCollection": "trackChannel"
+                }
             }
         }
     },
-    "inboundAdapters": [ { "type": "socket", "url": "tcp://127.0.0.1:2997" } ]
+    "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:2997" } ]
 }

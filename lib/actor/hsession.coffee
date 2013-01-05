@@ -30,18 +30,18 @@ statuses = require("../codes").statuses
 errors = require("../codes").errors
 validator = require "../validator"
 codes = require "../codes"
-options = require "../options"
+options = require("../options").options
 hFilter = require "../hFilter"
 adapters = require "../adapters"
 
 
 class Session extends Actor
 
-  constructor: (properties) ->
+  constructor: (topology) ->
     super
     # Setting outbound adapters
     @type = 'session'
-    @trackInbox = properties.trackInbox
+    @trackInbox = topology.trackInbox
 
   touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
@@ -114,7 +114,7 @@ class Session extends Actor
     if hCommand.params and typeof hCommand.params isnt "object"
       cb self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Params is settled but not an object")
       return
-    commandTimeout = module.timeout or options.commandController.timeout
+    commandTimeout = module.timeout or options["hcommands.timeout"]
 
     onResult = (status, result) ->
       #If callback is called after the timer ignore it
@@ -143,7 +143,7 @@ class Session extends Actor
 
   initListener: (client) =>
     delete client["hClient"]
-    socketIOAdapter = adapters.socketIOAdapter({targetActorAid: @actor, owner: @, socket: client.socket})
+    socketIOAdapter = adapters.adapter("socketIO", {targetActorAid: @actor, owner: @, socket: client.socket})
     @outboundAdapters.push socketIOAdapter
 
     @on "hStatus", (msg) ->
@@ -169,5 +169,5 @@ class Session extends Actor
     @emit "connect"
 
 exports.Session = Session
-exports.newActor = (properties) ->
-  new Session(properties)
+exports.newActor = (topology) ->
+  new Session(topology)

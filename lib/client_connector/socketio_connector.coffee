@@ -108,7 +108,7 @@ class SocketIO_Connector
         inboundAdapters.push {type:inboundAdapter.type, url:inboundAdapter.url}
 
       data.trackInbox = inboundAdapters
-      data.actor = authResponse.actor
+      data.actor = authResult.actor
       data.inboundAdapters
       client.hClient.createChild "hsession", "inproc", data, (child) =>
         #Relay all server status messages

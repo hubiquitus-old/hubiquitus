@@ -313,5 +313,5 @@ exports.adapter = (type, properties) ->
     else
       throw new Error "Incorrect type '#{type}'"
 
-
+exports.InboundAdapter = InboundAdapter
 exports.OutboundAdapter = OutboundAdapter

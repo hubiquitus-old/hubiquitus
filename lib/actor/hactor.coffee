@@ -52,7 +52,7 @@ class Actor extends EventEmitter
   logger.exitOnError = false
   logger.remove(logger.transports.Console)
   logger.add(logger.transports.Console, {handleExceptions: true, level: "debug"})
-  logger.add(logger.transports.File, {handleExceptions: true, filename: "#{__dirname}/../../log/hActor.log", level: "debug"})
+  logger.add(logger.transports.File, {handleExceptions: true, filename: "./log/hubiquitus.log", level: "debug"})
 
   # Possible running states of an actor
   STATUS_STARTING = "starting"
@@ -122,6 +122,8 @@ class Actor extends EventEmitter
 
     # registering callbacks on events
     @on "message", (hMessage) =>
+      #complete msgid
+      hMessage.msgid = hMessage.msgid + "#" + @makeMsgId()
       ref = undefined
       if hMessage and hMessage.ref and typeof hMessage.ref is "string"
         ref = hMessage.ref.split("#")[0]
@@ -238,7 +240,9 @@ class Actor extends EventEmitter
           throw new Error "Don't have any tracker for peer-searching"
 
   h_sending: (hMessage, cb, outboundAdapter) ->
-    #Complete hCommand
+    #Complete hMessage
+    hMessage.msgid = hMessage.msgid or @makeMsgId();
+
     errorCode = undefined
     errorMsg = undefined
 
@@ -620,8 +624,7 @@ class Actor extends EventEmitter
   Create a unique message id
   ###
   makeMsgId: () ->
-    msgId = ""
-    msgId += "#" + UUID.generate()
+    msgId = UUID.generate()
     msgId
 
 

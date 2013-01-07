@@ -30,7 +30,7 @@ describe "hGetThread", ->
   hActor = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hchannel")
-  existingCHID = "urn:localhost:##{config.getUUID()}"
+  existingCHID = "urn:localhost:#{config.getUUID()}"
   convid = undefined
   publishedMessages = 0
 
@@ -40,7 +40,11 @@ describe "hGetThread", ->
       type: "hchannel",
       properties: {
         subscribers:[existingCHID],
-        broadcastOn: "tcp://127.0.0.1:2998"
+        broadcastOn: "tcp://127.0.0.1:2998",
+        db:{
+          dbName: "test",
+          dbCollection: existingCHID
+        }
       }
     }
     hActor = actorModule.newActor(topology)

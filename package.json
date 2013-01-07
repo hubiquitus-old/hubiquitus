@@ -1,8 +1,8 @@
 {
-  "name": "hactor",
+  "name": "hubiquitus",
   "author": "Alexis Lesage",
   "description": "Actor model for Hubiquitus",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "homepage": "www.hubiquitus.com",
   "repository": {
     "type": "git",
@@ -11,7 +11,8 @@
   "maintainers": [{"name": "Alexis Lesage"
 		 ,"email":"alexislesage@gmail.com"
 		 }],
-  "bin": { "hengine": "./bin/hengine"},
+  "bin": { "launcher": "./lib/launcher.coffee"},
+  "main": "./lib/hubiquitus",
   "engines": {
     "node": ">0.8.0"
   },

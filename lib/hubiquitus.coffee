@@ -23,21 +23,28 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-main = ->
+{Actor} = require "./actor/hactor"
+{Auth} = require "./actor/hauth"
+{Channel} = require "./actor/hchannel"
+{Dispatcher} = require "./actor/hdispatcher"
+{Gateway} = require "./actor/hgateway"
+{Session} = require "./actor/hsession"
+{Tracker} = require "./actor/htracker"
+adapter = require "./adapters"
+validator = require "./validator"
+filter = require "./hFilter"
+dbPool = require "./dbPool"
+codes = require "./codes"
 
-  args = process.argv.slice(2)
-
-  actorProps = JSON.parse args[1]
-  actorModule = require "#{args[0]}"
-
-  actor = actorModule.newActor(actorProps);
-
-  # Acknowledging parent process that the job has been done
-  process.send( {state: "ready"} )
-
-  # Transmitting any message from parent actor to child actor
-  process.on "message" , (msg) ->
-    #console.log("Child process got message",msg)
-    actor.emit "message", msg
-
-main()
+exports.Actor = Actor
+exports.Auth = Auth
+exports.Channel = Channel
+exports.Dispatcher = Dispatcher
+exports.Gateway = Gateway
+exports.Session = Session
+exports.Tracker = Tracker
+exports.adapter = adapter
+exports.validator = validator
+exports.filter = filter
+exports.dbPool = dbPool
+exports.codes = codes

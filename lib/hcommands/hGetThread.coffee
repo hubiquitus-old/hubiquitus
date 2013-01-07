@@ -47,8 +47,8 @@ hGetThread::exec = (hMessage, context, cb) ->
       convid = hCommand.params.convid
       sort = hCommand.params.sort or 1
       sort = 1  if hCommand.params.sort isnt -1 and hCommand.params.sort isnt 1
-      dbPool.getDb "admin", (dbInstance) ->
-        stream = dbInstance.get(actor).find(convid: convid).sort(published: sort).skip(0).stream()
+      dbPool.getDb context.properties.db.dbName, (dbInstance) ->
+        stream = dbInstance.get(context.properties.db.dbCollection).find(convid: convid).sort(published: sort).skip(0).stream()
         firstElement = true
         stream.on "data", (localhMessage) ->
           localhMessage.actor = actor

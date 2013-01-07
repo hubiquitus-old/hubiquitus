@@ -23,41 +23,43 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-fs = require "fs"
-adapters = require "./adapters"
-{Actor} = require "./actor/hactor"
-os = require "os"
+{Actor} = require "./hactor"
+zmq = require "zmq"
 _ = require "underscore"
-opts = require("./options.coffee").options
-
-createActor = (properties) ->
-  actorModule = require "#{__dirname}/actor/#{properties.type}"
-  actor = actorModule.newActor(properties)
-
-main = ->
-
-  hTopology = `undefined`
-  try
-    hTopology = eval("(" + fs.readFileSync(opts["topology.path"], "utf8") + ")")
-  catch err
-    console.log "erreur : ",err
-  unless hTopology
-    console.log "No config file or malformated config file. Can not start actor"
-    process.exit 1
+statuses = require("../codes").statuses
+errors = require("../codes").errors
+validator = require "../validator"
+codes = require "../codes"
 
 
-  mockActor = { actor: "process"+process.pid }
+class Auth extends Actor
 
-  engine = createActor(hTopology)
+  constructor: (properties) ->
+    super
+    @type = 'auth'
 
-  engine.on "started", ->
-    _.forEach ["SIGINT"], (signal) ->
-      process.on signal, ->
-        engine.h_tearDown()
-        process.exit()
-     #   clearInterval interval
+  onMessage: (hMessage, cb) ->
+    if not hMessage or not hMessage.payload or hMessage.type isnt "hAuth"
+      cb codes.errors.AUTH_FAILED, "missing message"
+      return
+    @auth hMessage.payload.login, hMessage.payload.password, hMessage.payload.context, (actor, errorCode, errorMsg) =>
+      authResponse = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, {actor : actor, errorCode : errorCode, errorMsg: errorMsg}
+      @send authResponse
 
-  # starting engine
-  engine.h_init()
+  # Should be overrided to implement own auth system.
+  # context : extra data
+  # cb
+  #   status : authentification status. If ok it should be NO_ERROR
+  #   result : if ok, it should be user urn, else if should be error message
+  auth: (login, password, context, cb) ->
+    if(login is password)
+      @log "debug", "Login successful for user #{login}"
+      cb login, codes.errors.NO_ERROR
+    else
+      @log "debug", "Invalid login for user #{login}"
+      cb undefined, codes.errors.AUTH_FAILED, "invalid publisher or password"
 
-main()
+
+exports.Auth = Auth
+exports.newActor = (properties) ->
+  new Auth(properties)

@@ -31,7 +31,7 @@ describe "hRelevantMessages", ->
   cmd = undefined
   hActor = undefined
   nbMsgs = 10
-  activeChan = "urn:localhost:##{config.getUUID()}"
+  activeChan = "urn:localhost:#{config.getUUID()}"
 
   before () ->
     topology = {
@@ -40,7 +40,11 @@ describe "hRelevantMessages", ->
       properties: {
         subscribers:[activeChan],
         listenOn: "tcp://127.0.0.1:1221",
-        broadcastOn: "tcp://127.0.0.1:2998"
+        broadcastOn: "tcp://127.0.0.1:2998",
+        db:{
+          dbName: "test",
+          dbCollection: activeChan
+        }
       }
     }
     hActor = actorModule.newActor(topology)

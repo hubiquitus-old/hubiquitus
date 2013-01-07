@@ -39,11 +39,6 @@ class Channel extends Actor
     super
     @actor = validator.getBareURN(topology.actor)
     @type = "channel"
-    @properties =
-      subscribers : topology.properties.subscribers or []
-      db :
-        dbName : topology.properties.db.dbName
-        dbCollection : topology.properties.db.dbCollection
     @inboundAdapters.push adapters.adapter("socket_in", {url: topology.properties.listenOn, owner: @})
     @outboundAdapters.push adapters.adapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
 

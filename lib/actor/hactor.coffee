@@ -217,10 +217,17 @@ class Actor extends EventEmitter
         msg = @buildSignal(@trackers[0].trackerId, "peer-search", {actor:hMessage.actor}, {timeout:5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
-            outboundAdapter = adapters.adapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
-            @outboundAdapters.push outboundAdapter
-            if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
-              @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
+            found = false
+            _.forEach @outboundAdapters, (outbound) =>
+              if outbound.targetActorAid is hResult.payload.result.targetActorAid
+                found = true
+                hMessage.actor = outbound.targetActorAid
+                outboundAdapter = outbound
+            unless found
+              outboundAdapter = adapters.adapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
+              @outboundAdapters.push outboundAdapter
+              if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
+                @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
 
             @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
               delete @timerOutAdapter[outboundAdapter.targetActorAid]
@@ -356,8 +363,8 @@ class Actor extends EventEmitter
         @log "debug", "touching tracker #{trackerProps.trackerId}"
         inboundAdapters = []
         if @status isnt STATUS_STOPPING
-          for i in @inboundAdapters
-            inboundAdapters.push {type:i.type, url:i.url}
+          for inbound in @inboundAdapters
+            inboundAdapters.push {type:inbound.type, url:inbound.url}
         @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:inboundAdapters})
 
 
@@ -498,7 +505,7 @@ class Actor extends EventEmitter
       if channel is hChannel
         subs = true
         if quickFilter is undefined
-          delete @subscriptions[index]
+          @subscriptions.splice(index, 1)
       index++
 
     if subs is false
@@ -515,7 +522,7 @@ class Actor extends EventEmitter
                 return cb codes.hResultStatus.OK, "QuickFilter removed"
           else
             inbound.stop()
-            delete @inboundAdapters[index]
+            @inboundAdapters.splice(index, 1)
             return cb codes.hResultStatus.OK, "Unsubscribe from channel"
         index++
 
@@ -526,7 +533,7 @@ class Actor extends EventEmitter
     _.forEach @outboundAdapters, (outbound) =>
       if outbound.targetActorAid is actor
         outbound.stop()
-        delete @outboundAdapters[index]
+        @outboundAdapters.splice(index, 1)
         if @trackers[0]
           @unsubscribe @trackers[0].trackerChannel, actor, () ->
 

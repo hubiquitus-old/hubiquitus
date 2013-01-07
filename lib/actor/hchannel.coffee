@@ -30,18 +30,22 @@ _ = require "underscore"
 validator = require "./../validator"
 dbPool = require("./../dbPool.coffee").getDbPool()
 codes = require "./../codes"
-options = require "./../options"
+options = require("./../options").options
 
 class Channel extends Actor
 
   constructor: (topology) ->
+    #TODO Stop actor and send error when all mandatory attribut is not in topology
     super
     @actor = validator.getBareURN(topology.actor)
     @type = "channel"
     @properties =
       subscribers : topology.properties.subscribers or []
-    @inboundAdapters.push adapters.inboundAdapter("socket", {url: topology.properties.listenOn, owner: @})
-    @outboundAdapters.push adapters.outboundAdapter("channel", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
+      db :
+        dbName : topology.properties.db.dbName
+        dbCollection : topology.properties.db.dbCollection
+    @inboundAdapters.push adapters.adapter("socket_in", {url: topology.properties.listenOn, owner: @})
+    @outboundAdapters.push adapters.adapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
 
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
@@ -84,13 +88,14 @@ class Channel extends Actor
         delete hMessage.msgid
         delete hMessage.timeout
 
-        dbPool.getDb "admin", (dbInstance) ->
-          dbInstance.saveHMessage hMessage
+        dbPool.getDb @properties.db.dbName, (dbInstance) =>
+          dbInstance.saveHMessage hMessage, @properties.db.dbCollection
 
         hMessage.persistent = true
         hMessage.msgid = hMessage._id
         hMessage.timeout = timeout
         delete hMessage._id
+
       #sends to all subscribers the message received
       hMessage.actor = @actor
       @send hMessage
@@ -126,7 +131,7 @@ class Channel extends Actor
     if hCommand.params and typeof hCommand.params isnt "object"
       cb self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Params is settled but not an object")
       return
-    commandTimeout = module.timeout or options.commandController.timeout
+    commandTimeout = module.timeout or options["hcommands.timeout"]
 
     onResult = (status, result) ->
       #If callback is called after the timer ignore it

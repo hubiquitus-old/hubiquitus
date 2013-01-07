@@ -51,8 +51,8 @@ class Actor extends EventEmitter
   #Init logger
   logger.exitOnError = false
   logger.remove(logger.transports.Console)
-  logger.add(logger.transports.Console, {handleExceptions: true, level: "INFO"})
-  logger.add(logger.transports.File, {handleExceptions: true, filename: "#{__dirname}/../../log/hActor.log", level: "debug"})
+  logger.add(logger.transports.Console, {handleExceptions: true, level: "debug"})
+  logger.add(logger.transports.File, {handleExceptions: true, filename: "./log/hubiquitus.log", level: "debug"})
 
   # Possible running states of an actor
   STATUS_STARTING = "starting"
@@ -60,20 +60,31 @@ class Actor extends EventEmitter
   STATUS_STOPPING = "stopping"
   STATUS_STOPPED = "stopped"
 
+  # Native Actors provided by hubiquitus. If forked they will be used
+  H_ACTORS = {
+    hauth: true,
+    hchannel: true,
+    hdispatcher: true,
+    hgateway: true,
+    hsession: true,
+    htracker: true,
+    hactor: true
+  }
+
   # Constructor
-  constructor: (properties) ->
+  constructor: (topology) ->
     # setting up instance attributes
-    if(validator.validateFullURN(properties.actor))
-      @actor = properties.actor
-    else if(validator.validateURN(properties.actor))
-      @actor = "#{properties.actor}/#{UUID.generate()}"
+    if(validator.validateFullURN(topology.actor))
+      @actor = topology.actor
+    else if(validator.validateURN(topology.actor))
+      @actor = "#{topology.actor}/#{UUID.generate()}"
     else
       throw new Error "Invalid actor URN"
     @ressource = @actor.replace(/^.*\//, "")
     @type = "actor"
     @filter = {}
-    if properties.filter
-      @setFilter properties.filter, (status, result) =>
+    if topology.filter
+      @setFilter topology.filter, (status, result) =>
         unless status is codes.hResultStatus.OK
           # TODO arreter l'acteur
           @log "debug", "Invalid filter stopping actor"
@@ -83,6 +94,7 @@ class Actor extends EventEmitter
     @parent = undefined
 
     # Initializing attributs
+    @properties = topology.properties or {}
     @status = STATUS_STOPPED
     @children = []
     @trackers = []
@@ -91,27 +103,27 @@ class Actor extends EventEmitter
     @subscriptions = []
 
     # Registering trackers
-    if _.isArray(properties.trackers) and properties.trackers.length > 0
-      _.forEach properties.trackers, (trackerProps) =>
+    if _.isArray(topology.trackers) and topology.trackers.length > 0
+      _.forEach topology.trackers, (trackerProps) =>
         @log "debug", "registering tracker #{trackerProps.trackerId}"
         @trackers.push trackerProps
-        #@inboundAdapters.push adapters.inboundAdapter("channel",  {owner: @, url: trackerProps.broadcastUrl})
-        @outboundAdapters.push adapters.outboundAdapter("socket", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
+        @outboundAdapters.push adapters.adapter("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
     else
       @log "debug", "no tracker was provided"
 
-    # Setting inbound adapters
-    _.forEach properties.inboundAdapters, (adapterProps) =>
+    # Setting adapters
+    _.forEach topology.adapters, (adapterProps) =>
       adapterProps.owner = @
-      @inboundAdapters.push adapters.inboundAdapter(adapterProps.type, adapterProps)
-
-    # Setting outbound adapters
-    _.forEach properties.outboundAdapters, (adapterProps) =>
-      adapterProps.owner = @
-      @outboundAdapters.push adapters.outboundAdapter(adapterProps.type, adapterProps)
+      adapter = adapters.adapter(adapterProps.type, adapterProps)
+      if adapter.direction is "in"
+        @inboundAdapters.push adapter
+      else if adapter.direction is "out"
+        @outboundAdapters.push adapter
 
     # registering callbacks on events
     @on "message", (hMessage) =>
+      #complete msgid
+      hMessage.msgid = hMessage.msgid + "#" + @makeMsgId()
       ref = undefined
       if hMessage and hMessage.ref and typeof hMessage.ref is "string"
         ref = hMessage.ref.split("#")[0]
@@ -127,7 +139,7 @@ class Actor extends EventEmitter
 
     # Adding children once started
     @on "started", ->
-      @initChildren(properties.children)
+      @initChildren(topology.children)
 
   h_onMessageInternal: (hMessage, cb) ->
     @log "debug", "onMessage :"+JSON.stringify(hMessage)
@@ -195,7 +207,8 @@ class Actor extends EventEmitter
       if @timerOutAdapter[outboundAdapter.targetActorAid]
         clearTimeout(@timerOutAdapter[outboundAdapter.targetActorAid])
         @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
-          @timerOutAdapter[outboundAdapter.targetActorAid] = null
+          delete @timerOutAdapter[outboundAdapter.targetActorAid]
+          @unsubscribe @trackers[0].trackerChannel, outboundAdapter.targetActorAid, () ->
           @removePeer(outboundAdapter.targetActorAid)
         , 90000)
       @h_sending(hMessage, cb, outboundAdapter)
@@ -204,13 +217,14 @@ class Actor extends EventEmitter
         msg = @buildSignal(@trackers[0].trackerId, "peer-search", {actor:hMessage.actor}, {timeout:5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
-            outboundAdapter = adapters.outboundAdapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
+            outboundAdapter = adapters.adapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
             @outboundAdapters.push outboundAdapter
             if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
               @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
 
-            @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(->
-              @timerOutAdapter[outboundAdapter.targetActorAid] = null
+            @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
+              delete @timerOutAdapter[outboundAdapter.targetActorAid]
+              @unsubscribe @trackers[0].trackerChannel, outboundAdapter.targetActorAid, () ->
               @removePeer(outboundAdapter.targetActorAid)
             , 90000)
 
@@ -226,7 +240,9 @@ class Actor extends EventEmitter
           throw new Error "Don't have any tracker for peer-searching"
 
   h_sending: (hMessage, cb, outboundAdapter) ->
-    #Complete hCommand
+    #Complete hMessage
+    hMessage.msgid = hMessage.msgid or @makeMsgId();
+
     errorCode = undefined
     errorMsg = undefined
 
@@ -283,19 +299,22 @@ class Actor extends EventEmitter
     unless classname is "hchannel"
       properties.actor = "#{properties.actor}/#{UUID.generate()}"
 
+    if H_ACTORS[classname]
+      classname = "#{__dirname}/#{classname}"
+
     switch method
       when "inproc"
-        actorModule = require "#{__dirname}/#{classname}"
+        actorModule = require "#{classname}"
         childRef = actorModule.newActor(properties)
-        @outboundAdapters.push adapters.outboundAdapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
-        childRef.outboundAdapters.push adapters.outboundAdapter(method, owner: childRef, targetActorAid: @actor , ref: @)
+        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
+        childRef.outboundAdapters.push adapters.adapter(method, owner: childRef, targetActorAid: @actor , ref: @)
         childRef.parent = @
         # Starting the child
         @send @buildSignal(properties.actor, "start", {})
 
       when "fork"
         childRef = forker.fork __dirname+"/childlauncher", [classname , JSON.stringify(properties)]
-        @outboundAdapters.push adapters.outboundAdapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
+        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
         childRef.on "message", (msg) =>
           if msg.state is 'ready'
             @send @buildSignal(properties.actor, "start", {})
@@ -456,7 +475,7 @@ class Actor extends EventEmitter
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:5000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
-        channelInbound = adapters.inboundAdapter("channel", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
+        channelInbound = adapters.adapter("channel_in", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
         @inboundAdapters.push channelInbound
         channelInbound.start()
         @subscriptions.push hChannel
@@ -605,8 +624,7 @@ class Actor extends EventEmitter
   Create a unique message id
   ###
   makeMsgId: () ->
-    msgId = ""
-    msgId += "#" + UUID.generate()
+    msgId = UUID.generate()
     msgId
 
 
@@ -631,6 +649,6 @@ UUID._ha = (a, b) ->
   c
 
 exports.Actor = Actor
-exports.newActor = (properties) ->
-  new Actor(properties)
+exports.newActor = (topology) ->
+  new Actor(topology)
 

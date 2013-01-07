@@ -66,12 +66,6 @@ createOptions = () ->
         )
       else options[elem] = [parseInt(options[elem])]  if options[elem]
 
-
-    #If the option expects a number convert it to one
-    intNeeded = ["socket.io.disctimeout", "socket.io.ridwindow", "hnode.port"]
-    intNeeded.map (el) ->
-      options[el] = parseInt(options[el])
-
     options = overrideOptions(options)
   catch err
     log.error "Error parsing options.", err
@@ -88,23 +82,14 @@ overrideOptions = (options) ->
   options = options or {}
   _opts =
 
-  #Possible values are DEBUG, INFO, WARN or ERROR
+    #Possible values are DEBUG, INFO, WARN or ERROR
     "global.loglevel": options["global.loglevel"] or "INFO"
 
     #A different instance will be created for each port
     "socket.io.ports": options["socket.io.ports"] or [8080]
 
-    #websocket Namespace for events received/sent
-    "socket.io.namespace": options["socket.io.namespace"] or ""
-
-    #Host of the XMPP Server
-    "hnode.host": options["hnode.host"] or ""
-
-    #Port of the XMPP Server
-    "hnode.port": options["hnode.port"] or `undefined`
-
-    #Path to the hcommands executed by the hnode
-    "hcommands.path": options["hcommands.path"] or "lib/hcommands"
+    #Path to the topology executed by the launcher
+    "topology.path": options["topology.path"] or "samples/sample1.json"
 
     #Timeout for an hCommand, after that an hResult with timeout is sent
     "hcommands.timeout": options["hcommands.timeout"] or 5000
@@ -127,18 +112,8 @@ Function that parses the options (useful for testing)
 exports.createOptions = createOptions()
 
 ###
-Options object already formatted to be used with the command controller
-###
-commandController =
-  modulePath: options["hcommands.path"]
-  timeout: options["hcommands.timeout"]
-
-exports.commandController = commandController
-
-###
 Options object already formatted to be used with the Socket.io connector
 ###
 exports.sioConnector =
   logLevel: options["global.loglevel"]
-  namespace: options["socket.io.namespace"]
   _mongoURI: options["mongo.URI"]

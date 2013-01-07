@@ -69,7 +69,8 @@ class SocketInboundAdapter extends InboundAdapter
 
   stop: ->
     if @started
-      @sock.close()
+      if @sock._zmq.state is 0
+        @sock.close()
       super
 
 class LBSocketInboundAdapter extends InboundAdapter
@@ -90,7 +91,8 @@ class LBSocketInboundAdapter extends InboundAdapter
 
   stop: ->
     if @started
-      @sock.close()
+      if @sock._zmq.state is 0
+        @sock.close()
       super
 
 class ChannelInboundAdapter extends InboundAdapter
@@ -119,7 +121,8 @@ class ChannelInboundAdapter extends InboundAdapter
 
   removeFilter: (quickFilter, cb) ->
     @owner.log "debug", "Remove quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
-    @sock.unsubscribe(quickFilter)
+    if @sock._zmq.state is 0
+      @sock.unsubscribe(quickFilter)
     index = 0
     for qckFilter in @listQuickFilter
       if qckFilter is quickFilter
@@ -139,7 +142,8 @@ class ChannelInboundAdapter extends InboundAdapter
 
   stop: ->
     if @started
-      @sock.close()
+      if @sock._zmq.state is 0
+        @sock.close()
       super
 
 class OutboundAdapter extends Adapter
@@ -211,7 +215,9 @@ class SocketOutboundAdapter extends OutboundAdapter
 
   stop: ->
     if @started
-      @sock.close()
+      if @sock._zmq.state is 0
+        @sock.close()
+      super
 
   send: (message) ->
     @start() unless @started
@@ -235,7 +241,9 @@ class LBSocketOutboundAdapter extends OutboundAdapter
 
   stop: ->
     if @started
-      @sock.close()
+      if @sock._zmq.state is 0
+        @sock.close()
+      super
 
   send: (message) ->
     @start() unless @started
@@ -260,7 +268,9 @@ class ChannelOutboundAdapter extends OutboundAdapter
 
   stop: ->
     if @started
-      @sock.close()
+      if @sock._zmq.state is 0
+        @sock.close()
+      super
 
   send: (hMessage) ->
     @start() unless @started

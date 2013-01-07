@@ -50,7 +50,7 @@ class Session extends Actor
         @trackInbox = []
       @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:@trackInbox})
 
-  checkFilter: (hMessage) ->
+  validateFilter: (hMessage) ->
     unless validator.getBareURN(hMessage.publisher) is validator.getBareURN(@actor)
       return hFilter.checkFilterValidity(hMessage, @filter)
     return {result: true, error: ""}

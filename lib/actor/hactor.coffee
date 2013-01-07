@@ -228,7 +228,7 @@ class Actor extends EventEmitter
               @outboundAdapters.push outboundAdapter
               if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
                 @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
- 
+
             @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
               delete @timerOutAdapter[outboundAdapter.targetActorAid]
               @unsubscribe @trackers[0].trackerChannel, outboundAdapter.targetActorAid, () ->

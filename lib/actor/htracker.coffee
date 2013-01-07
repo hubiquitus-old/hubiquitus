@@ -51,7 +51,7 @@ class Tracker extends Actor
           peers.peerInbox = hMessage.payload.params.peerInbox
           if peers.peerStatus is "stopping"
             @stopAlert(hMessage.publisher)
-            delete @peers[index]
+            @peers.splice(index, 1)
             @removePeer(hMessage.publisher)
         index++
       if existPeer isnt true

@@ -498,7 +498,7 @@ class Actor extends EventEmitter
       if channel is hChannel
         subs = true
         if quickFilter is undefined
-          delete @subscriptions[index]
+          @subscriptions.splice(index, 1)
       index++
 
     if subs is false
@@ -515,7 +515,7 @@ class Actor extends EventEmitter
                 return cb codes.hResultStatus.OK, "QuickFilter removed"
           else
             inbound.stop()
-            delete @inboundAdapters[index]
+            @inboundAdapters.splice(index, 1)
             return cb codes.hResultStatus.OK, "Unsubscribe from channel"
         index++
 
@@ -526,7 +526,7 @@ class Actor extends EventEmitter
     _.forEach @outboundAdapters, (outbound) =>
       if outbound.targetActorAid is actor
         outbound.stop()
-        delete @outboundAdapters[index]
+        @outboundAdapters.splice(index, 1)
         if @trackers[0]
           @unsubscribe @trackers[0].trackerChannel, actor, () ->
 

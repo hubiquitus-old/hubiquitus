@@ -217,11 +217,18 @@ class Actor extends EventEmitter
         msg = @buildSignal(@trackers[0].trackerId, "peer-search", {actor:hMessage.actor}, {timeout:5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
-            outboundAdapter = adapters.adapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
-            @outboundAdapters.push outboundAdapter
-            if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
-              @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
-
+            found = false
+            _.forEach @outboundAdapters, (outbound) =>
+              if outbound.targetActorAid is hResult.payload.result.targetActorAid
+                found = true
+                hMessage.actor = outbound.targetActorAid
+                outboundAdapter = outbound
+            unless found
+              outboundAdapter = adapters.adapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
+              @outboundAdapters.push outboundAdapter
+              if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
+                @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
+ 
             @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
               delete @timerOutAdapter[outboundAdapter.targetActorAid]
               @unsubscribe @trackers[0].trackerChannel, outboundAdapter.targetActorAid, () ->

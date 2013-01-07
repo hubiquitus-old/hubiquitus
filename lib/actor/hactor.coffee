@@ -356,8 +356,8 @@ class Actor extends EventEmitter
         @log "debug", "touching tracker #{trackerProps.trackerId}"
         inboundAdapters = []
         if @status isnt STATUS_STOPPING
-          for i in @inboundAdapters
-            inboundAdapters.push {type:i.type, url:i.url}
+          for inbound in @inboundAdapters
+            inboundAdapters.push {type:inbound.type, url:inbound.url}
         @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:inboundAdapters})
 
 

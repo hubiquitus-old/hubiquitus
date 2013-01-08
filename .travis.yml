@@ -5,4 +5,4 @@ node_js:
 before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -qq coffeescript
- - sudo apt-get install -qq zeromq3
+ - sudo apt-get install -qq zeromq3 

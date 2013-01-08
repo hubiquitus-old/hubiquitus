@@ -27,5 +27,8 @@
       "should" : "=1.1.0",
       "mocha" : "=1.3.2",
       "coffee-script" : "1.4.0"
+  },
+   "scripts": {
+      "test": "mocha test/*"
   }
 }

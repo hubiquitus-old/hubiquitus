@@ -16,7 +16,7 @@ The source code of the Hubiquitus NodeJS engine itself is in the `src`subdirecto
 
 The source code of each Hubiquitus client is made available in a separate repo: 
 
-* HTML5 Client: [hubiquitus4js](https://https://github.com/hubiquitus/hubiquitus4js)
+* HTML5 Client: [hubiquitus4js](https://github.com/hubiquitus/hubiquitus4js)
 * Android client & related PhoneGap plugin: [hubiquitus4android](https://github.com/hubiquitus/hubiquitus4android)
 * Apple iOS client & related PhoneGap plugin: [hubquitus4ios](https://github.com/hubiquitus/hubiquitus4ios)
 * Windows 8 client: [hubiquitus4w8](https://github.com/hubiquitus/hubiquitus4w8) 

@@ -22,13 +22,11 @@ How to better explain why latency is bad than Geek & Poke does ?
 
 ### What it is ?
 
-### An open messaging protocol
-
-> TO BE DESCRIBED
-
 #### An actor-based applications framework
 
-The Hubiquitus design follows the "everything is an actor" philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm. Actors are the *neurons* of our apps.
+The Hubiquitus design follows the "everything is an actor" philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm. 
+
+Actors are the *neurons* of our apps.
  
 **An actor is a form of lightweight computational entity that sequentially process incoming messages received on its inbox**
 
@@ -44,9 +42,7 @@ The following figure summarizes these principles:
 
 ![actor model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/ActorModel.png)
 
-#### A NodeJS-based lightweight container
-
-The Hubiquitus framework is essentially a lightweight container for actors. It is highly inspired by existing actor-based frameworks, such as [Erlang OTP](http://www.erlang.org/) or Akka, and lightweight containers such as the [Spring Framework](http://www.springsource.org/spring-framework).
+The Hubiquitus framework is basically a lightweight container for actors. It is highly inspired by existing actor-based frameworks, such as [Erlang OTP](http://www.erlang.org/) or Akka, and other lightweight containers such as the [Spring Framework](http://www.springsource.org/spring-framework).
 
 The Hubiquitus actors engine is built on top of the [NodeJS](http://nodejs.org) evented programming platform.
 
@@ -55,6 +51,18 @@ NodeJS is a great choice as a container for actors since it provides features th
 * **Asynchronous I/O**: NodeJS allows binding *functions* to specific I/O events - such as "bytes has been written to this socket" - without blocking the execution thread until it occurs. This provides a simple and elegant way to implement the mechanism of the actor's inbox.
 * **Single threaded execution**: each NodeJS process run programs using a single execution thread, we are sure to never have to deal with concurrency issues.
 * **Child processes**: NodeJS natively supports creating forked process that communicates with their parent process using sockets, so that creating child actors as child processes becomes trivial.
+
+#### An open messaging protocol
+
+Hubiquitus actors receive, process and send *messages*, so it quickly appeared essential to adopt a messaging protocol for Hubiquitus. 
+
+We designed the protocol with the following constraints in mind:
+
+* **open**: messages should be able to carry any kind of data and metadata, allowing developers to design specialized protocols depending on their needs (a philosophy of design we share with XMPP, SOAP and other XML-based protocols)
+* **format agnostic**: messages should be able to be serialized into different formats in such a way that the most efficient format will be used depending on the situation (JSON will be perfect in a browser, but MessagePack will surely be a better option on the server side.
+* **transport agnostic**: messages should not be tied to any particular transport, so that you can use the best one to carry out a message, depending on its format (do I need a carry out binary messages ?) and the availability of the transport itself (can I use WebSocket here ?).
+
+> TO BE COMPLETED
 
 #### A distributed applications framework
 

@@ -29,7 +29,9 @@ _ = require "underscore"
 describe "hSubscribe", ->
   cmd = undefined
   hActor = undefined
+  hActor2 = undefined
   hChannel = undefined
+  hChannel2 = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hactor")
   existingCHID = "urn:localhost:#{config.getUUID()}"
@@ -104,4 +106,36 @@ describe "hSubscribe", ->
       unless find
         done()
 
+  describe "from topology", ->
+    before () ->
+      topology = {
+        actor: config.logins[2].urn,
+        type: "hactor"
+        adapters:[
+          { type: "channel_in", url: "tcp://127.0.0.1:2992", channel:existingCHID }
+        ]
+      }
+      hActor2 = actorModule.newActor(topology)
 
+      properties =
+        listenOn: "tcp://127.0.0.1:1221",
+        broadcastOn: "tcp://127.0.0.1:2998",
+        subscribers: [config.logins[2].urn],
+        db:{
+        dbName: "test",
+        dbCollection: existingCHID
+        }
+      hActor2.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
+        hChannel2 = child
+
+    after () ->
+      hActor2.h_tearDown()
+      hActor2 = null
+
+    it "should have channel in for existing channel", (done) ->
+      @timeout(6000)
+      hActor2.inboundAdapters.length.should.be.equal(0)
+      setTimeout(=>
+        hActor2.inboundAdapters.length.should.be.equal(1)
+        done()
+      , 5000)

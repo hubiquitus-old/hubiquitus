@@ -1,7 +1,8 @@
+[![Build Status](https://travis-ci.org/hubiquitus/hubiquitus.png?branch=master)](https://travis-ci.org/hubiquitus/hubiquitus)
+
 # Hubiquitus
 
 Hubiquitus is an ubiquitous framework for build context-aware live apps.
-[![Build Status](https://travis-ci.org/hubiquitus/hubiquitus.png?branch=master)](https://travis-ci.org/hubiquitus/hubiquitus)
 
 ## Docs
 

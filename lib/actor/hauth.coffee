@@ -40,7 +40,9 @@ class Auth extends Actor
 
   onMessage: (hMessage, cb) ->
     if not hMessage or not hMessage.payload or hMessage.type isnt "hAuth"
-      cb codes.errors.AUTH_FAILED, "missing message"
+      if hMessage
+        authResponse = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "missing payload or payload is not of type hAuth"
+        @send authResponse
       return
     @auth hMessage.payload.login, hMessage.payload.password, hMessage.payload.context, (actor, errorCode, errorMsg) =>
       authResponse = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, {actor : actor, errorCode : errorCode, errorMsg: errorMsg}

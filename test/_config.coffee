@@ -4,6 +4,9 @@ user1Pass = 'u1'
 user2Urn = 'urn:localhost:u2'
 user2Pass = 'u2'
 
+user3Urn = 'urn:localhost:u3'
+user3Pass = 'u3'
+
 mongoURI = 'mongodb://localhost/test'
 
 commandsPath = 'lib/hcommands'
@@ -64,11 +67,19 @@ exports.logins = [
   },
   {
     urn: user2Urn,
-    password: user1Pass
+    password: user2Pass
   },
   {
     urn: user2Urn + '/testRessource',
-    password: user1Pass
+    password: user2Pass
+  },
+  {
+    urn: user3Urn,
+    password: user3Pass
+  },
+  {
+    urn: user3Urn + '/testRessource',
+    password: user3Pass
   }
 ];
 

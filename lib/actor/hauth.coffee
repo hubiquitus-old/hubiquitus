@@ -51,8 +51,9 @@ class Auth extends Actor
   # Should be overrided to implement own auth system.
   # context : extra data
   # cb
-  #   status : authentification status. If ok it should be NO_ERROR
-  #   result : if ok, it should be user urn, else if should be error message
+  #   actor : urn of user. null if auth_failed
+  #   errorCode : authentification status. If ok it should be NO_ERROR
+  #   errorMsg : if ok, it should be user urn, else if should be error message
   auth: (login, password, context, cb) ->
     if(login is password)
       @log "debug", "Login successful for user #{login}"

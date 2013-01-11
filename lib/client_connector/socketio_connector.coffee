@@ -83,7 +83,7 @@ class SocketIO_Connector
     # Authentification
     @authenticate data, (actor, errorCode, errorMsg) =>
       if errorCode isnt codes.errors.NO_ERROR
-        client.socket.emit 'hStatus', {status: code.statuses.DISCONNECTED, errorCode: errorCode, errorMsg: errorMsg}
+        client.socket.emit 'hStatus', {status: codes.statuses.DISCONNECTED, errorCode: errorCode, errorMsg: errorMsg}
         @disconnect client
         return
 

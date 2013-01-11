@@ -264,8 +264,7 @@ class Actor extends EventEmitter
           throw new Error "Don't have any tracker for peer-searching"
 
   h_sending: (hMessage, cb, outboundAdapter) ->
-    #Complete hMessage
-    hMessage.msgid = hMessage.msgid or @makeMsgId();
+    @h_fillAttribut(hMessage, cb)
 
     errorCode = undefined
     errorMsg = undefined
@@ -298,13 +297,20 @@ class Actor extends EventEmitter
 
       #Send it to transport
       @log "debug", "Sending message: #{JSON.stringify(hMessage)}"
-      hMessage.sent = new Date().getTime()
       outboundAdapter.send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"
       resultMsg = @buildResult(actor, hMessage.msgid, errorCode, errorMsg)
       cb resultMsg
 
+  h_fillAttribut: (hMessage, cb) ->
+    #Complete hMessage
+    hMessage.publisher = @actor
+    if cb
+      hMessage.msgid = @makeMsgId()
+    else
+      hMessage.msgid = hMessage.msgid or @makeMsgId()
+    hMessage.sent = new Date().getTime()
 
   ###*
     Function allowing that creates and start an actor as a child of this actor

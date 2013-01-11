@@ -153,6 +153,9 @@ class Channel extends Actor
       @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
       cb(@buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 
+  h_fillAttribut: (hMessage, cb) ->
+    #Override with empty function to not altering hMessage
+
 exports.Channel = Channel
 exports.newActor = (properties) ->
   new Channel(properties)

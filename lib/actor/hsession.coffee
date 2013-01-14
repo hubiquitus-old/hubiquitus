@@ -55,6 +55,11 @@ class Session extends Actor
       return hFilter.checkFilterValidity(hMessage, @filter)
     return {result: true, error: ""}
 
+  h_onMessageInternal: (hMessage, cb) ->
+    if hMessage.actor is "session"
+      hMessage.actor = @actor
+    super
+    
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)

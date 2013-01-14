@@ -111,15 +111,6 @@ class Actor extends EventEmitter
     else
       @log "debug", "no tracker was provided"
 
-    # Setting adapters
-    _.forEach topology.adapters, (adapterProps) =>
-      adapterProps.owner = @
-      adapter = adapters.adapter(adapterProps.type, adapterProps)
-      if adapter.direction is "in"
-        @inboundAdapters.push adapter
-      else if adapter.direction is "out"
-        @outboundAdapters.push adapter
-
     # registering callbacks on events
     @on "message", (hMessage) =>
       #complete msgid
@@ -136,6 +127,32 @@ class Actor extends EventEmitter
         @h_onMessageInternal hMessage, (hMessageResult) =>
           @send hMessageResult
 
+    # Setting adapters
+    _.forEach topology.adapters, (adapterProps) =>
+      adapterProps.owner = @
+      if adapterProps.type is 'channel_in'
+        attempt = 1
+        @subscribe adapterProps.channel, adapterProps.quickFilter, (status, result) =>
+          unless status is codes.hResultStatus.OK
+            @log "debug", "Subscription attempt #{attempt} failed cause #{result} "
+            SubTimer = setInterval(=>
+              if attempt < 4
+                @subscribe adapterProps.channel, adapterProps.quickFilter, (status2) =>
+                  if status2 is codes.hResultStatus.OK
+                    clearInterval(SubTimer)
+                  else
+                    attempt++
+                    @log "debug", "Subscription attempt #{attempt} failed cause #{result} "
+              else
+                @log "debug", "Subscription attempt #{++attempt} failed cause #{result}, don't try again "
+                clearInterval(SubTimer)
+            , 5000)
+      else
+        adapter = adapters.adapter(adapterProps.type, adapterProps)
+        if adapter.direction is "in"
+          @inboundAdapters.push adapter
+        else if adapter.direction is "out"
+          @outboundAdapters.push adapter
 
     # Adding children once started
     @on "started", ->
@@ -247,8 +264,7 @@ class Actor extends EventEmitter
           throw new Error "Don't have any tracker for peer-searching"
 
   h_sending: (hMessage, cb, outboundAdapter) ->
-    #Complete hMessage
-    hMessage.msgid = hMessage.msgid or @makeMsgId();
+    @h_fillAttribut(hMessage, cb)
 
     errorCode = undefined
     errorMsg = undefined
@@ -281,13 +297,20 @@ class Actor extends EventEmitter
 
       #Send it to transport
       @log "debug", "Sending message: #{JSON.stringify(hMessage)}"
-      hMessage.sent = new Date().getTime()
       outboundAdapter.send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"
       resultMsg = @buildResult(actor, hMessage.msgid, errorCode, errorMsg)
       cb resultMsg
 
+  h_fillAttribut: (hMessage, cb) ->
+    #Complete hMessage
+    hMessage.publisher = @actor
+    if cb
+      hMessage.msgid = @makeMsgId()
+    else
+      hMessage.msgid = hMessage.msgid or @makeMsgId()
+    hMessage.sent = new Date().getTime()
 
   ###*
     Function allowing that creates and start an actor as a child of this actor
@@ -480,7 +503,7 @@ class Actor extends EventEmitter
         else
           return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
 
-    @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:5000}), (hResult) =>
+    @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:3000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
         channelInbound = adapters.adapter("channel_in", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
         @inboundAdapters.push channelInbound

@@ -137,7 +137,7 @@ class ChannelInboundAdapter extends InboundAdapter
     unless @started
       @sock.connect @url
       @addFilter(@filter)
-      @owner.log "debug", "#{@sock.identity} subscribe on #{@url}"
+      @owner.log "debug", "#{@owner.actor} subscribe to #{@channel} on #{@url}"
       super
 
   stop: ->

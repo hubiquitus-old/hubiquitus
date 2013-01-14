@@ -36,6 +36,7 @@ class Tracker extends Actor
     @peers = []
     @trackerChannelAid = topology.properties.channel.actor
     topology.children.push topology.properties.channel
+    @timerPeers = {}
     super
     #@on "started", -> @pingChannel(properties.broadcastUrl)
 
@@ -47,15 +48,37 @@ class Tracker extends Actor
       _.forEach @peers, (peers) =>
         if peers.peerFullId is hMessage.publisher
           existPeer = true
+          clearTimeout(@timerPeers[hMessage.publisher])
           peers.peerStatus = hMessage.payload.params.peerStatus
           peers.peerInbox = hMessage.payload.params.peerInbox
           if peers.peerStatus is "stopping"
             @stopAlert(hMessage.publisher)
             @peers.splice(index, 1)
             @removePeer(hMessage.publisher)
+          else
+            @timerPeers[hMessage.publisher] = setTimeout(=>
+              delete @timerPeers[hMessage.publisher]
+              @stopAlert(hMessage.publisher)
+              index2 = 0
+              _.forEach @peers, (peers) =>
+                if peers.peerFullId is hMessage.publisher
+                  @peers.splice(index2, 1)
+                index2++
+              @removePeer(hMessage.publisher)
+            , 180000)
         index++
       if existPeer isnt true
         @peers.push {peerType:hMessage.payload.params.peerType, peerFullId:hMessage.publisher, peerId:hMessage.payload.params.peerId, peerStatus:hMessage.payload.params.peerStatus, peerInbox:hMessage.payload.params.peerInbox}
+        @timerPeers[hMessage.publisher] = setTimeout(=>
+          delete @timerPeers[hMessage.publisher]
+          @stopAlert(hMessage.publisher)
+          index = 0
+          _.forEach @peers, (peers) =>
+            if peers.peerFullId is hMessage.publisher
+              @peers.splice(index, 1)
+            index++
+          @removePeer(hMessage.publisher)
+        , 180000)
         outbox = @findOutbox(hMessage.publisher)
         if outbox
           @outboundAdapters.push adapters.adapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
@@ -82,14 +105,6 @@ class Tracker extends Actor
         }]
       @createChild childProps.type, childProps.method, childProps
 
-  pingChannel: (broadcastUrl) ->
-    #@log "debug", "Starting a channel broadcasting on #{broadcastUrl}"
-    #@trackerChannelAid = @createChild "hchannel", "inproc",
-    #  { actor: "channel", outboundAdapters: [ { type: "channel", url: broadcastUrl } ] }
-    #interval = setInterval(=>
-    #    @send @buildMessage(@trackerChannelAid, "msg", "New event pusblished by tracker #{@actor}")
-    #  , 3000)
-    #@on "stopping", -> clearInterval(interval)
 
   findOutbox: (actor) ->
     outboundadapter = undefined
@@ -103,14 +118,13 @@ class Tracker extends Actor
     unless outboundadapter
       outTab = []
       _.forEach @peers, (peers) =>
-        if peers.peerId is validator.getBareURN(actor)
+        if peers.peerId is validator.getBareURN(actor) and peers.peerStatus is "started" and peers.peerInbox.length > 0
           outTab.push(peers)
       if outTab.length > 0
         lb_peers = outTab[Math.floor(Math.random() * outTab.length)]
-        if lb_peers.peerStatus is "started"
-          _.forEach lb_peers.peerInbox, (inbox) =>
-            if inbox.type is "socket_in"
-              outboundadapter = {type: "socket_out", targetActorAid: lb_peers.peerFullId, url: inbox.url}
+        _.forEach lb_peers.peerInbox, (inbox) =>
+           if inbox.type is "socket_in"
+             outboundadapter = {type: "socket_out", targetActorAid: lb_peers.peerFullId, url: inbox.url}
     outboundadapter
 
   stopAlert: (actor) ->

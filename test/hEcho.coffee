@@ -43,7 +43,7 @@ describe "hEcho", ->
     hActor = null
 
   beforeEach (done) ->
-    echoCmd = config.makeHMessage(hActor.actor, config.logins[0].urn, "hCommand", {})
+    echoCmd = config.makeHMessage("session", config.logins[0].urn, "hCommand", {})
     echoCmd.payload =
       cmd: "hEcho"
       params:

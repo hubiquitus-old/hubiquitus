@@ -37,10 +37,11 @@ class Tracker extends Actor
     @trackerChannelAid = topology.properties.channel.actor
     topology.children.push topology.properties.channel
     @timerPeers = {}
+    @timeoutDelay = 180000
     super
     #@on "started", -> @pingChannel(properties.broadcastUrl)
 
-  h_onSignal: (hMessage, cb) ->
+  h_onSignal: (hMessage) ->
     @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
     if hMessage.payload.name is "peer-info"
       existPeer = false
@@ -65,7 +66,7 @@ class Tracker extends Actor
                   @peers.splice(index2, 1)
                 index2++
               @removePeer(hMessage.publisher)
-            , 180000)
+            , @timeoutDelay)
         index++
       if existPeer isnt true
         @peers.push {peerType:hMessage.payload.params.peerType, peerFullId:hMessage.publisher, peerId:hMessage.payload.params.peerId, peerStatus:hMessage.payload.params.peerStatus, peerInbox:hMessage.payload.params.peerInbox}
@@ -78,7 +79,7 @@ class Tracker extends Actor
               @peers.splice(index, 1)
             index++
           @removePeer(hMessage.publisher)
-        , 180000)
+        , @timeoutDelay)
         outbox = @findOutbox(hMessage.publisher)
         if outbox
           @outboundAdapters.push adapters.adapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })

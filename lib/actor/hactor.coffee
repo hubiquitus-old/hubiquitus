@@ -469,10 +469,10 @@ class Actor extends EventEmitter
   ###
   h_init: () ->
     @setStatus STATUS_STARTING
-    @preStart () =>
-        @h_start () =>
-          @postStart () =>
-            @setStatus STATUS_STARTED
+    @preStart ( =>
+        @h_start ( =>
+          @postStart ( =>
+            @setStatus STATUS_STARTED)))
 
   preStart: (done) ->
     done()
@@ -490,10 +490,10 @@ class Actor extends EventEmitter
   ###
   h_tearDown: () ->
     @setStatus STATUS_STOPPING
-    @preStop () =>
-        @h_stop () =>
-          @postStop () =>
-            @setStatus STATUS_STOPPED
+    @preStop ( =>
+        @h_stop ( =>
+          @postStop ( =>
+            @setStatus STATUS_STOPPED)))
 
   preStop: (done) ->
     done()

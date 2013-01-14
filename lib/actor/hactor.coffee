@@ -91,10 +91,13 @@ class Actor extends EventEmitter
         unless status is codes.hResultStatus.OK
           # TODO arreter l'acteur
           @log "debug", "Invalid filter stopping actor"
+
+    # Initializing class variables
     @msgToBeAnswered = {}
     @timerOutAdapter = {}
     @timerTouch = undefined
     @parent = undefined
+    @touchDelay = 60000
 
     # Initializing attributs
     @properties = topology.properties or {}
@@ -451,7 +454,7 @@ class Actor extends EventEmitter
         @touchTrackers()
         @timerTouch = setInterval(=>
           @touchTrackers()
-        , 60000)
+        , @touchDelay)
       when STATUS_STOPPING
         @touchTrackers()
         if @timerTouch

@@ -68,6 +68,19 @@ describe "hTracker", ->
       hActor.peers.length.should.be.equal(0)
       done()
 
+    it "should remove peer after 3 unreceived peer-info", (done) ->
+      hActor.touchDelay = 100
+      hActor.timeoutDelay = 300
+      hActor.stopAlert = (actor)->
+      info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"started", peerInbox:[]}})
+      hActor.h_onMessageInternal info
+      hActor.peers.length.should.be.equal(1)
+      setTimeout(=>
+        hActor.peers.length.should.be.equal(0)
+        done()
+      , 500)
+      done()
+
   describe "Peer-search", ->
     before () ->
       hActor.peers = [

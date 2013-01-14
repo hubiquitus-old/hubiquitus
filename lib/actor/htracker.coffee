@@ -40,7 +40,7 @@ class Tracker extends Actor
     super
     #@on "started", -> @pingChannel(properties.broadcastUrl)
 
-  h_onSignal: (hMessage, cb) ->
+  h_onSignal: (hMessage) ->
     @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
     if hMessage.payload.name is "peer-info"
       existPeer = false

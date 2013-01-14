@@ -43,6 +43,8 @@ class Gateway extends Actor
       @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
       @send hMessage
 
+  h_fillAttribut: (hMessage, cb) ->
+    #Override with empty function to not altering hMessage
 
 exports.Gateway = Gateway
 exports.newActor = (topology) ->

@@ -52,6 +52,9 @@ class Dispatcher extends Actor
     msg.publisher = sender
     @send msg
 
+  h_fillAttribut: (hMessage, cb) ->
+    #Override with empty function to not altering hMessage
+
 exports.Dispatcher = Dispatcher
 exports.newActor = (topology) ->
   new Dispatcher(topology)

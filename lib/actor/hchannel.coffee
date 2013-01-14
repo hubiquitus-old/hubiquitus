@@ -58,10 +58,10 @@ class Channel extends Actor
           command = require("./../hcommands/hGetThread").Command
           module = new command()
           @runCommand(hMessage, module, cb)
-        #when "hGetThreads"
-        #  command = require("./../hcommands/hGetThreads").Command
-        #  module = new command()
-        #  @runCommand(hMessage, module, cb)
+        when "hGetThreads"
+          command = require("./../hcommands/hGetThreads").Command
+          module = new command()
+          @runCommand(hMessage, module, cb)
         when "hSubscribe"
           command = require("./../hcommands/hSubscribe").Command
           module = new command()
@@ -95,7 +95,7 @@ class Channel extends Actor
       hMessage.actor = @actor
       @send hMessage
       if cb and hMessage.timeout > 0
-        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, "")
+        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, hMessage)
         cb hMessageResult
 
   h_onSignal: (hMessage, cb) ->
@@ -152,6 +152,9 @@ class Channel extends Actor
       clearTimeout timerObject
       @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
       cb(@buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
+
+  h_fillAttribut: (hMessage, cb) ->
+    #Override with empty function to not altering hMessage
 
 exports.Channel = Channel
 exports.newActor = (properties) ->

@@ -81,26 +81,12 @@ class SocketIO_Connector
       return
 
     # Authentification
-    authTimeout = @owner.properties.authTimeout or 3000
-    authMsg = @owner.buildMessage @owner.properties.authActor, "hAuth", {login: data.login, password: data.password, context: data.context},{timeout: authTimeout}
-    @owner.send authMsg, (authResponse) =>
-      if not authResponse or not authResponse.payload or not authResponse.payload.result
-        client.socket.emit 'hStatus', {status: codes.statuses.DISCONNECTED, errorCode: codes.errors.TECH_ERROR, errorMsg: "invalid response"}
+    @authenticate data, (actor, errorCode, errorMsg) =>
+      if errorCode isnt codes.errors.NO_ERROR
+        client.socket.emit 'hStatus', {status: codes.statuses.DISCONNECTED, errorCode: errorCode, errorMsg: errorMsg}
         @disconnect client
         return
 
-      authResult = authResponse.payload.result
-
-      if authResult.errorCode isnt codes.errors.NO_ERROR
-        client.socket.emit 'hStatus', { status: codes.statuses.DISCONNECTED, errorCode: authResult.errorCode, errorMsg: authResult.errorMsg}
-        @disconnect client
-        return
-
-      if not validator.validateURN authResult.actor
-        log.debug "Disconnecting with error Client " + client.publish
-        client.socket.emit 'hStatus', { status: codes.statuses.DISCONNECTED, errorCode: codes.errors.URN_MALFORMAT}
-        @disconnect client
-        return
 
       client.hClient = @owner
       inboundAdapters = []
@@ -108,12 +94,35 @@ class SocketIO_Connector
         inboundAdapters.push {type:inboundAdapter.type, url:inboundAdapter.url}
 
       data.trackInbox = inboundAdapters
-      data.actor = authResult.actor
+      data.actor = actor
       data.inboundAdapters
       client.hClient.createChild "hsession", "inproc", data, (child) =>
         #Relay all server status messages
         child.initListener(client)
         client.child = child.actor
+
+  ###
+  Try to authenticate a user
+  ###
+  authenticate: (data, cb) ->
+    authTimeout = @owner.properties.authTimeout or 3000
+    authMsg = @owner.buildMessage @owner.properties.authActor, "hAuth", {login: data.login, password: data.password, context: data.context},{timeout: authTimeout}
+    @owner.send authMsg, (authResponse) =>
+      if not authResponse or not authResponse.payload or not authResponse.payload.result
+        cb undefined, codes.errors.TECH_ERROR, "invalid response"
+        return
+
+      authResult = authResponse.payload.result
+
+      if authResult.errorCode isnt codes.errors.NO_ERROR
+        cb undefined, authResult.errorCode, authResult.errorMsg
+        return
+
+      if not validator.validateURN authResult.actor
+        cb undefined, codes.errors.URN_MALFORMAT, "urn malformat"
+        return
+
+      cb authResult.actor, codes.errors.NO_ERROR
 
   ###
   Disconnects the current session and socket.

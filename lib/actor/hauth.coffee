@@ -40,7 +40,9 @@ class Auth extends Actor
 
   onMessage: (hMessage, cb) ->
     if not hMessage or not hMessage.payload or hMessage.type isnt "hAuth"
-      cb codes.errors.AUTH_FAILED, "missing message"
+      if hMessage
+        authResponse = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "missing payload or payload is not of type hAuth"
+        @send authResponse
       return
     @auth hMessage.payload.login, hMessage.payload.password, hMessage.payload.context, (actor, errorCode, errorMsg) =>
       authResponse = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, {actor : actor, errorCode : errorCode, errorMsg: errorMsg}
@@ -49,8 +51,9 @@ class Auth extends Actor
   # Should be overrided to implement own auth system.
   # context : extra data
   # cb
-  #   status : authentification status. If ok it should be NO_ERROR
-  #   result : if ok, it should be user urn, else if should be error message
+  #   actor : urn of user. null if auth_failed
+  #   errorCode : authentification status. If ok it should be NO_ERROR
+  #   errorMsg : if ok, it should be user urn, else if should be error message
   auth: (login, password, context, cb) ->
     if(login is password)
       @log "debug", "Login successful for user #{login}"

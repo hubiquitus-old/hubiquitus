@@ -76,6 +76,9 @@ class Session extends Actor
           @unsubscribe hMessage.payload.params, (status, result) =>
             hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
             cb hMessageResult
+        when "hGetSubscriptions"
+          hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, @getSubscriptions())
+          cb hMessageResult
         else
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
           cb hMessageResult

@@ -630,6 +630,12 @@ class Actor extends EventEmitter
             return cb codes.hResultStatus.OK, "Unsubscribe from channel"
         index++
 
+  ###*
+    Method called to get the actor subscriptions
+    @cb {callback}
+  ###
+  getSubscriptions: () ->
+    return @subscriptions
 
   ###*
     Method called to remove a actor from outboundAdapter

@@ -62,7 +62,7 @@ class Session extends Actor
 
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
-    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
+    if hMessage.type is "hCommand" and hMessage.publisher is @actor
       switch hMessage.payload.cmd
         when "hEcho"
           command = require("./../hcommands/hEcho").Command

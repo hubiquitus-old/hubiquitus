@@ -25,6 +25,7 @@
 
 url = require "url"
 zmq = require "zmq"
+cronJob = require("cron").CronJob
 validator = require "./validator"
 
 class Adapter
@@ -145,6 +146,54 @@ class ChannelInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+
+class TimerAdapter extends InboundAdapter
+
+  constructor: (properties) ->
+    super
+    @properties = properties.properties
+    @author = @owner.actor+"#TimerAdapter"
+    @job = undefined
+
+  startJob: =>
+    current = new Date()
+    msg = @owner.buildMessage(@owner.actor, "hAlert", {}, {author:@author, published:current})
+    @owner.emit "message", msg
+
+  stopJob: =>
+    # This function is executed when the job stops
+
+  launchTimer: ->
+    if @properties.mode is "millisecond"
+      @job = setInterval(=>
+        @startJob()
+      , @properties.period)
+    else if @properties.mode is "crontab"
+      try
+        @job = new cronJob(@properties.crontab, =>
+          @startJob()
+        , =>
+          @stopJob()
+        , true, "Europe/London")
+      catch err
+        @owner.log "error", "Couldn't setup timer adapter : #{err}"
+    else
+      @owner.log "error", "Timer adapter : Unhandled mode #{@properties}"
+
+  start: ->
+    unless @started
+      @launchTimer()
+      @owner.log "debug", "#{@owner.actor} launch TimerAdapter"
+      super
+
+  stop: ->
+    if @started
+      if @properties.mode is "crontab" and @job
+        @job.stop()
+      else if @properties.mode is "millisecond" and @job
+        clearInterval(@job)
+      super
+
 
 class OutboundAdapter extends Adapter
 
@@ -320,6 +369,8 @@ exports.adapter = (type, properties) ->
       new ChannelOutboundAdapter(properties)
     when "socketIO"
       new SocketIOAdapter(properties)
+    when "timerAdapter"
+      new TimerAdapter(properties)
     else
       throw new Error "Incorrect type '#{type}'"
 

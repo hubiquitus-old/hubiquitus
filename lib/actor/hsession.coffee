@@ -59,7 +59,7 @@ class Session extends Actor
     if hMessage.actor is "session"
       hMessage.actor = @actor
     super
-    
+
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
@@ -72,6 +72,10 @@ class Session extends Actor
           @setFilter hMessage.payload.params, (status, result) =>
             hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
             cb hMessageResult
+        when "hUnsubscribe"
+          @unsubscribe hMessage.payload.params, (status, result) =>
+            hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
+            cb hMessageResult
         else
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
           cb hMessageResult
@@ -82,10 +86,6 @@ class Session extends Actor
         switch hMessage.payload.cmd
           when "hSubscribe"
             @subscribe hMessage.actor, "", (status, result) =>
-              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
-              cb hMessageResult
-          when "hUnsubscribe"
-            @unsubscribe hMessage.actor, (status, result) =>
               hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
               cb hMessageResult
           else

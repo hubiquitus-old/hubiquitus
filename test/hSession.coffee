@@ -51,7 +51,7 @@ describe "hSession", ->
     hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
       hChannel = child
 
-  before () ->
+  before (done) ->
     hActor.subscribe existingCHID, "", (statuses, result) ->
       statuses.should.be.equal(status.OK)
       done()

@@ -24,6 +24,7 @@
 #
 
 log = require("winston")
+fs = require("fs")
 clients = {}
 options = require("../options").sioConnector
 validator = require "../validator"
@@ -43,7 +44,14 @@ class SocketIO_Connector
     then @owner = properties.owner
     else throw new Error("You must pass an actor as reference")
 
-    io = require("socket.io").listen(properties.port) #Creates the HTTP server
+    if properties.security
+      server_options =
+        key: fs.readFileSync(properties.security.key),
+        cert: fs.readFileSync(properties.security.cert)
+      server = require('https').createServer(server_options).listen(properties.port) #Creates the HTTPS server
+      io = require("socket.io").listen(server)
+    else
+      io = require("socket.io").listen(properties.port) #Creates the HTTP server
 
     logLevels =
       DEBUG: 3

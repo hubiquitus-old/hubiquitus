@@ -194,6 +194,36 @@ class TimerAdapter extends InboundAdapter
         clearInterval(@job)
       super
 
+class HttpInboundAdapter extends InboundAdapter
+  constructor: (properties) ->
+    super
+
+    if properties.url_path then @serverPath = properties.url_path   else @urlpath = "tcp://127.0.0.1"
+    if properties.port     then @port = properties.port             else @port = 8080
+
+    @qs = require 'querystring'
+    @sys = require 'sys'
+    @http = require 'http'
+
+
+  start: ->
+    @owner.log "debug", "Server path : #{@serverPath} Port : #{@port} is  running ..."
+    server = @http.createServer (req, res) =>
+      if req.method is 'POST'
+        body = ""
+        req.on "data", (data) ->
+          body += data
+        req.on "end", =>
+          post_data =  @qs.parse(body)
+          @owner.emit "message", @owner.buildMessage(@owner.actor, "hHttpData", post_data, {headers:req.headers})
+
+      else if req.method is 'GET'
+        req.on 'end', -> res.writeHead 200, 'ontent-Type' : 'text/plain'
+        res.end()
+        url_parts =  @qs.parse(req.url)
+        @owner.emit "message", @owner.buildMessage(@owner.actor, "hHttpData", url_parts, {headers:req.headers})
+
+    server.listen @port,@serverPath
 
 class OutboundAdapter extends Adapter
 
@@ -329,6 +359,49 @@ class ChannelOutboundAdapter extends OutboundAdapter
     else
       @sock.send JSON.stringify(hMessage)
 
+class HttpOutboundAdapter extends OutboundAdapter
+  constructor: (properties) ->
+    super
+
+    if properties.url             then @server_url  = properties.url                       else @server_url = "tcp://127.0.0.1"
+    if properties.port            then @port = properties.port                      else @port = 8080
+    if properties.path            then @path = properties.path                      else @path = "/"
+    if properties.targetActorAid  then @targetActorAid = properties.targetActorAid
+
+    console.log "HttpOutboundAdapter used -> [ url:  "+@server_url+"  port :"+@port+" path: "+@path+" targetActorAid: "+@targetActorAid+"]"
+
+  send: (message) ->
+    @start() unless @started
+
+    @querystring = require 'querystring'
+    @http = require 'http'
+
+    # Setting the configuration
+    post_options =
+      host: @server_url
+      port: @port
+      path: @path
+      method: "POST"
+      headers:
+        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Length": JSON.stringify(message.payload).length
+
+    post_req = @http.request(post_options, (res) ->
+      res.setEncoding "utf8"
+      res.on "data", (chunk) ->
+        console.log "Response: " + chunk
+
+      @status = res.statusCode
+      console.log "response  :"+@status+"  ", res.headers
+    )
+
+    post_req.on "error", (e) ->
+      console.log "problem with request: " + e.message
+
+    # write parameters to post body
+    post_req.write JSON.stringify(message.payload)
+    post_req.end()
+
 class SocketIOAdapter extends OutboundAdapter
 
   constructor: (properties) ->
@@ -371,6 +444,10 @@ exports.adapter = (type, properties) ->
       new SocketIOAdapter(properties)
     when "timerAdapter"
       new TimerAdapter(properties)
+    when "http_in"
+      new HttpInboundAdapter(properties)
+    when "http_out"
+      new HttpOutboundAdapter(properties)
     else
       throw new Error "Incorrect type '#{type}'"
 

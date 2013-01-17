@@ -54,12 +54,12 @@ NodeJS is a great choice as a container for actors since it provides features th
 
 #### An open messaging protocol
 
-Hubiquitus actors receive, process and send *messages*, so it quickly appeared essential to adopt a messaging protocol for Hubiquitus. 
+Since actors receive, process and send *messages*, so we need a messaging protocol. 
 
-We designed the protocol with the following constraints in mind:
+We designed this protocol with the following constraints in mind:
 
-* **open**: messages should be able to carry any kind of data and metadata, allowing developers to design specialized protocols depending on their needs (a philosophy of design we share with XMPP, SOAP and other XML-based protocols)
-* **format agnostic**: messages should be able to be serialized into different formats in such a way that the most efficient format will be used depending on the situation (JSON will be perfect in a browser, but MessagePack will surely be a better option on the server side.
+* **open**: messages should be able to carry any kind of data and metadata, allowing developers to design specialized protocols depending on their needs (a philosophy of design it shares with XMPP, SOAP and other XML-based protocols)
+* **format agnostic**: messages should be able to be serialized into different formats in such a way that the most efficient format will be used depending on the situation (JSON will be perfect in a browser, but MessagePack will surely be a better option on the server side).
 * **transport agnostic**: messages should not be tied to any particular transport, so that you can use the best one to carry out a message, depending on its format (do I need a carry out binary messages ?) and the availability of the transport itself (can I use WebSocket here ?).
 
 > TO BE COMPLETED

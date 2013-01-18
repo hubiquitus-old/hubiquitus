@@ -105,3 +105,15 @@ describe "hSession", ->
       hMessage.payload.should.have.property('result').and.match(/Command not available/)
       done();
 
+  it "should always override publisher before sending", (done) ->
+    send = hActor.send
+    hActor.send = (hMessage) ->
+      hMessage.publisher.should.be.equal(hActor.actor)
+      hActor.send = send
+      done()
+
+    msg = hActor.buildMessage("urn:localhost:otherActor", "string", {})
+    msg.publisher = config.logins[0].urn
+    hActor.onMessage msg, (hMessage) ->
+
+

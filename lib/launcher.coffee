@@ -24,7 +24,7 @@
 #
 
 fs = require "fs"
-adapters = require "./adapters"
+adapters = require "./adapters/hAdapters"
 {Actor} = require "./actor/hactor"
 os = require "os"
 _ = require "underscore"

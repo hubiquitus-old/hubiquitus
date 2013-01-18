@@ -24,7 +24,7 @@
 #
 
 {Actor} = require "./hactor"
-adapters = require "./../adapters"
+adapters = require "./../adapters/hAdapters"
 zmq = require "zmq"
 validator = require "./../validator"
 

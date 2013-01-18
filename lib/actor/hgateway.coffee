@@ -36,7 +36,7 @@ class Gateway extends Actor
     # Setting outbound adapters
     @type = 'gateway'
     if topology.properties.socketIOPort
-      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @})
+      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
 
   onMessage: (hMessage) ->
     if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)

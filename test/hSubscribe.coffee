@@ -118,8 +118,8 @@ describe "hSubscribe", ->
       hActor2 = actorModule.newActor(topology)
 
       properties =
-        listenOn: "tcp://127.0.0.1:1221",
-        broadcastOn: "tcp://127.0.0.1:2998",
+        listenOn: "tcp://127.0.0.1:2112",
+        broadcastOn: "tcp://127.0.0.1:9289",
         subscribers: [config.logins[2].urn],
         db:{
         dbName: "test",

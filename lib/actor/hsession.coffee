@@ -32,7 +32,7 @@ validator = require "../validator"
 codes = require "../codes"
 options = require("../options").options
 hFilter = require "../hFilter"
-adapters = require "../adapters"
+adapters = require "../adapters/hAdapters"
 
 
 class Session extends Actor

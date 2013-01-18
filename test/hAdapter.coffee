@@ -22,42 +22,46 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+should = require("should")
+config = require("./_config")
+url = require "url"
 
-fs = require "fs"
-adapters = require "./adapters/hAdapters"
-{Actor} = require "./actor/hactor"
-os = require "os"
-_ = require "underscore"
-opts = require("./options.coffee").options
+describe "hHttpAdapter", ->
+  hActor = undefined
+  hActor2 = undefined
+  hResultStatus = require("../lib/codes").hResultStatus
+  actorModule = require("../lib/actor/hactor")
 
-createActor = (properties) ->
-  actorModule = require "#{__dirname}/actor/#{properties.type}"
-  actor = actorModule.newActor(properties)
+  describe "Http_inbound", ->
+    http = require "http"
 
-main = ->
+    before () ->
+      topology = {
+        actor: config.logins[1].urn,
+        type: "hactor",
+        properties: {},
+        adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2112" } ]
+      }
+      hActor = actorModule.newActor(topology)
+      hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
 
-  hTopology = `undefined`
-  try
-    hTopology = eval("(" + fs.readFileSync(opts["topology.path"], "utf8") + ")")
-  catch err
-    console.log "erreur : ",err
-  unless hTopology
-    console.log "No config file or malformated config file. Can not start actor"
-    process.exit 1
+      topology = {
+        actor: config.logins[3].urn,
+        type: "hactor",
+        properties: {},
+        adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2112" } ]
+      }
+      hActor2 = actorModule.newActor(topology)
+      hActor2.h_onMessageInternal(hActor2.buildSignal(hActor2.actor, "start", {}))
 
+    after () ->
+      hActor.h_tearDown()
+      hActor = null
+      hActor2.h_tearDown()
+      hActor2 = null
 
-  mockActor = { actor: "process"+process.pid }
-
-  engine = createActor(hTopology)
-
-  engine.on "started", ->
-    _.forEach ["SIGINT"], (signal) ->
-      process.on signal, ->
-        engine.h_tearDown()
-        process.exit()
-     #   clearInterval interval
-
-  # starting engine
-  engine.h_init()
-
-main()
+    it "should avoid port collision", (done) ->
+      port_hActor = url.parse(hActor.inboundAdapters[0].url)
+      port_hActor2 = url.parse(hActor2.inboundAdapters[0].url)
+      port_hActor2.should.not.be.equal(port_hActor)
+      done()

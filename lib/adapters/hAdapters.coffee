@@ -25,16 +25,16 @@
 
 url = require "url"
 zmq = require "zmq"
-cronJob = require("cron").CronJob
-validator = require "./validator"
+validator = require "./../validator"
 
 class Adapter
 
   constructor: (properties) ->
     @started = false
     if properties.owner
-    then @owner = properties.owner
-    else throw new Error("You must pass an actor as reference")
+      @owner = properties.owner
+    else
+      throw new Error("You must pass an actor as reference")
 
   start: ->
     @started = true
@@ -51,22 +51,45 @@ class InboundAdapter extends Adapter
   genListenPort: ->
     Math.floor(Math.random() * 98)+3000
 
+  formatUrl: (url_string) ->
+    if url_string
+      url_props = url.parse(url_string)
+      if url_props.port
+        @url = url_string
+      else
+        url_props.port = @genListenPort()
+        delete url_props.host
+        @url = url.format(url_props)
+    else
+      @url = "tcp://127.0.0.1:#{@genListenPort}"
+
+
 class SocketInboundAdapter extends InboundAdapter
 
   constructor: (properties) ->
     super
-    if properties.url then @url = properties.url else @url = "tcp://127.0.0.1:#{@genListenPort}"
+    @formatUrl(properties.url)
     @type = "socket_in"
+    @initSocket()
+
+  initSocket: () ->
     @sock = zmq.socket "pull"
     @sock.identity = "SocketIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
       @owner.emit "message", JSON.parse(data)
 
   start: ->
-    unless @started
-      @sock.bindSync @url
-      @owner.log "debug", "#{@sock.identity} listening on #{@url}"
-      super
+    while @started is false
+      try
+        @sock.bindSync @url
+        @owner.log "debug", "#{@sock.identity} listening on #{@url}"
+        super
+      catch err
+        if err.message is "Address already in use"
+          @sock = null
+          @initSocket()
+          @formatUrl @url.replace(/:[0-9][0-9]?[0-9]?[0-9]?$/, '')
+          @owner.log "debug", 'Change listening port to avoid collision :',err
 
   stop: ->
     if @started
@@ -78,17 +101,28 @@ class LBSocketInboundAdapter extends InboundAdapter
 
   constructor: (properties) ->
     super
-    if properties.url then @url = properties.url else @url = "tcp://127.0.0.1:#{@genListenPort}"
+    @formatUrl(properties.url)
     @type = "lb_socket_in"
+    @initSocket()
+
+  initSocket: () ->
     @sock = zmq.socket "pull"
     @sock.identity = "LBSocketIA_of_#{@owner.actor}"
-    @sock.on "message", (data) => @owner.emit "message", JSON.parse(data)
+    @sock.on "message", (data) =>
+      @owner.emit "message", JSON.parse(data)
 
   start: ->
-    unless @started
-      @sock.connect @url
-      @owner.log "debug", "#{@sock.identity} listening on #{@url}"
-      super
+    while @started is false
+      try
+        @sock.connect @url
+        @owner.log "debug", "#{@sock.identity} listening on #{@url}"
+        super
+      catch err
+        if err.message is "Address already in use"
+          @sock = null
+          @initSocket()
+          @formatUrl @url.replace(/:[0-9][0-9]?[0-9]?[0-9]?$/, '')
+          @owner.log "debug", 'Change listening port to avoid collision :',err
 
   stop: ->
     if @started
@@ -102,8 +136,9 @@ class ChannelInboundAdapter extends InboundAdapter
     @channel = properties.channel
     super
     if properties.url
-    then @url = properties.url
-    else throw new Error("You must provide a channel url")
+      @url = properties.url
+    else
+      throw new Error("You must provide a channel url")
     @type = "channel_in"
     @listQuickFilter = []
     @filter = properties.filter or ""
@@ -147,83 +182,6 @@ class ChannelInboundAdapter extends InboundAdapter
         @sock.close()
       super
 
-class TimerAdapter extends InboundAdapter
-
-  constructor: (properties) ->
-    super
-    @properties = properties.properties
-    @author = @owner.actor+"#TimerAdapter"
-    @job = undefined
-
-  startJob: =>
-    current = new Date()
-    msg = @owner.buildMessage(@owner.actor, "hAlert", {}, {author:@author, published:current})
-    @owner.emit "message", msg
-
-  stopJob: =>
-    # This function is executed when the job stops
-
-  launchTimer: ->
-    if @properties.mode is "millisecond"
-      @job = setInterval(=>
-        @startJob()
-      , @properties.period)
-    else if @properties.mode is "crontab"
-      try
-        @job = new cronJob(@properties.crontab, =>
-          @startJob()
-        , =>
-          @stopJob()
-        , true, "Europe/London")
-      catch err
-        @owner.log "error", "Couldn't setup timer adapter : #{err}"
-    else
-      @owner.log "error", "Timer adapter : Unhandled mode #{@properties}"
-
-  start: ->
-    unless @started
-      @launchTimer()
-      @owner.log "debug", "#{@owner.actor} launch TimerAdapter"
-      super
-
-  stop: ->
-    if @started
-      if @properties.mode is "crontab" and @job
-        @job.stop()
-      else if @properties.mode is "millisecond" and @job
-        clearInterval(@job)
-      super
-
-class HttpInboundAdapter extends InboundAdapter
-  constructor: (properties) ->
-    super
-
-    if properties.url_path then @serverPath = properties.url_path   else @urlpath = "tcp://127.0.0.1"
-    if properties.port     then @port = properties.port             else @port = 8080
-
-    @qs = require 'querystring'
-    @sys = require 'sys'
-    @http = require 'http'
-
-
-  start: ->
-    @owner.log "debug", "Server path : #{@serverPath} Port : #{@port} is  running ..."
-    server = @http.createServer (req, res) =>
-      if req.method is 'POST'
-        body = ""
-        req.on "data", (data) ->
-          body += data
-        req.on "end", =>
-          post_data =  @qs.parse(body)
-          @owner.emit "message", @owner.buildMessage(@owner.actor, "hHttpData", post_data, {headers:req.headers})
-
-      else if req.method is 'GET'
-        req.on 'end', -> res.writeHead 200, 'ontent-Type' : 'text/plain'
-        res.end()
-        url_parts =  @qs.parse(req.url)
-        @owner.emit "message", @owner.buildMessage(@owner.actor, "hHttpData", url_parts, {headers:req.headers})
-
-    server.listen @port,@serverPath
 
 class OutboundAdapter extends Adapter
 
@@ -246,8 +204,9 @@ class LocalOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     if properties.ref
-    then @ref = properties.ref
-    else throw new Error("You must explicitely pass an actor as reference to a LocalOutboundAdapter")
+      @ref = properties.ref
+    else
+      throw new Error("You must explicitely pass an actor as reference to a LocalOutboundAdapter")
 
   start: ->
     super
@@ -261,8 +220,9 @@ class ChildprocessOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     if properties.ref
-    then @ref = properties.ref
-    else throw new Error("You must explicitely pass an actor child process as reference to a ChildOutboundAdapter")
+      @ref = properties.ref
+    else
+      throw new Error("You must explicitely pass an actor child process as reference to a ChildOutboundAdapter")
 
   start: ->
     super
@@ -281,8 +241,9 @@ class SocketOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     if properties.url
-    then @url = properties.url
-    else throw new Error("You must explicitely pass a valid url to a SocketOutboundAdapter")
+      @url = properties.url
+    else
+      throw new Error("You must explicitely pass a valid url to a SocketOutboundAdapter")
     @sock = zmq.socket "push"
     @sock.identity = "SocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
@@ -307,8 +268,9 @@ class LBSocketOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     if properties.url
-    then @url = properties.url
-    else throw new Error("You must explicitely pass a valid url to a LBSocketOutboundAdapter")
+      @url = properties.url
+    else
+      throw new Error("You must explicitely pass a valid url to a LBSocketOutboundAdapter")
     @sock = zmq.socket "push"
     @sock.identity = "LBSocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
@@ -335,8 +297,14 @@ class ChannelOutboundAdapter extends OutboundAdapter
     properties.targetActorAid = "#{validator.getBareURN(properties.owner.actor)}"
     super
     if properties.url
-    then @url = properties.url
-    else throw new Error("You must explicitely pass a valid url to a ChannelOutboundAdapter")
+      url_props = url.parse(properties.url)
+      if url_props.port
+        @url = properties.url
+      else
+        url_props.port = @genListenPort()
+        @url = url.format(url_props)
+    else
+      @url = "tcp://127.0.0.1:#{@genListenPort}"
     @sock = zmq.socket "pub"
     @sock.identity = "ChannelOA_of_#{@owner.actor}"
 
@@ -359,48 +327,6 @@ class ChannelOutboundAdapter extends OutboundAdapter
     else
       @sock.send JSON.stringify(hMessage)
 
-class HttpOutboundAdapter extends OutboundAdapter
-  constructor: (properties) ->
-    super
-
-    if properties.url             then @server_url  = properties.url                       else @server_url = "tcp://127.0.0.1"
-    if properties.port            then @port = properties.port                      else @port = 8080
-    if properties.path            then @path = properties.path                      else @path = "/"
-    if properties.targetActorAid  then @targetActorAid = properties.targetActorAid
-
-    console.log "HttpOutboundAdapter used -> [ url:  "+@server_url+"  port :"+@port+" path: "+@path+" targetActorAid: "+@targetActorAid+"]"
-
-  send: (message) ->
-    @start() unless @started
-
-    @querystring = require 'querystring'
-    @http = require 'http'
-
-    # Setting the configuration
-    post_options =
-      host: @server_url
-      port: @port
-      path: @path
-      method: "POST"
-      headers:
-        "Content-Type": "application/x-www-form-urlencoded"
-        "Content-Length": JSON.stringify(message.payload).length
-
-    post_req = @http.request(post_options, (res) ->
-      res.setEncoding "utf8"
-      res.on "data", (chunk) ->
-        console.log "Response: " + chunk
-
-      @status = res.statusCode
-      console.log "response  :"+@status+"  ", res.headers
-    )
-
-    post_req.on "error", (e) ->
-      console.log "problem with request: " + e.message
-
-    # write parameters to post body
-    post_req.write JSON.stringify(message.payload)
-    post_req.end()
 
 class SocketIOAdapter extends OutboundAdapter
 
@@ -443,11 +369,14 @@ exports.adapter = (type, properties) ->
     when "socketIO"
       new SocketIOAdapter(properties)
     when "timerAdapter"
-      new TimerAdapter(properties)
+      timerAdapter = require("./hTimerAdapter")
+      timerAdapter.newTimerAdapter(properties)
     when "http_in"
-      new HttpInboundAdapter(properties)
+      httpInAdapter = require("./hHttpAdapter")
+      httpInAdapter.newHttpInboundAdapter(properties)
     when "http_out"
-      new HttpOutboundAdapter(properties)
+      httpOutAdapter = require("./hHttpAdapter")
+      httpOutAdapter.newHttpOutboundAdapter(properties)
     else
       throw new Error "Incorrect type '#{type}'"
 

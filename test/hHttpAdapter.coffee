@@ -38,7 +38,7 @@ describe "hHttpAdapter", ->
         actor: "urn:localhost:actor",
         type: "hactor",
         properties: {},
-        adapters: [ { "type": "http_in", "url_path": "127.0.0.1", "port": 8888 } ]
+        adapters: [ { type: "http_in", url: "http://127.0.0.1:8888" } ]
       }
       hActor = actorModule.newActor(topology)
       hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))

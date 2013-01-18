@@ -24,7 +24,7 @@
 #
 
 {Actor} = require "./hactor"
-adapters = require "./../adapters"
+adapters = require "./../adapters/hAdapters"
 _ = require "underscore"
 codes = require("./../codes.coffee").hResultStatus
 validator = require "./../validator.coffee"

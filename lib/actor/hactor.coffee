@@ -28,11 +28,11 @@
 forker = require "child_process"
 #Third party modules
 zmq = require "zmq"
-logger = require "winston"
+winston = require "winston"
 _ = require "underscore"
 #Hactor modules
-{OutboundAdapter} = require "./../adapters"
-adapters = require "./../adapters"
+{OutboundAdapter} = require "./../adapters/hAdapters"
+adapters = require "./../adapters/hAdapters"
 validator = require "./../validator"
 codes = require "./../codes.coffee"
 hFilter = require "./../hFilter"
@@ -48,11 +48,6 @@ _.mixin toDict: (arr, key) ->
   Class that defines an Actor
 ###
 class Actor extends EventEmitter
-  #Init logger
-  logger.exitOnError = false
-  logger.remove(logger.transports.Console)
-  logger.add(logger.transports.Console, {handleExceptions: true, level: "INFO"})
-  logger.add(logger.transports.File, {handleExceptions: true, filename: "./log/hubiquitus.log", level: "debug"})
 
   # Possible running states of an actor
   STATUS_STARTING = "starting"
@@ -76,6 +71,13 @@ class Actor extends EventEmitter
     @topology {object} Launch topology of the actor
   ###
   constructor: (topology) ->
+    # init logger
+    if topology.log
+      @log_properties = topology.log
+      @initLogger(topology.log.logLevel or "info", topology.log.logFile)
+    else
+      @initLogger("info")
+
     # setting up instance attributes
     if(validator.validateFullURN(topology.actor))
       @actor = topology.actor
@@ -368,6 +370,7 @@ class Actor extends EventEmitter
     unless _.isString(method) then throw new Error "'method' parameter must be a string"
 
     unless properties.trackers then properties.trackers = @trackers
+    unless properties.log then properties.log = @log_properties
 
     # prefixing actor's id automatically
     unless classname is "hchannel"
@@ -403,20 +406,42 @@ class Actor extends EventEmitter
     properties.actor
 
   ###*
+    Method called by constructor to initializing logger
+  ###
+  initLogger: (logLevel, logFile) ->
+    logLevels =
+      debug: 0,
+      info: 1,
+      warn: 2,
+      error:3
+    @logger = new winston.Logger({levels: logLevels})
+    # Don't crash on uncaught exception
+    @logger.exitOnError = false
+
+    # Set log display
+    @logger.add(winston.transports.Console, {handleExceptions: true, level: logLevel})
+    if logFile
+      try
+        @logger.add(winston.transports.File, {handleExceptions: true, filename: logFile, level: logLevel})
+      catch err
+
+  ###*
     Method that enrich a message with actor details and logs it to the console
     @message {object} the message to log
   ###
   log: (type, message) ->
-    # TODO properly configure logging system
     switch type
       when "debug"
-        logger.debug "#{validator.getBareURN(@actor)} | #{message}"
+        @logger.debug "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "info"
-        logger.info "#{validator.getBareURN(@actor)} | #{message}"
+        @logger.info "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "warn"
-        logger.warn "#{validator.getBareURN(@actor)} | #{message}"
+        @logger.warn "#{validator.getBareURN(@actor)} | #{message}"
+        break
+      when "error"
+        @logger.error "#{validator.getBareURN(@actor)} | #{message}"
         break
 
   ###*
@@ -469,10 +494,10 @@ class Actor extends EventEmitter
   ###
   h_init: () ->
     @setStatus STATUS_STARTING
-    @preStart () =>
-        @h_start () =>
-          @postStart () =>
-            @setStatus STATUS_STARTED
+    @preStart ( =>
+        @h_start ( =>
+          @postStart ( =>
+            @setStatus STATUS_STARTED)))
 
   preStart: (done) ->
     done()
@@ -490,10 +515,10 @@ class Actor extends EventEmitter
   ###
   h_tearDown: () ->
     @setStatus STATUS_STOPPING
-    @preStop () =>
-        @h_stop () =>
-          @postStop () =>
-            @setStatus STATUS_STOPPED
+    @preStop ( =>
+        @h_stop ( =>
+          @postStop ( =>
+            @setStatus STATUS_STOPPED)))
 
   preStop: (done) ->
     done()
@@ -630,6 +655,12 @@ class Actor extends EventEmitter
             return cb codes.hResultStatus.OK, "Unsubscribe from channel"
         index++
 
+  ###*
+    Method called to get the actor subscriptions
+    @cb {callback}
+  ###
+  getSubscriptions: () ->
+    return @subscriptions
 
   ###*
     Method called to remove a actor from outboundAdapter

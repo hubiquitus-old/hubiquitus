@@ -25,15 +25,31 @@
 
 url = require "url"
 zmq = require "zmq"
-validator = require "./validator"
+validator = require "./../validator"
 
 class Adapter
 
   constructor: (properties) ->
     @started = false
     if properties.owner
-    then @owner = properties.owner
-    else throw new Error("You must pass an actor as reference")
+      @owner = properties.owner
+    else
+      throw new Error("You must pass an actor as reference")
+
+  formatUrl: (url_string) ->
+    if url_string
+      url_props = url.parse(url_string)
+      if url_props.port
+        @url = url_string
+      else
+        url_props.port = @genListenPort()
+        delete url_props.host
+        @url = url.format(url_props)
+    else
+      @url = "tcp://127.0.0.1:#{@genListenPort}"
+
+  genListenPort: ->
+    Math.floor(Math.random() * 30000)+3000
 
   start: ->
     @started = true
@@ -47,25 +63,33 @@ class InboundAdapter extends Adapter
     @direction = "in"
     super
 
-  genListenPort: ->
-    Math.floor(Math.random() * 98)+3000
 
 class SocketInboundAdapter extends InboundAdapter
 
   constructor: (properties) ->
     super
-    if properties.url then @url = properties.url else @url = "tcp://127.0.0.1:#{@genListenPort}"
+    @formatUrl(properties.url)
     @type = "socket_in"
+    @initSocket()
+
+  initSocket: () ->
     @sock = zmq.socket "pull"
     @sock.identity = "SocketIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
       @owner.emit "message", JSON.parse(data)
 
   start: ->
-    unless @started
-      @sock.bindSync @url
-      @owner.log "debug", "#{@sock.identity} listening on #{@url}"
-      super
+    while @started is false
+      try
+        @sock.bindSync @url
+        @owner.log "debug", "#{@sock.identity} listening on #{@url}"
+        super
+      catch err
+        if err.message is "Address already in use"
+          @sock = null
+          @initSocket()
+          @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
+          @owner.log "error", 'Change listening port to avoid collision :',err
 
   stop: ->
     if @started
@@ -77,17 +101,28 @@ class LBSocketInboundAdapter extends InboundAdapter
 
   constructor: (properties) ->
     super
-    if properties.url then @url = properties.url else @url = "tcp://127.0.0.1:#{@genListenPort}"
+    @formatUrl(properties.url)
     @type = "lb_socket_in"
+    @initSocket()
+
+  initSocket: () ->
     @sock = zmq.socket "pull"
     @sock.identity = "LBSocketIA_of_#{@owner.actor}"
-    @sock.on "message", (data) => @owner.emit "message", JSON.parse(data)
+    @sock.on "message", (data) =>
+      @owner.emit "message", JSON.parse(data)
 
   start: ->
-    unless @started
-      @sock.connect @url
-      @owner.log "debug", "#{@sock.identity} listening on #{@url}"
-      super
+    while @started is false
+      try
+        @sock.connect @url
+        @owner.log "debug", "#{@sock.identity} listening on #{@url}"
+        super
+      catch err
+        if err.message is "Address already in use"
+          @sock = null
+          @initSocket()
+          @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
+          @owner.log "error", 'Change listening port to avoid collision :',err
 
   stop: ->
     if @started
@@ -101,8 +136,9 @@ class ChannelInboundAdapter extends InboundAdapter
     @channel = properties.channel
     super
     if properties.url
-    then @url = properties.url
-    else throw new Error("You must provide a channel url")
+      @url = properties.url
+    else
+      throw new Error("You must provide a channel url")
     @type = "channel_in"
     @listQuickFilter = []
     @filter = properties.filter or ""
@@ -146,6 +182,7 @@ class ChannelInboundAdapter extends InboundAdapter
         @sock.close()
       super
 
+
 class OutboundAdapter extends Adapter
 
   constructor: (properties) ->
@@ -167,8 +204,9 @@ class LocalOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     if properties.ref
-    then @ref = properties.ref
-    else throw new Error("You must explicitely pass an actor as reference to a LocalOutboundAdapter")
+      @ref = properties.ref
+    else
+      throw new Error("You must explicitely pass an actor as reference to a LocalOutboundAdapter")
 
   start: ->
     super
@@ -182,8 +220,9 @@ class ChildprocessOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     if properties.ref
-    then @ref = properties.ref
-    else throw new Error("You must explicitely pass an actor child process as reference to a ChildOutboundAdapter")
+      @ref = properties.ref
+    else
+      throw new Error("You must explicitely pass an actor child process as reference to a ChildOutboundAdapter")
 
   start: ->
     super
@@ -202,8 +241,9 @@ class SocketOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     if properties.url
-    then @url = properties.url
-    else throw new Error("You must explicitely pass a valid url to a SocketOutboundAdapter")
+      @url = properties.url
+    else
+      throw new Error("You must explicitely pass a valid url to a SocketOutboundAdapter")
     @sock = zmq.socket "push"
     @sock.identity = "SocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
@@ -228,8 +268,9 @@ class LBSocketOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     if properties.url
-    then @url = properties.url
-    else throw new Error("You must explicitely pass a valid url to a LBSocketOutboundAdapter")
+      @url = properties.url
+    else
+      throw new Error("You must explicitely pass a valid url to a LBSocketOutboundAdapter")
     @sock = zmq.socket "push"
     @sock.identity = "LBSocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
@@ -256,15 +297,32 @@ class ChannelOutboundAdapter extends OutboundAdapter
     properties.targetActorAid = "#{validator.getBareURN(properties.owner.actor)}"
     super
     if properties.url
-    then @url = properties.url
-    else throw new Error("You must explicitely pass a valid url to a ChannelOutboundAdapter")
+      url_props = url.parse(properties.url)
+      if url_props.port
+        @url = properties.url
+      else
+        url_props.port = @genListenPort()
+        @url = url.format(url_props)
+    else
+      @url = "tcp://127.0.0.1:#{@genListenPort}"
+    @initSocket()
+
+  initSocket: () ->
     @sock = zmq.socket "pub"
     @sock.identity = "ChannelOA_of_#{@owner.actor}"
 
   start:->
-    @sock.bindSync @url
-    @owner.log "debug", "#{@sock.identity} streaming on #{@url}"
-    super
+    while @started is false
+      try
+        @sock.bindSync @url
+        @owner.log "debug", "#{@sock.identity} streaming on #{@url}"
+        super
+      catch err
+        if err.message is "Address already in use"
+          @sock = null
+          @initSocket()
+          @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
+          @owner.log "error", 'Change streaming port to avoid collision :',err
 
   stop: ->
     if @started
@@ -279,6 +337,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
       @sock.send message
     else
       @sock.send JSON.stringify(hMessage)
+
 
 class SocketIOAdapter extends OutboundAdapter
 
@@ -320,6 +379,15 @@ exports.adapter = (type, properties) ->
       new ChannelOutboundAdapter(properties)
     when "socketIO"
       new SocketIOAdapter(properties)
+    when "timerAdapter"
+      timerAdapter = require("./hTimerAdapter")
+      timerAdapter.newTimerAdapter(properties)
+    when "http_in"
+      httpInAdapter = require("./hHttpAdapter")
+      httpInAdapter.newHttpInboundAdapter(properties)
+    when "http_out"
+      httpOutAdapter = require("./hHttpAdapter")
+      httpOutAdapter.newHttpOutboundAdapter(properties)
     else
       throw new Error "Incorrect type '#{type}'"
 

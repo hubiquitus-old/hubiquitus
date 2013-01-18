@@ -24,7 +24,7 @@
 #
 
 {Actor} = require "./hactor"
-adapters = require "./../adapters"
+adapters = require "./../adapters/hAdapters"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "./../validator"
@@ -66,10 +66,6 @@ class Channel extends Actor
           command = require("./../hcommands/hSubscribe").Command
           module = new command()
           @runCommand(hMessage, module, cb)
-        when "hSetFilter"
-          @setFilter hMessage.payload.params, (status, result) =>
-            hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
-            cb hMessageResult
         else
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
           cb hMessageResult

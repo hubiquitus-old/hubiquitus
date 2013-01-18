@@ -32,7 +32,7 @@ validator = require "../validator"
 codes = require "../codes"
 options = require("../options").options
 hFilter = require "../hFilter"
-adapters = require "../adapters"
+adapters = require "../adapters/hAdapters"
 
 
 class Session extends Actor
@@ -42,6 +42,7 @@ class Session extends Actor
     # Setting outbound adapters
     @type = 'session'
     @trackInbox = topology.trackInbox
+    @hClient = undefined
 
   touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
@@ -59,10 +60,10 @@ class Session extends Actor
     if hMessage.actor is "session"
       hMessage.actor = @actor
     super
-    
+
   onMessage: (hMessage, cb) ->
     # If hCommand, execute it
-    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
+    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor) and hMessage.publisher is @actor
       switch hMessage.payload.cmd
         when "hEcho"
           command = require("./../hcommands/hEcho").Command
@@ -72,20 +73,23 @@ class Session extends Actor
           @setFilter hMessage.payload.params, (status, result) =>
             hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
             cb hMessageResult
+        when "hUnsubscribe"
+          @unsubscribe hMessage.payload.params, (status, result) =>
+            hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
+            cb hMessageResult
+        when "hGetSubscriptions"
+          hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, @getSubscriptions())
+          cb hMessageResult
         else
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
           cb hMessageResult
     else if hMessage.actor is @actor
-      @send hMessage
+      @hClient.emit "hMessage", hMessage
     else
       if hMessage.type is "hCommand"
         switch hMessage.payload.cmd
           when "hSubscribe"
             @subscribe hMessage.actor, "", (status, result) =>
-              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
-              cb hMessageResult
-          when "hUnsubscribe"
-            @unsubscribe hMessage.actor, (status, result) =>
               hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
               cb hMessageResult
           else
@@ -149,7 +153,7 @@ class Session extends Actor
   initListener: (client) =>
     delete client["hClient"]
     socketIOAdapter = adapters.adapter("socketIO", {targetActorAid: @actor, owner: @, socket: client.socket})
-    @outboundAdapters.push socketIOAdapter
+    @hClient = client.socket
 
     @on "hStatus", (msg) ->
       client.socket.emit "hStatus", msg

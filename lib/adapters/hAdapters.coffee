@@ -36,21 +36,6 @@ class Adapter
     else
       throw new Error("You must pass an actor as reference")
 
-  start: ->
-    @started = true
-
-  stop: ->
-    @started = false
-
-class InboundAdapter extends Adapter
-
-  constructor: (properties) ->
-    @direction = "in"
-    super
-
-  genListenPort: ->
-    Math.floor(Math.random() * 98)+3000
-
   formatUrl: (url_string) ->
     if url_string
       url_props = url.parse(url_string)
@@ -62,6 +47,21 @@ class InboundAdapter extends Adapter
         @url = url.format(url_props)
     else
       @url = "tcp://127.0.0.1:#{@genListenPort}"
+
+  genListenPort: ->
+    Math.floor(Math.random() * 30000)+3000
+
+  start: ->
+    @started = true
+
+  stop: ->
+    @started = false
+
+class InboundAdapter extends Adapter
+
+  constructor: (properties) ->
+    @direction = "in"
+    super
 
 
 class SocketInboundAdapter extends InboundAdapter
@@ -88,8 +88,8 @@ class SocketInboundAdapter extends InboundAdapter
         if err.message is "Address already in use"
           @sock = null
           @initSocket()
-          @formatUrl @url.replace(/:[0-9][0-9]?[0-9]?[0-9]?$/, '')
-          @owner.log "debug", 'Change listening port to avoid collision :',err
+          @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
+          @owner.log "error", 'Change listening port to avoid collision :',err
 
   stop: ->
     if @started
@@ -121,8 +121,8 @@ class LBSocketInboundAdapter extends InboundAdapter
         if err.message is "Address already in use"
           @sock = null
           @initSocket()
-          @formatUrl @url.replace(/:[0-9][0-9]?[0-9]?[0-9]?$/, '')
-          @owner.log "debug", 'Change listening port to avoid collision :',err
+          @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
+          @owner.log "error", 'Change listening port to avoid collision :',err
 
   stop: ->
     if @started
@@ -305,13 +305,24 @@ class ChannelOutboundAdapter extends OutboundAdapter
         @url = url.format(url_props)
     else
       @url = "tcp://127.0.0.1:#{@genListenPort}"
+    @initSocket()
+
+  initSocket: () ->
     @sock = zmq.socket "pub"
     @sock.identity = "ChannelOA_of_#{@owner.actor}"
 
   start:->
-    @sock.bindSync @url
-    @owner.log "debug", "#{@sock.identity} streaming on #{@url}"
-    super
+    while @started is false
+      try
+        @sock.bindSync @url
+        @owner.log "debug", "#{@sock.identity} streaming on #{@url}"
+        super
+      catch err
+        if err.message is "Address already in use"
+          @sock = null
+          @initSocket()
+          @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
+          @owner.log "error", 'Change streaming port to avoid collision :',err
 
   stop: ->
     if @started

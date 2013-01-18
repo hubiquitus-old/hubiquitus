@@ -26,13 +26,14 @@ should = require("should")
 config = require("./_config")
 url = require "url"
 
-describe "hHttpAdapter", ->
+describe "hAdapter", ->
   hActor = undefined
   hActor2 = undefined
   hResultStatus = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hactor")
+  actorModuleChannel = require("../lib/actor/hchannel")
 
-  describe "Http_inbound", ->
+  describe "socket_in collision", ->
     http = require "http"
 
     before () ->
@@ -63,5 +64,53 @@ describe "hHttpAdapter", ->
     it "should avoid port collision", (done) ->
       port_hActor = url.parse(hActor.inboundAdapters[0].url)
       port_hActor2 = url.parse(hActor2.inboundAdapters[0].url)
+      port_hActor2.should.not.be.equal(port_hActor)
+      done()
+
+  describe "channel_out collision", ->
+    http = require "http"
+
+    before () ->
+      topology = {
+        actor: config.logins[1].urn,
+        type: "hchannel",
+        properties: {
+          subscribers:[config.logins[1].urn, config.logins[2].urn],
+          listenOn: "tcp://127.0.0.1:1221",
+          broadcastOn: "tcp://127.0.0.1:2998",
+          db:{
+            dbName: "test",
+            dbCollection: config.logins[1].urn
+          }
+        }
+      }
+      hActor = actorModuleChannel.newActor(topology)
+      hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
+
+      topology = {
+        actor: config.logins[1].urn,
+        type: "hchannel",
+        properties: {
+          subscribers:[config.logins[1].urn, config.logins[2].urn],
+          listenOn: "tcp://127.0.0.1:2112",
+          broadcastOn: "tcp://127.0.0.1:2998",
+          db:{
+            dbName: "test",
+            dbCollection: config.logins[1].urn
+          }
+        }
+      }
+      hActor2 = actorModuleChannel.newActor(topology)
+      hActor2.h_onMessageInternal(hActor2.buildSignal(hActor2.actor, "start", {}))
+
+    after () ->
+      hActor.h_tearDown()
+      hActor = null
+      hActor2.h_tearDown()
+      hActor2 = null
+
+    it "should avoid port collision", (done) ->
+      port_hActor = url.parse(hActor.outboundAdapters[0].url)
+      port_hActor2 = url.parse(hActor2.outboundAdapters[0].url)
       port_hActor2.should.not.be.equal(port_hActor)
       done()

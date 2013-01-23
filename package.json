@@ -6,10 +6,10 @@
   "homepage": "www.hubiquitus.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hubiquitus/hubiquitus-node"
+    "url": "https://github.com/hubiquitus/hubiquitus"
   },
-  "maintainers": [{"name": "Alexis Lesage"
-		 ,"email":"alexislesage@gmail.com"
+  "maintainers": [{"name": "Gauthier Boivin"
+		 ,"email":"gauthierboivin@gmail.com"
 		 }],
   "bin": { "launcher": "./lib/launcher.coffee"},
   "main": "./lib/hubiquitus",

@@ -30,12 +30,11 @@ class TimerAdapter extends InboundAdapter
   constructor: (properties) ->
     super
     @properties = properties.properties
-    @author = @owner.actor+"#TimerAdapter"
     @job = undefined
 
   startJob: =>
-    current = new Date()
-    msg = @owner.buildMessage(@owner.actor, "hAlert", {}, {author:@author, published:current})
+    current = new Date().getTime()
+    msg = @owner.buildMessage(@owner.actor, "hAlert", {name:@properties.name}, {published:current})
     @owner.emit "message", msg
 
   stopJob: =>

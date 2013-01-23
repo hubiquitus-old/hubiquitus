@@ -23,7 +23,6 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-log = require("winston")
 fs = require("fs")
 clients = {}
 options = require("../options").sioConnector
@@ -81,11 +80,11 @@ class SocketIO_Connector
   ###
   connect: (client, data) ->
     unless client
-      log.warn "A client sent an invalid ID with data", data
+      @owner.log "warn", "A client sent an invalid ID with data", data
       return
-    log.info "Client ID " + client.id + " sent connection data", data
+    @owner.log "info", "Client ID " + client.id + " sent connection data", data
     if not data or not data.login or not data.password
-      log.info "Client ID " + client.id + " is trying to connect without mandatory attribute", data
+      @owner.log "info", "Client ID " + client.id + " is trying to connect without mandatory attribute", data
       return
 
     # Authentification

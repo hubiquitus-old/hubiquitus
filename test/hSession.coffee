@@ -89,7 +89,7 @@ describe "hSession", ->
 
 
   it "should return hResult OK when correctly unsubscribe", (done) ->
-    unSubCmd = hActor.buildCommand("session", "hUnsubscribe", existingCHID)
+    unSubCmd = hActor.buildCommand("session", "hUnsubscribe", {channel:existingCHID})
     hActor.h_onMessageInternal unSubCmd, (hMessage) ->
       hMessage.should.have.property "ref", unSubCmd.msgid
       hMessage.payload.should.have.property "status", status.OK

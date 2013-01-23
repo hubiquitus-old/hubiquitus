@@ -74,7 +74,7 @@ class Session extends Actor
             hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
             cb hMessageResult
         when "hUnsubscribe"
-          @unsubscribe hMessage.payload.params, (status, result) =>
+          @unsubscribe hMessage.payload.params.channel, (status, result) =>
             hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
             cb hMessageResult
         when "hGetSubscriptions"

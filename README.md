@@ -14,7 +14,7 @@ If you have some time and motivation, you should then [go deep into Hubiquitus](
 
 ## Code
 
-The source code of the Hubiquitus NodeJS engine itself is in the `src`subdirectory of this repo. 
+The source code of the Hubiquitus NodeJS engine itself is in the `lib` subdirectory of this repo.
 
 The source code of each Hubiquitus client is made available in a separate repo: 
 
@@ -26,7 +26,7 @@ The source code of each Hubiquitus client is made available in a separate repo:
 
 ## Issues
 
-If you want to know what we are doing right now, you could watch our job [here](hubiquitus.atlassian.net).
+If you want to know what we are doing right now, you could watch our job [here](http://hubiquitus.atlassian.net/).
 
 ## License
 

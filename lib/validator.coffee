@@ -78,14 +78,14 @@ Returns true or false if it is a valid URN following hubiquitus standards
 @param urn - the urn string to validate
 ###
 exports.validateURN = (urn) ->
-  /(^urn:[a-z0-9]{1}[a-z0-9\-]{1,31}:[a-z0-9_,:=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/.test(urn)
+  /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/.test(urn)
 
 ###
 Returns true or false if it is a valid URN with ressource following hubiquitus standards
 @param urn - the urn string to validate
 ###
 exports.validateFullURN = (urn) ->
-  /(^urn:[a-z0-9]{1}[a-z0-9\-]{1,31}:[a-z0-9_,:=@;!'%/#\(\)\+\-\.\$\*\?]+\/.+$)/.test(urn)
+  /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/.+$)/.test(urn)
 
 ###
 Removes attributes that are strings and that are empty (ie. "") in hLocation

@@ -36,7 +36,7 @@ describe "hTimerAdapter", ->
         actor: "urn:localhost:actor",
         type: "hactor",
         properties: {},
-        adapters: [ { type: "timerAdapter", properties: {name:"timer_milli", mode: "millisecond", period:100}} ]
+        adapters: [ { type: "timerAdapter", properties: {alert:"timer_milli", mode: "millisecond", period:100}} ]
       }
       hActor = actorModule.newActor(topology)
       hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
@@ -48,7 +48,7 @@ describe "hTimerAdapter", ->
     it "should receive 5 message in 500ms", (done) ->
       incoming_msg = 0
       hActor.onMessage = (hMessage, cb) =>
-        hMessage.payload.name.should.be.equal("timer_milli")
+        hMessage.payload.alert.should.be.equal("timer_milli")
         incoming_msg++
 
       setTimeout(=>
@@ -62,7 +62,7 @@ describe "hTimerAdapter", ->
         actor: "urn:localhost:actor",
         type: "hactor",
         properties: {},
-        adapters: [ { type: "timerAdapter", properties: {name:"timer_cron", mode: "crontab", crontab:"* * * * * *"}} ]
+        adapters: [ { type: "timerAdapter", properties: {alert:"timer_cron", mode: "crontab", crontab:"* * * * * *"}} ]
       }
       hActor = actorModule.newActor(topology)
       hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
@@ -75,7 +75,7 @@ describe "hTimerAdapter", ->
       @timeout(3000)
       incoming_msg = 0
       hActor.onMessage = (hMessage, cb) =>
-        hMessage.payload.name.should.be.equal("timer_cron")
+        hMessage.payload.alert.should.be.equal("timer_cron")
         incoming_msg++
 
       setTimeout(=>

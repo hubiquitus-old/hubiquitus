@@ -48,8 +48,8 @@ describe "hGateway", ->
         adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:3993" } ],
         properties: {
           security: {
-            key: "./ssl/server.key.pem",
-            cert: "./ssl/server.crt.pem"
+            key: "./test/resources/server.key.pem",
+            cert: "./test/resources/server.crt.pem"
           },
           socketIOPort: 8080,
           authActor: "urn:localhost:auth",

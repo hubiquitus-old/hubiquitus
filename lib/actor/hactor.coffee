@@ -172,14 +172,14 @@ class Actor extends EventEmitter
     @hMessage {object} the hMessage receive
     @cb {callback} callback which send an eventual result
   ###
-  h_onMessageInternal: (hMessage, cb) ->
+  h_onMessageInternal: (hMessage) ->
     @log "debug", "onMessage :"+JSON.stringify(hMessage)
     try
       validator.validateHMessage hMessage, (err, result) =>
         if err
           @log "debug", "hMessage not conform : "+JSON.stringify(result)
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "actor is missing")
-          cb hMessageResult
+          @send hMessageResult
         else
           #Complete missing values
           hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
@@ -200,10 +200,10 @@ class Actor extends EventEmitter
             #Check if hMessage respect filter
             checkValidity = @validateFilter(hMessage)
             if checkValidity.result is true
-              @onMessage hMessage, cb
+              @onMessage hMessage
             else
-              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, checkValidity.error)
-              cb hMessageResult
+              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "#{@actor} refuse the hMessage")
+              @send hMessageResult
 
     catch error
       @log "warn", "An error occured while processing incoming message: "+error
@@ -214,11 +214,11 @@ class Actor extends EventEmitter
     @hMessage {object} the hMessage receive
     @cb {callback} callback which send an eventual result
   ###
-  onMessage: (hMessage, cb) ->
-    @log "info", "Message reveived: #{JSON.stringify(hMessage)}"
+  onMessage: (hMessage) ->
+    @log "debug", "Message reveived: #{JSON.stringify(hMessage)}"
     if hMessage.timeout > 0
         hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
-        cb hMessageResult
+        @send hMessageResult
 
   ###*
     Private method that processes hSignal message.
@@ -560,7 +560,7 @@ class Actor extends EventEmitter
     @hMessage {Object} hMessage to check
   ###
   validateFilter: (hMessage) ->
-    return hFilter.checkFilterValidity(hMessage, @filter)
+    return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
 
   ###*
     Method called to subscribe to a channel

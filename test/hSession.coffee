@@ -57,53 +57,64 @@ describe "hSession", ->
       done()
 
   after () ->
+    hActor.send = (hMessage) =>
     hActor.h_tearDown()
     hActor = null
 
   it "should emit result echoing input", (done) ->
     echoCmd = hActor.buildCommand("session", "hEcho", {hello: "world"})
-    hActor.h_onMessageInternal echoCmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       should.exist hMessage.payload.status
       should.exist hMessage.payload.result
       hMessage.payload.status.should.be.equal status.OK
       hMessage.payload.result.should.be.equal echoCmd.payload.params
       done()
 
+    hActor.h_onMessageInternal echoCmd
+
   it "should return hResult OK and filter attribut must be set", (done) ->
     setCmd = hActor.buildCommand("session", "hSetFilter", {eq:{publisher:config.logins[0].urn}})
-    hActor.h_onMessageInternal setCmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", setCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hActor.filter.should.have.property('eq')
       done()
 
+    hActor.h_onMessageInternal setCmd
+
 
   it "should return hResult ok with an array as result if user has subscriptions", (done) ->
     getSubsCmd = hActor.buildCommand("session", "hGetSubscriptions", {})
-    hActor.h_onMessageInternal getSubsCmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property('ref', getSubsCmd.msgid)
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
       hMessage.payload.result.length.should.be.equal(1)
-      done();
+      done()
+
+    hActor.h_onMessageInternal getSubsCmd
 
 
   it "should return hResult OK when correctly unsubscribe", (done) ->
     unSubCmd = hActor.buildCommand("session", "hUnsubscribe", {channel:existingCHID})
-    hActor.h_onMessageInternal unSubCmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", unSubCmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hActor.getSubscriptions().length.should.be.equal(0)
       done()
 
+    hActor.h_onMessageInternal unSubCmd
+
 
   it "should return hResult NOT_AVAILABLE when unknow command is send", (done) ->
     otherCmd = hActor.buildCommand("session", "hOtherCommand", {})
-    hActor.h_onMessageInternal otherCmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property('ref', otherCmd.msgid)
       hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
       hMessage.payload.should.have.property('result').and.match(/Command not available/)
       done();
+
+    hActor.h_onMessageInternal otherCmd
 
   it "should always override publisher before sending", (done) ->
     send = hActor.send
@@ -114,6 +125,6 @@ describe "hSession", ->
 
     msg = hActor.buildMessage("urn:localhost:otherActor", "string", {})
     msg.publisher = config.logins[0].urn
-    hActor.onMessage msg, (hMessage) ->
+    hActor.onMessage msg
 
 

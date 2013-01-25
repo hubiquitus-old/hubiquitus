@@ -80,7 +80,7 @@ hGetThreads::mapReduce = (hMessage, context, cb) ->
         convids = []
         stream = collection.find({}).stream()
         stream.on "data", (elem) ->
-          convids.push elem._id  if elem.value.status is status and hFilter.checkFilterValidity(elem, hCommand.filter).result
+          convids.push elem._id  if elem.value.status is status and hFilter.checkFilterValidity(elem, hCommand.filter, {actor:context.actor}).result
 
         stream.on "close", ->
           collection.drop()
@@ -159,7 +159,7 @@ hGetThreads::checkValidity = (hMessage, context, cb) ->
     return cb(hResultStatus.MISSING_ATTR, "missing status")
   unless typeof status is "string"
     return cb(hResultStatus.INVALID_ATTR, "status is not a string")
-  if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0
+  if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0 and context.properties.subscribers.length > 0
     return cb(hResultStatus.NOT_AUTHORIZED, "the sender is not in the channel subscribers list")
   cb()
 

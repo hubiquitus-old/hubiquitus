@@ -51,7 +51,7 @@ hRelevantMessages::exec = (hMessage, context, cb) ->
           localhMessage.msgid = localhMessage._id
           delete hMessage._id
 
-          hMessages.push localhMessage  if hFilter.checkFilterValidity(localhMessage, hMessage.payload.filter).result
+          hMessages.push localhMessage  if hFilter.checkFilterValidity(localhMessage, hMessage.payload.filter, {actor:context.actor}).result
 
         stream.on "close", ->
           cb status.OK, hMessages
@@ -65,7 +65,7 @@ hRelevantMessages::validateCmd = (hMessage, context, cb) ->
   actor = hMessage.actor
   unless actor
     return cb(status.MISSING_ATTR, "missing actor")
-  if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0
+  if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0 and context.properties.subscribers.length > 0
     return cb(status.NOT_AUTHORIZED, "error recovering messages with current credentials")
   cb()
 

@@ -95,6 +95,12 @@ exports.checkFilterFormat = (hCondition) ->
             result: false
             error: "The attribute of an operand \"boolean\" must be a boolean"
           }
+      when "domain"
+        if typeof hCondition.domain isnt "string"
+          return {
+            result: false
+            error: "The attribute of an operand \"domain\" must be a string"
+          }
       else
         return {
           result: false
@@ -116,7 +122,7 @@ exports.findPath = (element, tab) ->
     tab.shift()
 
 
-exports.checkFilterValidity = (hMessage, hCondition) ->
+exports.checkFilterValidity = (hMessage, hCondition, context) ->
   filter = undefined
   validate = []
   operand = undefined
@@ -493,6 +499,26 @@ exports.checkFilterValidity = (hMessage, hCondition) ->
               result: false
               error: "the user's filter refuse all hMessage"
             }
+
+        when "domain"
+          if typeof filter.domain isnt "string"
+            return {
+              result: false
+              error: "Attribute of operand \"domain\" must be a string"
+            }
+          if filter.domain is "$mydomain"
+            filter.domain = validator.splitURN(context.actor)[0]
+          if filter.domain is validator.splitURN(hMessage.publisher)[0]
+            return {
+              result: true
+              error: ""
+            }
+          else
+            return {
+              result: false
+              error: "User does'nt accept hMessage from this domain"
+            }
+
 
         else
           return {

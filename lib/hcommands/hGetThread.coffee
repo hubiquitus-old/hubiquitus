@@ -55,7 +55,7 @@ hGetThread::exec = (hMessage, context, cb) ->
           localhMessage.msgid = localhMessage._id
           delete localhMessage._id
 
-          if firstElement and hFilter.checkFilterValidity(localhMessage, hCommand.filter).result is false
+          if firstElement and hFilter.checkFilterValidity(localhMessage, hCommand.filter, {actor:context.actor}).result is false
             stream.destroy()
           firstElement = false
           hMessages.push localhMessage
@@ -80,7 +80,7 @@ hGetThread::checkValidity = (hMessage, context, cb) ->
     return cb(status.MISSING_ATTR, "missing convid")
   unless typeof convid is "string"
     return cb(status.INVALID_ATTR, "convid is not a string")
-  if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0
+  if context.properties.subscribers.indexOf(validator.getBareURN(hMessage.publisher)) < 0 and context.properties.subscribers.length > 0
     return cb(status.NOT_AUTHORIZED, "the sender is not in the channel subscribers list")
   cb()
 

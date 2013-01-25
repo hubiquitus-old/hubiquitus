@@ -61,9 +61,12 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
     return cb(status.MISSING_ATTR, "command missing actor")
   sender = hMessage.publisher.replace(/\/.*/, "")
   quant = @quant
-
-  if context.properties.subscribers.indexOf(sender) > -1
-    quant = params.nbLastMsg or quant
+  console.log context.properties.subscribers
+  if context.properties.subscribers.indexOf(sender) > -1 or context.properties.subscribers.length is 0
+    if params
+      quant = params.nbLastMsg or quant
+    else
+      quant = quant
 
     #Test if quant field by the user is a number
     quant = parseInt(quant)
@@ -76,7 +79,7 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
         hMessages.actor = localhMessage._id
         delete localhMessage._id
 
-        if localhMessage and hFilter.checkFilterValidity(localhMessage, hCommand.filter).result
+        if localhMessage and hFilter.checkFilterValidity(localhMessage, hCommand.filter, {actor:context.actor}).result
           hMessages.push localhMessage
           stream.destroy()  if --quant is 0
 

@@ -389,7 +389,11 @@ exports.adapter = (type, properties) ->
       httpOutAdapter = require("./hHttpAdapter")
       httpOutAdapter.newHttpOutboundAdapter(properties)
     else
-      throw new Error "Incorrect type '#{type}'"
+      try
+        adapter = require(properties.type)
+        adapter.newAdapter(properties)
+      catch error
+        throw new Error "Incorrect type '#{type}'"
 
 exports.InboundAdapter = InboundAdapter
 exports.OutboundAdapter = OutboundAdapter

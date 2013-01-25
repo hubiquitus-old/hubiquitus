@@ -27,8 +27,10 @@ config = require("./_config")
 describe "hGetThreads", ->
   cmd = undefined
   hActor = undefined
+  hActor2 = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hchannel")
+  actorModule2 = require("../lib/actor/hactor")
   activeChannel = "urn:localhost:#{config.getUUID()}"
   correctStatus = config.getUUID()
   convids = []
@@ -49,9 +51,18 @@ describe "hGetThreads", ->
     }
     hActor = actorModule.newActor(topology)
 
+    topology = {
+      actor: config.logins[0].urn,
+      type: "hactor",
+      properties: {}
+    }
+    hActor2 = actorModule2.newActor(topology)
+
   after () ->
     hActor.h_tearDown()
     hActor = null
+    hActor2.h_tearDown()
+    hActor2 = null
 
   #Root messages with different status
   i = 0
@@ -61,10 +72,11 @@ describe "hGetThreads", ->
       publishMsg.timeout = 30000
       publishMsg.persistent = true
       publishMsg.published = new Date().getTime()
-      hActor.h_onMessageInternal publishMsg, (hMessage) ->
-        hMessage.payload.should.have.property "status", status.OK
-        shouldNotAppearConvids.push hMessage.payload.result.convid
-        done()
+      hActor.send = (hMessage) ->
+        if hMessage.type is "hResult"
+          shouldNotAppearConvids.push hMessage.payload.result.convid
+          done()
+      hActor.h_onMessageInternal publishMsg
     i++
   i = 0
 
@@ -75,17 +87,19 @@ describe "hGetThreads", ->
     publishMsg.persistent = true
     publishMsg.published = new Date().getTime()
     publishMsg.convid = shouldNotAppearConvids.pop()
-    hActor.h_onMessageInternal publishMsg, (hMessage) ->
-      hMessage.payload.should.have.property "status", status.OK
-      publishMsg2 = config.makeHMessage activeChannel, hActor.actor, "string", {}
-      publishMsg2.timeout = 0
-      publishMsg2.persistent = true
-      publishMsg2.published = new Date().getTime()
-      publishMsg2.priority = 3
-      publishMsg2.convid = hMessage.payload.result.convid
-      hActor.h_onMessageInternal publishMsg2
-      convids.push hMessage.payload.result.convid
-      done()
+    hActor.send = (hMessage) ->
+      if hMessage.type is "hResult"
+        hMessage.payload.should.have.property "status", status.OK
+        publishMsg2 = config.makeHMessage activeChannel, hActor.actor, "string", {}
+        publishMsg2.timeout = 0
+        publishMsg2.persistent = true
+        publishMsg2.published = new Date().getTime()
+        publishMsg2.priority = 3
+        publishMsg2.convid = hMessage.payload.result.convid
+        hActor.h_onMessageInternal publishMsg2
+        convids.push hMessage.payload.result.convid
+        done()
+    hActor.h_onMessageInternal publishMsg
 
   #Add a new conversation with good status
   before (done) ->
@@ -93,16 +107,18 @@ describe "hGetThreads", ->
     publishMsg.timeout = 30000
     publishMsg.persistent = true
     publishMsg.published = new Date().getTime()
-    hActor.h_onMessageInternal publishMsg, (hMessage) ->
-      hMessage.payload.should.have.property "status", status.OK
-      publishMsg2 = config.makeHMessage activeChannel, hActor.actor, "string", {}
-      publishMsg2.timeout = 0
-      publishMsg2.persistent = true
-      publishMsg2.published = new Date().getTime()
-      publishMsg2.convid = hMessage.payload.result.convid
-      hActor.h_onMessageInternal publishMsg2
-      convids.push hMessage.payload.result.convid
-      done()
+    hActor.send = (hMessage) ->
+      if hMessage.type is "hResult"
+        hMessage.payload.should.have.property "status", status.OK
+        publishMsg2 = config.makeHMessage activeChannel, hActor.actor, "string", {}
+        publishMsg2.timeout = 0
+        publishMsg2.persistent = true
+        publishMsg2.published = new Date().getTime()
+        publishMsg2.convid = hMessage.payload.result.convid
+        hActor.h_onMessageInternal publishMsg2
+        convids.push hMessage.payload.result.convid
+        done()
+    hActor.h_onMessageInternal publishMsg
 
   beforeEach ->
     cmd = config.makeHMessage(activeChannel, hActor.actor, "hCommand", {})
@@ -114,91 +130,108 @@ describe "hGetThreads", ->
 
   it "should return hResult error INVALID_ATTR without params", (done) ->
     cmd.payload.params = null
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.be.a "string"
       done()
+
+    hActor.h_onMessageInternal cmd
 
 
   it "should return hResult error INVALID_ATTR with params not an object", (done) ->
     cmd.payload.params = "string"
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.be.a "string"
       done()
 
+    hActor.h_onMessageInternal cmd
+
 
   it "should return hResult error NOT_AUTHORIZED if the publisher is not a subscriber", (done) ->
     hActor.properties.subscribers = [config.logins[2].urn]
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
       hMessage.payload.should.have.property('result').and.be.a('string')
       hActor.properties.subscribers = [activeChannel]
       done()
 
+    hActor.h_onMessageInternal cmd
+
 
   it "should return hResult error MISSING_ATTR if actor is not provided", (done) ->
     delete cmd.actor
 
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.MISSING_ATTR
       hMessage.payload.should.have.property("result").and.match /actor/
       done()
 
+    hActor.h_onMessageInternal cmd
+
 
   it "should return hResult error INVALID_ATTR with actor not a channel", (done) ->
-    hActor.createChild "hactor", "inproc", {actor: config.logins[0].urn}, (child) =>
-      cmd.actor = child.actor
-      child.h_onMessageInternal cmd, (hMessage) ->
-        hMessage.should.have.property "ref", cmd.msgid
-        hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-        done()
+    cmd.actor = hActor2.actor
+    hActor2.send = (hMessage) ->
+      hMessage.should.have.property "ref", cmd.msgid
+      hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
+      done()
+
+    hActor2.h_onMessageInternal cmd
 
 
   it "should return hResult error MISSING_ATTR if status is not provided", (done) ->
     delete cmd.payload.params.status
 
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.MISSING_ATTR
       hMessage.payload.should.have.property("result").and.match /status/
       done()
 
+    hActor.h_onMessageInternal cmd
+
 
   it "should return hResult error INVALID_ATTR with status not a string", (done) ->
     cmd.payload.params.status = []
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.INVALID_ATTR
       hMessage.payload.should.have.property("result").and.match /status/
       done()
 
+    hActor.h_onMessageInternal cmd
+
 
   it "should return hResult OK with an empty [] if no messages found matching status", (done) ->
     cmd.payload.params.status = config.getUUID()
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.result.should.be.an.instanceof(Array)
       hMessage.payload.result.length.should.be.equal(0)
       done()
 
+    hActor.h_onMessageInternal cmd
+
 
   it "should return hResult OK with an [] containing convids whose convstate status is equal to the sent one", (done) ->
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.result.should.be.an.instanceof(Array)
       hMessage.payload.result.length.should.be.equal(convids.length)
       done()
 
+    hActor.h_onMessageInternal cmd
+
 
   it "should return hResult OK with an [] without convid that was equal to the one sent but is not anymore", (done) ->
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       i = 0
@@ -208,17 +241,18 @@ describe "hGetThreads", ->
         i++
       done()
 
+    hActor.h_onMessageInternal cmd
+
 
   describe "#FilterMessage()", ->
     it "should only return convids of filtered conversations", (done) ->
       cmd.payload.filter = eq :
         priority: 3
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.result.should.be.an.instanceof(Array)
         hMessage.payload.result.length.should.be.equal(1)
         done()
 
-
-
+      hActor.h_onMessageInternal cmd

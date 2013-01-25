@@ -28,8 +28,10 @@ config = require("./_config")
 describe "hRelevantMessages", ->
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hchannel")
+  actorModule2 = require("../lib/actor/hactor")
   cmd = undefined
   hActor = undefined
+  hActor2 = undefined
   nbMsgs = 10
   activeChan = "urn:localhost:#{config.getUUID()}"
 
@@ -49,9 +51,19 @@ describe "hRelevantMessages", ->
     }
     hActor = actorModule.newActor(topology)
 
+
+    topology = {
+        actor: config.logins[0].urn,
+        type: "hactor",
+        properties: {}
+    }
+    hActor2 = actorModule2.newActor(topology)
+
   after () ->
     hActor.h_tearDown()
     hActor = null
+    hActor2.h_tearDown()
+    hActor2 = null
 
   beforeEach ->
     cmd = config.makeHMessage(activeChan, hActor.actor, "hCommand", {})
@@ -61,14 +73,17 @@ describe "hRelevantMessages", ->
       filter: {}
 
   it "should return hResult OK with an empty array if no matching msgs found", (done) ->
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.result.length.should.be.eql 0
       done()
 
+    hActor.h_onMessageInternal cmd
+
   describe "Test with messages published", ->
 
     before (done) ->
+      hActor.send = (hMessage) =>
       i = 0
       nbOfPublish = 0
       while i < nbMsgs
@@ -104,33 +119,38 @@ describe "hRelevantMessages", ->
 
     it "should return hResult error MISSING_ATTR if actor is missing", (done) ->
       delete cmd.actor
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.payload.should.have.property "status", status.MISSING_ATTR
         hMessage.payload.result.should.match /actor/
         done()
 
+      hActor.h_onMessageInternal cmd
+
 
     it "should return hResult error NOT_AVAILABLE with actor not a channel", (done) ->
-      hActor.createChild "hactor", "inproc", {actor: config.logins[0].urn}, (child) =>
-        cmd.actor = child.actor
-        child.h_onMessageInternal cmd, (hMessage) ->
-          hMessage.should.have.property "ref", cmd.msgid
-          hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-          done()
+      cmd.actor = hActor2.actor
+      hActor2.send = (hMessage) ->
+        hMessage.should.have.property "ref", cmd.msgid
+        hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
+        done()
+
+      hActor2.h_onMessageInternal cmd
 
 
     it "should return hResult error NOT_AUTHORIZED if not in subscribers list", (done) ->
       hActor.properties.subscribers = [config.logins[2].urn]
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
         hMessage.payload.should.have.property('result').and.be.a('string')
         hActor.properties.subscribers = [activeChan]
         done()
 
+      hActor.h_onMessageInternal cmd
+
 
     it "should return hResult OK with an array of valid messages and without msgs missing relevance", (done) ->
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.result.length.should.be.eql nbMsgs
 
@@ -140,9 +160,12 @@ describe "hRelevantMessages", ->
           i++
         done()
 
+      hActor.h_onMessageInternal cmd
+
     describe "#FilterMessage()", ->
 
       before ->
+        hActor.send = (hMessage) =>
         i = 0
         while i < 5
           publishMsg = config.makeHMessage activeChan, hActor.actor, "string", {}
@@ -157,19 +180,21 @@ describe "hRelevantMessages", ->
         cmd.payload.filter = in:
           publisher: [activeChan]
 
-        hActor.h_onMessageInternal cmd, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", status.OK
           hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
           hMessage.payload.result.length.should.be.equal(15);
           done()
 
+        hActor.h_onMessageInternal cmd
+
 
       it "should return Ok with only filtered messages with right quantity", (done) ->
         cmd.payload.filter = in:
           author: ["urn:localhost:u2"]
 
-        hActor.h_onMessageInternal cmd, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", status.OK
           hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -181,4 +206,4 @@ describe "hRelevantMessages", ->
             i++
           done()
 
-
+        hActor.h_onMessageInternal cmd

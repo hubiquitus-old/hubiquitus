@@ -42,33 +42,33 @@ class Channel extends Actor
     @inboundAdapters.push adapters.adapter("socket_in", {url: topology.properties.listenOn, owner: @})
     @outboundAdapters.push adapters.adapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
 
-  onMessage: (hMessage, cb) ->
+  onMessage: (hMessage) ->
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
       switch hMessage.payload.cmd
         when "hGetLastMessages"
           command = require("./../hcommands/hGetLastMessages").Command
           module = new command()
-          @runCommand(hMessage, module, cb)
+          @runCommand(hMessage, module)
         when "hRelevantMessages"
           command = require("./../hcommands/hRelevantMessages").Command
           module = new command()
-          @runCommand(hMessage, module, cb)
+          @runCommand(hMessage, module)
         when "hGetThread"
           command = require("./../hcommands/hGetThread").Command
           module = new command()
-          @runCommand(hMessage, module, cb)
+          @runCommand(hMessage, module)
         when "hGetThreads"
           command = require("./../hcommands/hGetThreads").Command
           module = new command()
-          @runCommand(hMessage, module, cb)
+          @runCommand(hMessage, module)
         when "hSubscribe"
           command = require("./../hcommands/hSubscribe").Command
           module = new command()
-          @runCommand(hMessage, module, cb)
+          @runCommand(hMessage, module)
         else
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Command not available for this actor")
-          cb hMessageResult
+          @send hMessageResult
     # If other type, publish
     else
       if hMessage.persistent is true
@@ -90,9 +90,9 @@ class Channel extends Actor
       #sends to all subscribers the message received
       hMessage.actor = @actor
       @send hMessage
-      if cb and hMessage.timeout > 0
+      if hMessage.timeout > 0
         hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, hMessage)
-        cb hMessageResult
+        @send hMessageResult
 
   h_onSignal: (hMessage) ->
     @log "debug", "Channel received a hSignal: #{JSON.stringify(hMessage)}"
@@ -101,11 +101,11 @@ class Channel extends Actor
       @send hMessage
 
   ###
-  Loads the hCommand module, sets the listener calls cb with the hResult.
+  Loads the hCommand module, sets the listener.
   @param hMessage - The received hMessage with a hCommand payload
-  @param cb - Callback receiving a hResult (optional)
+  @module Module calls to run command
   ###
-  runCommand: (hMessage, module,cb) ->
+  runCommand: (hMessage, module) ->
     self = this
     timerObject = null #setTimeout timer variable
     commandTimeout = null #Time in ms to wait to launch timeout
@@ -114,31 +114,31 @@ class Channel extends Actor
 
     #check hCommand
     if not hCommand or typeof hCommand isnt "object"
-      cb self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid payload. Not an hCommand")
+      @send self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid payload. Not an hCommand")
       return
     if not hCommand.cmd or typeof hCommand.cmd isnt "string"
-      cb self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Not a string")
+      @send self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Not a string")
       return
     if hCommand.params and typeof hCommand.params isnt "object"
-      cb self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Params is settled but not an object")
+      @send self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Params is settled but not an object")
       return
     commandTimeout = module.timeout or options["hcommands.timeout"]
 
-    onResult = (status, result) ->
+    onResult = (status, result) =>
       #If callback is called after the timer ignore it
       return  unless timerObject?
       clearTimeout timerObject
       hMessageResult = self.buildResult(hMessage.publisher, hMessage.msgid, status, result)
-      self.log "debug", "hCommand sent hMessage with hResult", hMessageResult
-      cb hMessageResult
+      @log "debug", "hCommand sent hMessage with hResult", hMessageResult
+      @send hMessageResult
 
     #Add a timeout for the execution
-    timerObject = setTimeout(->
-      #Set it to null to test if cb is executed after timeout
+    timerObject = setTimeout(=>
+      #Set it to null to test if send is executed after timeout
       timerObject = null
       hMessageResult = self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.EXEC_TIMEOUT,"")
       @log "debug", "hCommand sent hMessage with exceed timeout error", hMessageResult
-      cb hMessageResult
+      @send hMessageResult
     , commandTimeout)
 
     #Run it!
@@ -147,7 +147,7 @@ class Channel extends Actor
     catch err
       clearTimeout timerObject
       @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
-      cb(@buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
+      @send(@buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage

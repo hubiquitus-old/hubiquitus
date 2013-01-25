@@ -52,20 +52,22 @@ describe "hEcho", ->
 
   it "should return hResult error if the hMessage can not be treat", (done) ->
     echoCmd.payload.params.error = "DIV0"
-    hActor.h_onMessageInternal echoCmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", echoCmd.msgid
       hMessage.payload.should.have.property "status", status.TECH_ERROR
       done()
 
+    hActor.h_onMessageInternal echoCmd
+
 
   describe "#Execute hEcho", ->
     it "should emit result echoing input", (done) ->
-      hActor.h_onMessageInternal echoCmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         should.exist hMessage.payload.status
         should.exist hMessage.payload.result
         hMessage.payload.status.should.be.equal status.OK
         hMessage.payload.result.should.be.equal echoCmd.payload.params
         done()
 
-
+      hActor.h_onMessageInternal echoCmd
 

@@ -27,8 +27,10 @@ config = require("./_config")
 describe "hGetLastMessages", ->
   cmd = undefined
   hActor = undefined
+  hActor2 = undefined
   status = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hchannel")
+  actorModule2 = require("../lib/actor/hactor")
   existingCHID = "urn:localhost:#{config.getUUID()}"
   DateTab = []
 
@@ -48,9 +50,18 @@ describe "hGetLastMessages", ->
     }
     hActor = actorModule.newActor(topology)
 
+    topology = {
+      actor: config.logins[0].urn,
+      type: "hactor",
+      properties: {}
+    }
+    hActor2 = actorModule2.newActor(topology)
+
   after () ->
     hActor.h_tearDown()
     hActor = null
+    hActor2.h_tearDown()
+    hActor2 = null
 
   beforeEach ->
     cmd = config.makeHMessage(existingCHID, hActor.actor, "hCommand", {})
@@ -61,12 +72,14 @@ describe "hGetLastMessages", ->
       filter: {}
 
   it "should return hResult ok if there are no hMessages stored", (done) ->
-    hActor.h_onMessageInternal cmd, (hMessage) ->
+    hActor.send = (hMessage) ->
       hMessage.should.have.property "ref", cmd.msgid
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.should.have.property('result').and.be.an.instanceof(Array);
       hMessage.payload.result.length.should.equal(0)
       done()
+
+    hActor.h_onMessageInternal cmd
 
   describe "Test with messages published", ->
     i = 0
@@ -84,55 +97,64 @@ describe "hGetLastMessages", ->
       i++
 
     it "should return hResult error NOT_AVAILABLE with actor not a channel", (done) ->
-      hActor.createChild "hactor", "inproc", {actor: config.logins[0].urn}, (child) =>
-        cmd.actor = child.actor
-        child.h_onMessageInternal cmd, (hMessage) ->
-          hMessage.should.have.property "ref", cmd.msgid
-          hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
-          done()
+      cmd.actor = hActor2.actor
+      hActor2.send = (hMessage) ->
+        hMessage.should.have.property "ref", cmd.msgid
+        hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
+        done()
+
+      hActor2.h_onMessageInternal cmd
 
 
     it "should return hResult error MISSING_ATTR if no channel is passed", (done) ->
       delete cmd.actor
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.MISSING_ATTR
         hMessage.payload.should.have.property('result').and.be.a('string');
         done()
 
+      hActor.h_onMessageInternal cmd
+
 
     it "should return hResult error NOT_AUTHORIZED if publisher not in subscribers list", (done) ->
       hActor.properties.subscribers = [config.logins[2].urn]
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.NOT_AUTHORIZED
         hMessage.payload.should.have.property('result').and.be.a('string')
         hActor.properties.subscribers = [existingCHID, config.logins[2].urn]
         done()
 
+      hActor.h_onMessageInternal cmd
+
     it "should return hResult ok with 10 msgs if cmd quant not a number", (done) ->
       cmd.payload.params.nbLastMsg = "not a number"
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
         hMessage.payload.result.length.should.be.equal(10)
         done()
+
+      hActor.h_onMessageInternal cmd
 
 
     it "should return hResult ok with 10 messages if not specified in cmd", (done) ->
       delete cmd.payload.params.nbLastMsg
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
         hMessage.payload.result.length.should.be.equal(10)
         done()
 
+      hActor.h_onMessageInternal cmd
+
 
     it "should return hResult ok with 10 last messages", (done) ->
       delete cmd.payload.params.nbLastMsg
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -149,15 +171,19 @@ describe "hGetLastMessages", ->
           i++
         done()
 
+      hActor.h_onMessageInternal cmd
+
     it "should return hResult ok with nb of msgs in cmd", (done) ->
       length = 4
       cmd.payload.params.nbLastMsg = length
-      hActor.h_onMessageInternal cmd, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "ref", cmd.msgid
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
         hMessage.payload.result.length.should.be.equal(length)
         done()
+
+      hActor.h_onMessageInternal cmd
 
     describe "#FilterMessage()", ->
 
@@ -183,13 +209,14 @@ describe "hGetLastMessages", ->
         cmd.payload.filter = in:
           publisher: [hActor.actor]
 
-        hActor.h_onMessageInternal cmd, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", status.OK
           hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
           hMessage.payload.result.length.should.be.equal(10);
-
           done()
+
+        hActor.h_onMessageInternal cmd
 
 
       it "should return Ok with only filtered messages with right quantity", (done) ->
@@ -197,7 +224,7 @@ describe "hGetLastMessages", ->
         cmd.payload.filter = in:
           author: ["urn:localhost:u2"]
 
-        hActor.h_onMessageInternal cmd, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", status.OK
           hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -209,13 +236,15 @@ describe "hGetLastMessages", ->
             i++
           done()
 
+        hActor.h_onMessageInternal cmd
+
 
       it "should return Ok with only filtered messages with less quantity if demanded does not exist.", (done) ->
         cmd.payload.params.nbLastMsg = 1000
         cmd.payload.filter = in:
           author: ["urn:localhost:u2"]
 
-        hActor.h_onMessageInternal cmd, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", status.OK
           hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
@@ -227,6 +256,4 @@ describe "hGetLastMessages", ->
             i++
           done()
 
-
-
-
+        hActor.h_onMessageInternal cmd

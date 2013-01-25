@@ -40,10 +40,10 @@ describe "hActor", ->
         type: "hactor"
       }
       hActor = actorModule.newActor(topology)
-      hActor.onMessage = (hMessage, cb) ->
+      hActor.onMessage = (hMessage) ->
         if hMessage.timeout > 0
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, hResultStatus.OK, "")
-          cb hMessageResult
+          @send hMessageResult
 
     after () ->
       hActor.h_tearDown()
@@ -54,11 +54,12 @@ describe "hActor", ->
       hMsg = config.makeHMessage(hActor.actor, config.logins[0].urn, "string", {})
 
     it "should return Ok if empty filter", (done) ->
-      hActor.h_onMessageInternal hMsg, (hMessage) ->
+      hActor.send = (hMessage) ->
         hMessage.should.have.property "type", "hResult"
         hMessage.payload.should.have.property "status", hResultStatus.OK
         done()
 
+      hActor.h_onMessageInternal hMsg
 
     describe "#eqFilter()", ->
       it "should return INVALID_ATTR if hMessage don't respect \"eq\" filter", (done) ->
@@ -69,10 +70,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = eq:
@@ -81,10 +84,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"eq\" filter with multiple hCondition", (done) ->
         filter = eq:
@@ -96,10 +101,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"eq\" filter with multiple hCondition", (done) ->
         filter = eq:
@@ -111,10 +118,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"eq\" filter ", (done) ->
         filter = eq:
@@ -124,10 +133,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#neFilter()", ->
@@ -139,10 +150,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = ne:
@@ -151,10 +164,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"ne\" filter with multiple hCondition", (done) ->
         filter = ne:
@@ -166,10 +181,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"ne\" filter with multiple hCondition", (done) ->
         filter = ne:
@@ -181,10 +198,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"ne\" filter ", (done) ->
         filter = ne:
@@ -194,10 +213,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#gtFilter()", ->
@@ -209,10 +230,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = gt:
@@ -221,10 +244,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if an attribute is not a number", (done) ->
         filter = gt:
@@ -233,10 +258,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"gt\" filter with multiple hCondition", (done) ->
         filter = gt:
@@ -248,10 +275,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"gt\" filter with multiple hCondition", (done) ->
         filter = gt:
@@ -262,10 +291,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"gt\" filter ", (done) ->
         filter = gt:
@@ -275,10 +306,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#gteFilter()", ->
@@ -290,10 +323,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = gte:
@@ -302,10 +337,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if an attribute is not a number", (done) ->
         filter = gte:
@@ -314,10 +351,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"gte\" filter with multiple hCondition", (done) ->
         filter = gte:
@@ -329,10 +368,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"gte\" filter with multiple hCondition", (done) ->
         filter = gte:
@@ -343,10 +384,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"gte\" filter ", (done) ->
         filter = gte:
@@ -357,10 +400,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#ltFilter()", ->
@@ -372,10 +417,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = lt:
@@ -384,10 +431,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if an attribute is not a number", (done) ->
         filter = lt:
@@ -396,10 +445,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"lt\" filter with multiple hCondition", (done) ->
         filter = lt:
@@ -411,10 +462,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"lt\" filter with multiple hCondition", (done) ->
         filter = lt:
@@ -426,10 +479,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"lt\" filter ", (done) ->
         filter = lt:
@@ -440,10 +495,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#lteFilter()", ->
@@ -455,10 +512,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = lte:
@@ -467,10 +526,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if an attribute is not a number", (done) ->
         filter = lte:
@@ -479,10 +540,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"lte\" filter with multiple hCondition", (done) ->
         filter = lte:
@@ -494,10 +557,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"lte\" filter with multiple hCondition", (done) ->
         filter = lte:
@@ -509,10 +574,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"lte\" filter ", (done) ->
         filter = lte:
@@ -523,10 +590,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#inFilter()", ->
@@ -537,10 +606,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = in:
@@ -549,10 +620,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if the attribute is not a array", (done) ->
         filter = in:
@@ -561,10 +634,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"in\" filter with multiple hCondition", (done) ->
         filter = in:
@@ -575,10 +650,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"in\" filter with multiple hCondition", (done) ->
         filter = in:
@@ -589,10 +666,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"in\" filter ", (done) ->
         filter = in:
@@ -603,10 +682,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#ninFilter()", ->
@@ -617,10 +698,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = nin:
@@ -629,10 +712,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if the attribute is not a array", (done) ->
         filter = nin:
@@ -641,10 +726,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"nin\" filter with multiple hCondition", (done) ->
         filter = nin:
@@ -655,10 +742,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"nin\" filter with multiple hCondition", (done) ->
         filter = nin:
@@ -669,10 +758,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"nin\" filter ", (done) ->
         filter = nin:
@@ -683,10 +774,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#andFilter()", ->
@@ -702,10 +795,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = and: [
@@ -718,10 +813,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"and\" filter with multiple hCondition", (done) ->
         filter = and: [
@@ -735,10 +832,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"and\" filter ", (done) ->
         filter = and: [
@@ -754,10 +853,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#orFilter()", ->
@@ -773,10 +874,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
         filter = or: [
@@ -789,10 +892,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"or\" filter with multiple hCondition", (done) ->
         filter = or: [
@@ -806,10 +911,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"or\" filter ", (done) ->
         filter = or: [
@@ -825,10 +932,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#norFilter()", ->
@@ -844,10 +953,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"nor\" filter with multiple hCondition", (done) ->
         filter = nor: [
@@ -861,10 +972,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"nor\" filter ", (done) ->
         filter = nor: [
@@ -880,10 +993,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#notFilter()", ->
@@ -895,10 +1010,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect \"not\" filter with multiple hCondition", (done) ->
         filter = not:
@@ -912,10 +1029,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"not\" filter with multiple hCondition", (done) ->
         filter = not:
@@ -929,10 +1048,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"not\" filter ", (done) ->
         filter = not:
@@ -948,10 +1069,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#relevantFilter()", ->
@@ -961,10 +1084,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if hMessage don't respect false \"relevant\" filter", (done) ->
         filter = relevant: false
@@ -972,20 +1097,24 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if attribute relevance of hMessage is not set", (done) ->
         filter = relevant: false
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if attribute relevance of hMessage is incorrect", (done) ->
         filter = relevant: false
@@ -993,10 +1122,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"relevance\" filter ", (done) ->
         filter = relevant: true
@@ -1004,10 +1135,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect false \"relevance\" filter ", (done) ->
         filter = relevant: false
@@ -1015,10 +1148,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#geoFilter()", ->
@@ -1036,10 +1171,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if attribut radius is missing in filter", (done) ->
         filter = geo:
@@ -1054,10 +1191,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.INVALID_ATTR)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if attribut lat/lng is not a number", (done) ->
         filter = geo:
@@ -1073,10 +1212,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.INVALID_ATTR)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return INVALID_ATTR if attribut lat/lng of hMessage is not a number", (done) ->
         filter = geo:
@@ -1092,10 +1233,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if hMessage respect \"geo\" filter", (done) ->
         filter = geo:
@@ -1111,10 +1254,12 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
 
     describe "#booleanFilter()", ->
@@ -1123,18 +1268,21 @@ describe "hActor", ->
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
           done()
+
+        hActor.h_onMessageInternal hMsg
 
       it "should return OK if filter boolean = true", (done) ->
         filter = boolean: true
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
 
-        hActor.h_onMessageInternal hMsg, (hMessage) ->
+        hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"
           hMessage.payload.should.have.property "status", hResultStatus.OK
           done()
 
+        hActor.h_onMessageInternal hMsg

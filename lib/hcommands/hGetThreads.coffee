@@ -80,7 +80,7 @@ hGetThreads::mapReduce = (hMessage, context, cb) ->
         convids = []
         stream = collection.find({}).stream()
         stream.on "data", (elem) ->
-          convids.push elem._id  if elem.value.status is status and hFilter.checkFilterValidity(elem, hCommand.filter).result
+          convids.push elem._id  if elem.value.status is status and hFilter.checkFilterValidity(elem, hCommand.filter, {actor:context.actor}).result
 
         stream.on "close", ->
           collection.drop()

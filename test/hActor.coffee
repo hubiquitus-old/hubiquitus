@@ -1286,3 +1286,41 @@ describe "hActor", ->
           done()
 
         hActor.h_onMessageInternal hMsg
+
+    describe "#domainFilter()", ->
+      it "should return INVALID_ATTR if hMessage don't respect \"domain\" filter", (done) ->
+        filter = domain: "domain"
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
+
+        hActor.send = (hMessage) ->
+          hMessage.should.have.property "type", "hResult"
+          hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
+          done()
+
+        hActor.h_onMessageInternal hMsg
+
+      it "should return OK if hMessage respect \"domain\" filter", (done) ->
+        filter = domain: "localhost"
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
+
+        hActor.send = (hMessage) ->
+          hMessage.should.have.property "type", "hResult"
+          hMessage.payload.should.have.property "status", hResultStatus.OK
+          done()
+
+        hActor.h_onMessageInternal hMsg
+
+      it "should return OK if hMessage respect \"domain\" filter with '$mydomain'", (done) ->
+        filter = domain: "$mydomain"
+        hActor.setFilter filter, (status) ->
+          status.should.be.equal(hResultStatus.OK)
+
+        hActor.send = (hMessage) ->
+          hMessage.should.have.property "type", "hResult"
+          hMessage.payload.should.have.property "status", hResultStatus.OK
+          done()
+
+        hActor.h_onMessageInternal hMsg
+

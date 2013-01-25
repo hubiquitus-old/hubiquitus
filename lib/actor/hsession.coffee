@@ -53,7 +53,7 @@ class Session extends Actor
 
   validateFilter: (hMessage) ->
     unless validator.getBareURN(hMessage.publisher) is validator.getBareURN(@actor)
-      return hFilter.checkFilterValidity(hMessage, @filter)
+      return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
     return {result: true, error: ""}
 
   h_onMessageInternal: (hMessage) ->

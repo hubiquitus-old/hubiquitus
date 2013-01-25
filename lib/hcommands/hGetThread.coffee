@@ -55,7 +55,7 @@ hGetThread::exec = (hMessage, context, cb) ->
           localhMessage.msgid = localhMessage._id
           delete localhMessage._id
 
-          if firstElement and hFilter.checkFilterValidity(localhMessage, hCommand.filter).result is false
+          if firstElement and hFilter.checkFilterValidity(localhMessage, hCommand.filter, {actor:context.actor}).result is false
             stream.destroy()
           firstElement = false
           hMessages.push localhMessage

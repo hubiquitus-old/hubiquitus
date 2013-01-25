@@ -560,7 +560,7 @@ class Actor extends EventEmitter
     @hMessage {Object} hMessage to check
   ###
   validateFilter: (hMessage) ->
-    return hFilter.checkFilterValidity(hMessage, @filter)
+    return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
 
   ###*
     Method called to subscribe to a channel

@@ -38,7 +38,7 @@ class Auth extends Actor
     super
     @type = 'auth'
 
-  onMessage: (hMessage, cb) ->
+  onMessage: (hMessage) ->
     if not hMessage or not hMessage.payload or hMessage.type isnt "hAuth"
       if hMessage
         authResponse = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "missing payload or payload is not of type hAuth"

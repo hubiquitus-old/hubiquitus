@@ -47,7 +47,7 @@ describe "hTimerAdapter", ->
 
     it "should receive 5 message in 500ms", (done) ->
       incoming_msg = 0
-      hActor.onMessage = (hMessage, cb) =>
+      hActor.onMessage = (hMessage) =>
         hMessage.payload.alert.should.be.equal("timer_milli")
         incoming_msg++
 
@@ -74,7 +74,7 @@ describe "hTimerAdapter", ->
     it "should receive 2 message in 2sec", (done) ->
       @timeout(3000)
       incoming_msg = 0
-      hActor.onMessage = (hMessage, cb) =>
+      hActor.onMessage = (hMessage) =>
         hMessage.payload.alert.should.be.equal("timer_cron")
         incoming_msg++
 

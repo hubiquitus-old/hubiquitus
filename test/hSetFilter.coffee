@@ -212,4 +212,9 @@ describe "hSetFilter", ->
       result.should.be.equal "The attribute of an operand \"boolean\" must be a boolean"
       done()
 
-
+  it "should return INVALID_ATTR if attribute domain is not a string", (done) ->
+    hCondition = domain:{hello:"world"}
+    hActor.setFilter hCondition, (status, result) ->
+      status.should.be.equal(hResultStatus.INVALID_ATTR)
+      result.should.be.equal "The attribute of an operand \"domain\" must be a string"
+      done()

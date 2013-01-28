@@ -202,8 +202,7 @@ class Actor extends EventEmitter
             if checkValidity.result is true
               @onMessage hMessage
             else
-              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "#{@actor} refuse the hMessage")
-              @send hMessageResult
+              @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
 
     catch error
       @log "warn", "An error occured while processing incoming message: "+error
@@ -565,6 +564,7 @@ class Actor extends EventEmitter
     @hMessage {Object} hMessage to check
   ###
   validateFilter: (hMessage) ->
+    console.log "return : ",hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
     return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
 
   ###*

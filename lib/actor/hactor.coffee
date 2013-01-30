@@ -145,12 +145,12 @@ class Actor extends EventEmitter
             @log "debug", "Subscription attempt #{attempt} failed cause #{result} "
             SubTimer = setInterval(=>
               if attempt < 4
-                @subscribe adapterProps.channel, adapterProps.quickFilter, (status2) =>
+                @subscribe adapterProps.channel, adapterProps.quickFilter, (status2, result2) =>
                   if status2 is codes.hResultStatus.OK
                     clearInterval(SubTimer)
                   else
                     attempt++
-                    @log "debug", "Subscription attempt #{attempt} failed cause #{result} "
+                    @log "debug", "Subscription attempt #{attempt} failed cause #{result2} "
               else
                 @log "debug", "Subscription attempt #{++attempt} failed cause #{result}, don't try again "
                 clearInterval(SubTimer)
@@ -202,8 +202,7 @@ class Actor extends EventEmitter
             if checkValidity.result is true
               @onMessage hMessage
             else
-              hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "#{@actor} refuse the hMessage")
-              @send hMessageResult
+              @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
 
     catch error
       @log "warn", "An error occured while processing incoming message: "+error
@@ -289,7 +288,10 @@ class Actor extends EventEmitter
             hMessage.actor = hResult.payload.result.targetActorAid
             @h_sending hMessage, cb, outboundAdapter
           else
-            @log "debug", "Can't send hMessage : "+hResult.payload.result
+            if cb
+              cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : "+ hResult.payload.result)
+            else
+              @log "debug", "Can't send hMessage : "+ hResult.payload.result
       else
         if cb
           cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't find actor")
@@ -496,8 +498,10 @@ class Actor extends EventEmitter
     @setStatus STATUS_STARTING
     @preStart ( =>
         @h_start ( =>
-          @postStart ( =>
-            @setStatus STATUS_STARTED)))
+          @setStatus STATUS_STARTED
+          @postStart ( => )
+        )
+    )
 
   preStart: (done) ->
     done()
@@ -560,6 +564,7 @@ class Actor extends EventEmitter
     @hMessage {Object} hMessage to check
   ###
   validateFilter: (hMessage) ->
+    console.log "return : ",hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
     return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
 
   ###*

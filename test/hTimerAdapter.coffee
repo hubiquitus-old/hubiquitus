@@ -54,7 +54,7 @@ describe "hTimerAdapter", ->
       setTimeout(=>
         incoming_msg.should.be.equal(5)
         done()
-      , 550)
+      , 510)
 
   describe "crontab", ->
     before () ->

@@ -327,7 +327,7 @@ exports.checkFilterValidity = (hMessage, hCondition, context) ->
             }
           j = 0
           for condAnd in filter.and
-            checkValidity = exports.checkFilterValidity(hMessage, condAnd)
+            checkValidity = exports.checkFilterValidity(hMessage, condAnd, context)
             if checkValidity.result
               operand[k] = true
               k++
@@ -354,7 +354,7 @@ exports.checkFilterValidity = (hMessage, hCondition, context) ->
               error: "Attribute of operand \"nor\" must be an array with at least 2 elements"
             )
           for condNor in filter.nor
-            checkValidity = exports.checkFilterValidity(hMessage, condNor)
+            checkValidity = exports.checkFilterValidity(hMessage, condNor, context)
             if checkValidity.result
               operand[k] = true
               k++
@@ -380,7 +380,7 @@ exports.checkFilterValidity = (hMessage, hCondition, context) ->
               error: "Attribute of operand \"or\" must be an array with at least 2 elements"
             )
           for condOr in filter.or
-            checkValidity = exports.checkFilterValidity(hMessage, condOr)
+            checkValidity = exports.checkFilterValidity(hMessage, condOr, context)
             if checkValidity.result
               operand[k] = true
               k++
@@ -404,7 +404,7 @@ exports.checkFilterValidity = (hMessage, hCondition, context) ->
               result: false
               error: "Attribute of operand \"not\" must be an object"
             )
-          checkValidity = exports.checkFilterValidity(hMessage, filter.not)
+          checkValidity = exports.checkFilterValidity(hMessage, filter.not, context)
           if checkValidity.result is false
             operand[k] = true
             k++

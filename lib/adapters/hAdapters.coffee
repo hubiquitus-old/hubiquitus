@@ -302,6 +302,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
         @url = properties.url
       else
         url_props.port = @genListenPort()
+        delete url_props.host
         @url = url.format(url_props)
     else
       @url = "tcp://127.0.0.1:#{@genListenPort}"
@@ -397,6 +398,7 @@ exports.adapter = (type, properties) ->
 
 exports.InboundAdapter = InboundAdapter
 exports.OutboundAdapter = OutboundAdapter
-exports.timerAdapter = require("./hTimerAdapter")
-exports.httpInboundAdapter = require("./hHttpAdapter").HttpInboundAdapter
-exports.httpOutboundAdapter = require("./hHttpAdapter").HttpOutboundAdapter
+exports.TimerAdapter = require("./hTimerAdapter").TimerAdapter
+exports.HttpInboundAdapter = require("./hHttpAdapter").HttpInboundAdapter
+exports.HttpOutboundAdapter = require("./hHttpAdapter").HttpOutboundAdapter
+exports.TwitterInboundAdapter = require("./hTwitterAdapter").TwitterInboundAdapter

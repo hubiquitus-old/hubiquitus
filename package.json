@@ -21,6 +21,7 @@
       "zmq": ">=2.1.0",
       "cron": "1.0.1",
       "time": "0.8.3",
+      "ntwitter": "git://github.com/hubiquitus/ntwitter.git",
       "winston" : ">=0.6.2",
       "socket.io" : "=0.9.10",
       "mongodb" : "=1.1.4"

@@ -333,7 +333,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
   send: (hMessage) ->
     @start() unless @started
     if hMessage.headers and hMessage.headers.h_quickFilter and typeof hMessage.headers.h_quickFilter is "string"
-      message = hMessage.payload.params+"$"+JSON.stringify(hMessage)
+      message = hMessage.headers.h_quickFilter+"$"+JSON.stringify(hMessage)
       @sock.send message
     else
       @sock.send JSON.stringify(hMessage)
@@ -397,3 +397,6 @@ exports.adapter = (type, properties) ->
 
 exports.InboundAdapter = InboundAdapter
 exports.OutboundAdapter = OutboundAdapter
+exports.timerAdapter = require("./hTimerAdapter")
+exports.httpInboundAdapter = require("./hHttpAdapter").HttpInboundAdapter
+exports.httpOutboundAdapter = require("./hHttpAdapter").HttpOutboundAdapter

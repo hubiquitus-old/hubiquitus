@@ -55,8 +55,6 @@ exports.validateHMessage = (hMessage, cb) ->
     return cb(codes.INVALID_ATTR, "hMessage persistent is not a boolean")
   if hMessage.location and (hMessage.location not instanceof Object)
     return cb(codes.INVALID_ATTR, "hMessage location is not an Object")
-  if hMessage.author and not exports.validateURN(hMessage.author)
-    return cb(codes.INVALID_ATTR, "hMessage author is not a URN")
   unless hMessage.publisher
     return cb(codes.MISSING_ATTR, "hMessage missing publisher")
   if hMessage.published

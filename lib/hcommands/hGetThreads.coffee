@@ -132,7 +132,7 @@ hGetThreads::filterMessages = (actor, convids, context, filter, cb) ->
     ).stream()
     convidDone = false
     stream.on "data", (hMessage) ->
-      if hFilter.checkFilterValidity(hMessage, filter).result
+      if hFilter.checkFilterValidity(hMessage, filter, {actor:context.actor}).result
         if filteredConvids.length is 0
           filteredConvids.push hMessage.convid
         else

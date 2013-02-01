@@ -397,3 +397,6 @@ exports.adapter = (type, properties) ->
 
 exports.InboundAdapter = InboundAdapter
 exports.OutboundAdapter = OutboundAdapter
+exports.timerAdapter = require("./hTimerAdapter")
+exports.httpInboundAdapter = require("./hHttpAdapter").HttpInboundAdapter
+exports.httpOutboundAdapter = require("./hHttpAdapter").HttpOutboundAdapter

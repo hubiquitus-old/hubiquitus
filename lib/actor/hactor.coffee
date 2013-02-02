@@ -44,12 +44,12 @@ _.mixin toDict: (arr, key) ->
     dict[ obj[key] ] = obj if obj[key]?
     return dict), {}
 
-###*
-  Class that defines an Actor
-###
+#
+# Class that defines an Actor
+#
 class Actor extends EventEmitter
 
-  # Possible running states of an actor
+# Possible running states of an actor
   STATUS_STARTING = "starting"
   STATUS_STARTED = "started"
   STATUS_STOPPING = "stopping"
@@ -57,19 +57,58 @@ class Actor extends EventEmitter
 
   # Native Actors provided by hubiquitus. If forked they will be used
   H_ACTORS = {
-    hauth: true,
-    hchannel: true,
-    hdispatcher: true,
-    hgateway: true,
-    hsession: true,
-    htracker: true,
-    hactor: true
+  hauth: true,
+  hchannel: true,
+  hdispatcher: true,
+  hgateway: true,
+  hsession: true,
+  htracker: true,
+  hactor: true
   }
 
-  ###*
-    Actor's constructor
-    @topology {object} Launch topology of the actor
-  ###
+  # @property {object} log properties
+  log_properties: undefined
+  # @property {object}
+  logger: undefined
+  # @property {string} ID in URN format
+  actor: undefined
+  # @property {string}
+  ressource: undefined
+  # @property {string}
+  type: undefined
+  # @property {object}
+  filter: undefined
+  # @property {object}
+  msgToBeAnswered:
+    {}
+  # @property {object}
+  timerOutAdapter:
+    {}
+  # @property {number}
+  timerTouch: undefined
+  # @property {Actor}
+  parent: undefined
+  # @property {number}
+  touchDelay: 60000
+  # @property {object}
+  properties: undefined
+  # @property {string} Status
+  status: STATUS_STOPPED
+  # @property {Array}
+  children: []
+  # @property {Array}
+  trackers: []
+  # @property {Array}
+  inboundAdapters: []
+  # @property {Array}
+  outboundAdapters: []
+  # @property {Array}
+  subscriptions: []
+
+  #
+  # Actor's constructor
+  # @param {object} topology Launch topology of the actor
+  #
   constructor: (topology) ->
     # init logger
     if topology.log
@@ -94,21 +133,8 @@ class Actor extends EventEmitter
           # TODO arreter l'acteur
           @log "debug", "Invalid filter stopping actor"
 
-    # Initializing class variables
-    @msgToBeAnswered = {}
-    @timerOutAdapter = {}
-    @timerTouch = undefined
-    @parent = undefined
-    @touchDelay = 60000
-
     # Initializing attributs
     @properties = topology.properties or {}
-    @status = STATUS_STOPPED
-    @children = []
-    @trackers = []
-    @inboundAdapters = []
-    @outboundAdapters = []
-    @subscriptions = []
 
     # Registering trackers
     if _.isArray(topology.trackers) and topology.trackers.length > 0
@@ -166,18 +192,19 @@ class Actor extends EventEmitter
     @on "started", ->
       @initChildren(topology.children)
 
-  ###*
-    Private method called when the actor receive a hMessage.
-    Check hMessage format, catch hSignal, Apply filter then calle onMessage
-    @hMessage {object} the hMessage receive
-    @cb {callback} callback which send an eventual result
-  ###
+  #
+  # Private method called when the actor receive a hMessage.
+  # Check hMessage format, catch hSignal, Apply filter then calle onMessage
+  # @private
+  # @param {object} hMessage the hMessage receive
+  # @param {function} cb callback which send an eventual result
+  #
   h_onMessageInternal: (hMessage) ->
-    @log "debug", "onMessage :"+JSON.stringify(hMessage)
+    @log "debug", "onMessage :" + JSON.stringify(hMessage)
     try
       validator.validateHMessage hMessage, (err, result) =>
         if err
-          @log "debug", "hMessage not conform : "+JSON.stringify(result)
+          @log "debug", "hMessage not conform : " + JSON.stringify(result)
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "actor is missing")
           @send hMessageResult
         else
@@ -205,37 +232,38 @@ class Actor extends EventEmitter
               @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
 
     catch error
-      @log "warn", "An error occured while processing incoming message: "+error
+      @log "warn", "An error occured while processing incoming message: " + error
 
-  ###*
-    Method that processes the incoming message.
-    This method could be override to specified an actor
-    @hMessage {object} the hMessage receive
-    @cb {callback} callback which send an eventual result
-  ###
+  #
+  # Method that processes the incoming message.
+  # This method could be override to specified an actor
+  # @param {object} hMessage the hMessage receive
+  # @param {function} cb callback which send an eventual result
+  #
   onMessage: (hMessage) ->
     @log "debug", "Message reveived: #{JSON.stringify(hMessage)}"
     if hMessage.timeout > 0
-        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
-        @send hMessageResult
+      hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
+      @send hMessageResult
 
-  ###*
-    Private method that processes hSignal message.
-    The hSignal are service's message
-    @hMessage {object} the hSignal receive
-  ###
+  #
+  # Private method that processes hSignal message.
+  # The hSignal are service's message
+  # @private
+  # @param {object} hMessage the hSignal receive
+  #
   h_onSignal: (hMessage) ->
     @log "debug", "Actor received a hSignal: #{JSON.stringify(hMessage)}"
     if hMessage.payload.name is "hStopAlert"
       @removePeer(hMessage.payload.params)
 
-  ###*
-    Method called for sending hMessage
-    Check for an outboundAdapter, then ask to the tracker if needed
-    This method could be override to specified an actor
-    @hMessage {object} the hMessage to send
-    @cb {callback} callback to call when a answer is receive
-  ###
+  #
+  # Method called for sending hMessage
+  # Check for an outboundAdapter, then ask to the tracker if needed
+  # This method could be override to specified an actor
+  # @param {object} hMessage the hMessage to send
+  # @param {function} cb callback to call when a answer is receive
+  #
   send: (hMessage, cb) ->
     unless _.isString(hMessage.actor)
       if cb
@@ -245,7 +273,7 @@ class Actor extends EventEmitter
         throw new Error "'aid' parameter must be a string"
 
     # first looking up for a cached adapter
-    outboundAdapter = _.toDict( @outboundAdapters , "targetActorAid" )[hMessage.actor]
+    outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
     unless outboundAdapter
       _.forEach @outboundAdapters, (outbound) =>
         if validator.getBareURN(outbound.targetActorAid) is hMessage.actor
@@ -260,10 +288,10 @@ class Actor extends EventEmitter
           @removePeer(outboundAdapter.targetActorAid)
         , 90000)
       @h_sending(hMessage, cb, outboundAdapter)
-    # if don't have cached adapter, send lookup demand to the tracker
+      # if don't have cached adapter, send lookup demand to the tracker
     else
       if @trackers[0]
-        msg = @buildSignal(@trackers[0].trackerId, "peer-search", {actor:hMessage.actor}, {timeout:5000})
+        msg = @buildSignal(@trackers[0].trackerId, "peer-search", {actor: hMessage.actor}, {timeout: 5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
             # Subscribe to trackChannel to be alerting when actor disconnect
@@ -289,9 +317,9 @@ class Actor extends EventEmitter
             @h_sending hMessage, cb, outboundAdapter
           else
             if cb
-              cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : "+ hResult.payload.result)
+              cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : " + hResult.payload.result)
             else
-              @log "debug", "Can't send hMessage : "+ hResult.payload.result
+              @log "debug", "Can't send hMessage : " + hResult.payload.result
       else
         if cb
           cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't find actor")
@@ -299,13 +327,14 @@ class Actor extends EventEmitter
         else
           throw new Error "Don't have any tracker for peer-searching"
 
-  ###*
-    Private method called for sending hMessage
-    Complete hMessage by override some attribut, then send the hMessage from outboundAdapter
-    @hMessage {object} the hMessage to send
-    @cb {callback} callback to call when a answer is receive
-    @outboundAdapter {object} adapter used to send hMessage
-  ###
+  #
+  # Private method called for sending hMessage
+  # Complete hMessage by override some attribut, then send the hMessage from outboundAdapter
+  # @private
+  # @param {object} hMessage the hMessage to send
+  # @param {function} cb callback to call when a answer is receive
+  # @param {object} outboundAdapter adapter used to send hMessage
+  #
   h_sending: (hMessage, cb, outboundAdapter) ->
     @h_fillAttribut(hMessage, cb)
 
@@ -346,11 +375,12 @@ class Actor extends EventEmitter
       resultMsg = @buildResult(actor, hMessage.msgid, errorCode, errorMsg)
       cb resultMsg
 
-  ###*
-  Private method called override some hMessage's attributs before sending
-  @hMessage {object} the hMessage update
-  @cb {callback} callback to define which attribut must be override
-  ###
+  #
+  # Private method called override some hMessage's attributs before sending
+  # @private
+  # @param {object} hMessage the hMessage update
+  # @param {function} cb callback to define which attribut must be override
+  #
   h_fillAttribut: (hMessage, cb) ->
     #Complete hMessage
     hMessage.publisher = @actor
@@ -360,14 +390,13 @@ class Actor extends EventEmitter
       hMessage.msgid = hMessage.msgid or @makeMsgId()
     hMessage.sent = new Date().getTime()
 
-  ###*
-    Method allowing that creates and start an actor as a child of this actor
-    @classname {string} the
-    @method {string} the method to use
-    @properties {object} the properties of the child actor to create
-  ###
+  #
+  # Method allowing that creates and start an actor as a child of this actor
+  # @param {string} classname the classname
+  # @param {string} method the method to use
+  # @param {object} properties the properties of the child actor to create
+  #
   createChild: (classname, method, properties, cb) ->
-
     unless _.isString(classname) then throw new Error "'classname' parameter must be a string"
     unless _.isString(method) then throw new Error "'method' parameter must be a string"
 
@@ -385,15 +414,15 @@ class Actor extends EventEmitter
       when "inproc"
         actorModule = require "#{classname}"
         childRef = actorModule.newActor(properties)
-        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
-        childRef.outboundAdapters.push adapters.adapter(method, owner: childRef, targetActorAid: @actor , ref: @)
+        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor, ref: childRef)
+        childRef.outboundAdapters.push adapters.adapter(method, owner: childRef, targetActorAid: @actor, ref: @)
         childRef.parent = @
         # Starting the child
         @send @buildSignal(properties.actor, "start", {})
 
       when "fork"
-        childRef = forker.fork __dirname+"/childlauncher", [classname , JSON.stringify(properties)]
-        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
+        childRef = forker.fork __dirname + "/childlauncher", [classname , JSON.stringify(properties)]
+        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor, ref: childRef)
         childRef.on "message", (msg) =>
           if msg.state is 'ready'
             @send @buildSignal(properties.actor, "start", {})
@@ -407,15 +436,17 @@ class Actor extends EventEmitter
 
     properties.actor
 
-  ###*
-    Method called by constructor to initializing logger
-  ###
+  #
+  # Method called by constructor to initializing logger
+  # @param {string} logLevel
+  # @param {string} logFile
+  #
   initLogger: (logLevel, logFile) ->
     logLevels =
       debug: 0,
       info: 1,
       warn: 2,
-      error:3
+      error: 3
     @logger = new winston.Logger({levels: logLevels})
     # Don't crash on uncaught exception
     @logger.exitOnError = false
@@ -427,10 +458,11 @@ class Actor extends EventEmitter
         @logger.add(winston.transports.File, {handleExceptions: true, filename: logFile, level: logLevel})
       catch err
 
-  ###*
-    Method that enrich a message with actor details and logs it to the console
-    @message {object} the message to log
-  ###
+  #
+  # Method that enrich a message with actor details and logs it to the console
+  # @param {string} type
+  # @param {object} message the message to log
+  #
   log: (type, message) ->
     switch type
       when "debug"
@@ -446,19 +478,19 @@ class Actor extends EventEmitter
         @logger.error "#{validator.getBareURN(@actor)} | #{message}"
         break
 
-  ###*
-    Method called by constructor to initializing actor's children
-    This method could be override to specified an actor
-    @children {Array of object} Actor's children and their topology
-  ###
+  #
+  # Method called by constructor to initializing actor's children
+  # This method could be override to specified an actor
+  # @param {Array} children Actor's children and their topology
+  #
   initChildren: (children)->
     _.forEach children, (childProps) =>
       @createChild childProps.type, childProps.method, childProps
 
-  ###*
-    Method called every minuts to inform the tracker about the actor state
-    This method could be override to specified an actor
-  ###
+  #
+  # Method called every minuts to inform the tracker about the actor state
+  # This method could be override to specified an actor
+  #
   touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
       if trackerProps.trackerId isnt @actor
@@ -466,13 +498,13 @@ class Actor extends EventEmitter
         inboundAdapters = []
         if @status isnt STATUS_STOPPING
           for inbound in @inboundAdapters
-            inboundAdapters.push {type:inbound.type, url:inbound.url}
-        @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:inboundAdapters})
+            inboundAdapters.push {type: inbound.type, url: inbound.url}
+        @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType: @type, peerId: validator.getBareURN(@actor), peerStatus: @status, peerInbox: inboundAdapters})
 
-  ###*
-    Method called when the actor status change
-    @status {string} New status to apply
-  ###
+  #
+  # Method called when the actor status change
+  # @param {string} status New status to apply
+  #
   setStatus: (status) ->
     # alter the state
     @status = status
@@ -491,42 +523,61 @@ class Actor extends EventEmitter
     # Log
     @log "debug", "new status:#{status}"
 
-  ###*
-    Function that starts the actor, including its inbound adapters
-  ###
+  #
+  # Function that starts the actor, including its inbound adapters
+  # @private
+  #
   h_init: () ->
     @setStatus STATUS_STARTING
     @preStart ( =>
-        @h_start ( =>
-          @setStatus STATUS_STARTED
-          @postStart ( => )
-        )
+      @h_start ( =>
+        @setStatus STATUS_STARTED
+        @postStart ( => )
+      )
     )
 
+  #
+  # @param {function} done
+  #
   preStart: (done) ->
     done()
 
+  #
+  # @private
+  # @param {function} done
+  #
   h_start: (done)->
     _.invoke @inboundAdapters, "start"
     _.invoke @outboundAdapters, "start"
     done()
 
+  #
+  # @param {function} done
+  #
   postStart: (done) ->
     done()
 
-  ###*
-    Function that stops the actor, including its children and adapters
-  ###
+  #
+  # Function that stops the actor, including its children and adapters
+  # @private
+  #
   h_tearDown: () ->
     @setStatus STATUS_STOPPING
     @preStop ( =>
-        @h_stop ( =>
-          @postStop ( =>
-            @setStatus STATUS_STOPPED)))
+      @h_stop ( =>
+        @postStop ( =>
+          @setStatus STATUS_STOPPED)))
 
+  #
+  # @param {function} done
+  #
   preStop: (done) ->
     done()
 
+  #
+  # @private
+  # @param {function} done
+  #
   h_stop: (done) ->
     # Stop children first
     _.forEach @children, (childAid) =>
@@ -536,16 +587,19 @@ class Actor extends EventEmitter
     _.invoke @outboundAdapters, "stop"
     done()
 
+  #
+  # @param {function} done
+  #
   postStop: (done) ->
     @removeAllListeners()
     done()
 
-  ###*
-    Method called to set a filter on the actor
-    This method could be override to specified an actor
-    @hCondition {Object} The filter to set
-    @cb {callback}
-  ###
+  #
+  # Method called to set a filter on the actor
+  # This method could be override to specified an actor
+  # @param {object} hCondition The filter to set
+  # @param {function} cb
+  #
   setFilter: (hCondition, cb) ->
     if not hCondition or (hCondition not instanceof Object)
       return cb codes.hResultStatus.INVALID_ATTR, "invalid filter"
@@ -558,22 +612,22 @@ class Actor extends EventEmitter
     else
       cb codes.hResultStatus.INVALID_ATTR, checkFormat.error
 
-  ###*
-    Method called on incoming message to check if the hMessage respect the actor's filter
-    This method could be override to specified an actor
-    @hMessage {Object} hMessage to check
-  ###
+  #
+  # Method called on incoming message to check if the hMessage respect the actor's filter
+  # This method could be override to specified an actor
+  # @param {object} hMessage hMessage to check
+  #
   validateFilter: (hMessage) ->
-    console.log "return : ",hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
-    return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
+    console.log "return : ", hFilter.checkFilterValidity(hMessage, @filter, {actor: @actor})
+    return hFilter.checkFilterValidity(hMessage, @filter, {actor: @actor})
 
-  ###*
-    Method called to subscribe to a channel
-    If a quickFilter is specified, the method subscribe the actor just for this quickFilter
-    @hChannel {string} URN of the channel to subscribe
-    @quickFilter {string} quickFilter to apply on the channel
-    @cb {callback}
-  ###
+  #
+  # Method called to subscribe to a channel
+  # If a quickFilter is specified, the method subscribe the actor just for this quickFilter
+  # @param {string} hChannel URN of the channel to subscribe
+  # @param {string} quickFilter quickFilter to apply on the channel
+  # @param {function} cb
+  #
   subscribe: (hChannel, quickFilter, cb) ->
     status = undefined
     result = undefined
@@ -606,7 +660,7 @@ class Actor extends EventEmitter
         else
           return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
 
-    @send @buildCommand(hChannel, "hSubscribe", {}, {timeout:3000}), (hResult) =>
+    @send @buildCommand(hChannel, "hSubscribe", {}, {timeout: 3000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
         channelInbound = adapters.adapter("channel_in", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
         @inboundAdapters.push channelInbound
@@ -617,14 +671,14 @@ class Actor extends EventEmitter
       else
         cb hResult.payload.status, hResult.payload.result
 
-  ###*
-    Method called to unsubscribe to a channel.
-    If a quickFilter is specified, the method unsubscribe the actor just for this quickFilter
-    Else the actor is unsubsribe of all the channel
-    @hChannel {string} URN of the channel to unsubscribe
-    @quickFilter {string} quickFilter to removed from the channel
-    @cb {callback}
-  ###
+  #
+  # Method called to unsubscribe to a channel.
+  # If a quickFilter is specified, the method unsubscribe the actor just for this quickFilter
+  # Else the actor is unsubsribe of all the channel
+  # @param {string} hChannel URN of the channel to unsubscribe
+  # @param {string} quickFilter quickFilter to removed from the channel
+  # @param {function} cb
+  #
   unsubscribe: (hChannel, quickFilter, cb) ->
     if typeof quickFilter is "function"
       cb = quickFilter
@@ -660,17 +714,17 @@ class Actor extends EventEmitter
             return cb codes.hResultStatus.OK, "Unsubscribe from channel"
         index++
 
-  ###*
-    Method called to get the actor subscriptions
-    @cb {callback}
-  ###
+  #
+  # Method called to get the actor subscriptions
+  # @return {Array}
+  #
   getSubscriptions: () ->
     return @subscriptions
 
-  ###*
-    Method called to remove a actor from outboundAdapter
-    @actor {string} URN of the actor to remove
-  ###
+  #
+  # Method called to remove a actor from outboundAdapter
+  # @param {string} actor URN of the actor to remove
+  #
   removePeer: (actor) ->
     @log "debug", "Removing peer #{actor}"
     index = 0
@@ -683,9 +737,9 @@ class Actor extends EventEmitter
 
       index++
 
-  ###*
-    BUILDERS FOR SPECIFIC MESSAGE
-  ###
+  #
+  # BUILDERS FOR SPECIFIC MESSAGE
+  #
   buildMessage: (actor, type, payload, options) ->
     options = options or {}
     hMessage = {}

@@ -564,7 +564,6 @@ class Actor extends EventEmitter
     @hMessage {Object} hMessage to check
   ###
   validateFilter: (hMessage) ->
-    console.log "return : ",hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
     return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
 
   ###*

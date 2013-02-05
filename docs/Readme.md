@@ -60,6 +60,7 @@ To use a config file you need only to pass one argument: `--config <path>`
 * Config files are comprised of key-values pairs in the format `key = value`.
 
 > Note: Blank lines or lines starting with '#' are ignored.
+
 > Keys accepting arrays are specified by passing value1,value2,value3
 
 

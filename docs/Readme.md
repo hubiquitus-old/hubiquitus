@@ -14,14 +14,15 @@ process increasing scalability!
 ## How to Install
 ### Dependencies
 
-To use **Hubiquitus**, you need Node.JS, NPM, mongoDb, ZeroMQ and CoffeeScript.
+To use **Hubiquitus**, you need Node.JS, NPM, mongoDb, ZeroMQ and CoffeeScript :
 
-To install correctly Node.JS you can use this [link](https://github.com/joyent/node/wiki/Installation)
+* To install correctly Node.JS you can use this [link](https://github.com/joyent/node/wiki/Installation)
 Note that you need at least v0.6.16
 
-To install correctly MongoDB database you can use `sudo apt-get install mongodb`
+* To install correctly MongoDB database you can use `sudo apt-get install mongodb`
 
-To install correctly ZeroMQ follow the next steps :
+* To install correctly ZeroMQ follow the next steps :
+
 ```
 tar -zxf zeromq-3.2.2.tar #Download this from zeromq.org
 cd zeromq-3.2.2
@@ -31,7 +32,7 @@ sudo make install
 ```
 > Note that you need at least v3.2.2
 
-To install correctly CoffeeScript you can use `sudo apt-get install coffeescript`
+* To install correctly CoffeeScript you can use `sudo apt-get install coffeescript`
 
 ###Installation
 
@@ -51,7 +52,7 @@ for example [hubiquitus4js](https://github.com/hubiquitus/hubiquitus4js).
 There are two ways to configure **Hubiquitus**, you can pass command-line
 arguments when running it or use a config file. The options, their format,
 their default values and their explanation can all be found in
-[Options](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Options) > (Coming Soon)
+[Options](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Options)
 
 To use a config file you need only to pass one argument: `--config <path>`
 

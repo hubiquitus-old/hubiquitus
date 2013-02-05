@@ -122,7 +122,10 @@ class Actor extends EventEmitter
     # registering callbacks on events
     @on "message", (hMessage) =>
       #complete msgid
-      hMessage.msgid = hMessage.msgid + "#" + @makeMsgId()
+      if hMessage.msgid
+        hMessage.msgid = hMessage.msgid + "#" + @makeMsgId()
+      else
+        @makeMsgId()
       ref = undefined
       if hMessage and hMessage.ref and typeof hMessage.ref is "string"
         ref = hMessage.ref.split("#")[0]
@@ -564,7 +567,6 @@ class Actor extends EventEmitter
     @hMessage {Object} hMessage to check
   ###
   validateFilter: (hMessage) ->
-    console.log "return : ",hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
     return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
 
   ###*

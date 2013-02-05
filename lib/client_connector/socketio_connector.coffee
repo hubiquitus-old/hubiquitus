@@ -103,7 +103,8 @@ class SocketIO_Connector
       data.trackInbox = inboundAdapters
       data.actor = actor
       data.inboundAdapters
-      client.hClient.createChild "hsession", "inproc", data, (child) =>
+      session_type = @owner.properties.sessionType or "hsession"
+      client.hClient.createChild session_type, "inproc", data, (child) =>
         #Relay all server status messages
         child.initListener(client)
         client.child = child.actor

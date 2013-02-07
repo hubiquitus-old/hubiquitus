@@ -226,6 +226,7 @@ describe "hGetThread", ->
       msgX = new Date(hMessage.payload.result[publishedMessages - 1].published).getTime()
       diff = msg1 - msgX
       diff.should.be.above 0
+      hActor.send = (hMessage) ->
       done()
 
     hActor.h_onMessageInternal cmd

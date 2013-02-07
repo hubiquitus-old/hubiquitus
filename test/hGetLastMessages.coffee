@@ -77,6 +77,7 @@ describe "hGetLastMessages", ->
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.should.have.property('result').and.be.an.instanceof(Array);
       hMessage.payload.result.length.should.equal(0)
+      hActor.send = (hMessage) ->
       done()
 
     hActor.h_onMessageInternal cmd
@@ -181,6 +182,7 @@ describe "hGetLastMessages", ->
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
         hMessage.payload.result.length.should.be.equal(length)
+        hActor.send = (hMessage) ->
         done()
 
       hActor.h_onMessageInternal cmd

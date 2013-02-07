@@ -79,7 +79,6 @@ describe "hTracker", ->
         hActor.peers.length.should.be.equal(0)
         done()
       , 500)
-      done()
 
   describe "Peer-search", ->
     before () ->

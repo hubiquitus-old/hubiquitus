@@ -14,10 +14,13 @@ process increasing scalability!
 ## How to Install
 ### Dependencies
 
-To use **Hubiquitus**, you need Node.JS, NPM, mongoDb, ZeroMQ and CoffeeScript :
+To use **Hubiquitus**, you need Node.JS, mongoDb, ZeroMQ and CoffeeScript :
 
 * To install correctly Node.JS you can use this [link](https://github.com/joyent/node/wiki/Installation)
-Note that you need at least v0.6.16
+
+> Note that you need at least v0.8.0
+
+> Warning : Do not install Node.JS with `sudo apt-get install nodejs`
 
 * To install correctly MongoDB database you can use `sudo apt-get install mongodb`
 
@@ -32,7 +35,7 @@ sudo make install
 ```
 > Note that you need at least v3.2.2
 
-* To install correctly CoffeeScript you can use `sudo apt-get install coffeescript`
+* To install correctly CoffeeScript you can use `npm install -g coffee-script`
 
 ###Installation
 
@@ -43,6 +46,8 @@ $ npm install git://github.com/hubiquitus/hubiquitus.git
 ## How to use
 
 * See our [Getting Start](https://github.com/hubiquitus/hubiquitus/tree/master/docs/GettingStart) > (Coming Soon)
+* See Hubiquitus [Data structure](https://github.com/hubiquitus/hubiquitus/tree/master/docs/DataStructure)
+* See the details about our [Actors](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors/hActor) > (Coming Soon)
 
 This server needs a hAPI counterpart (ported to different languages),
 for example [hubiquitus4js](https://github.com/hubiquitus/hubiquitus4js).

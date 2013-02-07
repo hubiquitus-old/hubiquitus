@@ -669,6 +669,16 @@ class Actor extends EventEmitter
   getSubscriptions: () ->
     return @subscriptions
 
+  #
+  # Method called to update adapter
+  # @name {string} name of the adapter to update
+  # @properties {object} new properties to apply
+  #
+  updateAdapter: (name, properties) ->
+    adapter = _.find @inboundAdapters, (inbound) =>
+      inbound.name = name
+    adapter.update(properties)
+
   ###*
     Method called to remove a actor from outboundAdapter
     @actor {string} URN of the actor to remove

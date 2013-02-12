@@ -29,7 +29,6 @@ class TwitterInboundAdapter extends InboundAdapter
 
   constructor: (properties) ->
     super
-    @properties = properties.properties
     @server = undefined
     @stream = undefined
     @twit = undefined
@@ -77,6 +76,11 @@ class TwitterInboundAdapter extends InboundAdapter
       @stream.destroy()  if @stream
       super
 
+  update: (properties) ->
+    @stop()
+    for props in Object.getOwnPropertyNames(properties)
+      @properties[props] = properties[props]
+    @start()
 exports.TwitterInboundAdapter = TwitterInboundAdapter
 exports.newAdapter = (properties) ->
   new TwitterInboundAdapter(properties)

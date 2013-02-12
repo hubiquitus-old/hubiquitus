@@ -61,7 +61,6 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
     return cb(status.MISSING_ATTR, "command missing actor")
   sender = hMessage.publisher.replace(/\/.*/, "")
   quant = @quant
-  console.log context.properties.subscribers
   if context.properties.subscribers.indexOf(sender) > -1 or context.properties.subscribers.length is 0
     if params
       quant = params.nbLastMsg or quant

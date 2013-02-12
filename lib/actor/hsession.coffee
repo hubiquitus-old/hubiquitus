@@ -95,11 +95,19 @@ class Session extends Actor
           else
             hMessage.publisher = @actor
             @log "debug", "Session received a hCommand to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-            @send hMessage
+            if hMessage.timeout > 0
+              @send hMessage, (hResult) =>
+                @hClient.emit "hMessage", hResult
+            else
+              @send hMessage
       else
         hMessage.publisher = @actor
         @log "debug", "Session received a hMessage to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-        @send hMessage
+        if hMessage.timeout > 0
+          @send hMessage, (hResult) =>
+            @hClient.emit "hMessage", hResult
+        else
+          @send hMessage
 
   ###
   Loads the hCommand module, sets the listener calls cb with the hResult.
@@ -176,6 +184,12 @@ class Session extends Actor
     #  client.socket.emit "hMessage", hMessage
     @emit "hStatus", {status:statuses.CONNECTED, errorCode:errors.NO_ERROR}
     @emit "connect"
+
+  h_fillAttribut: (hMessage, cb) ->
+    #Complete hMessage
+    hMessage.publisher = @actor
+    hMessage.msgid = hMessage.msgid or @makeMsgId()
+    hMessage.sent = new Date().getTime()
 
 exports.Session = Session
 exports.newActor = (topology) ->

@@ -29,7 +29,6 @@ class TimerAdapter extends InboundAdapter
 
   constructor: (properties) ->
     super
-    @properties = properties.properties
     @job = undefined
 
   startJob: =>

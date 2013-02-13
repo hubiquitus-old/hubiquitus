@@ -718,7 +718,7 @@ class Actor extends EventEmitter
     if options.persistent isnt null or options.persistent isnt undefined
       hMessage.persistent = options.persistent
     if hMessage.persistent is null or hMessage.persistent is undefined
-      hMessage.persistent = true
+      hMessage.persistent = false
     hMessage.location = options.location  if options.location
     hMessage.author = options.author  if options.author
     hMessage.published = options.published  if options.published

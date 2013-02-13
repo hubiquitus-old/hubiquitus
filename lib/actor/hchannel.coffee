@@ -41,6 +41,7 @@ class Channel extends Actor
     @type = "channel"
     @inboundAdapters.push adapters.adapter("socket_in", {url: topology.properties.listenOn, owner: @})
     @outboundAdapters.push adapters.adapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
+    @properties.subscribers = topology.properties.subscribers or []
 
   onMessage: (hMessage) ->
     # If hCommand, execute it

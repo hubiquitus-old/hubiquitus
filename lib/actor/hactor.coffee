@@ -76,6 +76,8 @@ class Actor extends EventEmitter
       @log_properties = topology.log
       @initLogger(topology.log.logLevel or "info", topology.log.logFile)
     else
+      @log_properties =
+        logLevel: "info"
       @initLogger("info")
 
     # setting up instance attributes

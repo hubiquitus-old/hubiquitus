@@ -52,23 +52,6 @@ $ npm install git://github.com/hubiquitus/hubiquitus.git
 This server needs a hAPI counterpart (ported to different languages),
 for example [hubiquitus4js](https://github.com/hubiquitus/hubiquitus4js).
 
-### Configuring
-
-There are two ways to configure **Hubiquitus**, you can pass command-line
-arguments when running it or use a config file. The options, their format,
-their default values and their explanation can all be found in
-[Options](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Options)
-
-To use a config file you need only to pass one argument: `--config <path>`
-
-* Command-line arguments are always in the format `--option value`.
-
-* Config files are comprised of key-values pairs in the format `key = value`.
-
-> Note: Blank lines or lines starting with '#' are ignored.
-
-> Keys accepting arrays are specified by passing value1,value2,value3
-
 
 ## License
 

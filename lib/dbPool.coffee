@@ -26,7 +26,6 @@
 {EventEmitter} = require "events"
 mongo = require("./mongo.coffee").db
 log = require("winston")
-opts = require("./options.coffee")
 codes = require("./codes.coffee")
 validators = require("./validator.coffee")
 

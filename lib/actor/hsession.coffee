@@ -30,7 +30,6 @@ statuses = require("../codes").statuses
 errors = require("../codes").errors
 validator = require "../validator"
 codes = require "../codes"
-options = require("../options").options
 hFilter = require "../hFilter"
 adapters = require "../adapters/hAdapters"
 
@@ -131,7 +130,7 @@ class Session extends Actor
     if hCommand.params and typeof hCommand.params isnt "object"
       @send self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Params is settled but not an object")
       return
-    commandTimeout = module.timeout or options["hcommands.timeout"]
+    commandTimeout = module.timeout or 5000
 
     onResult = (status, result) =>
       #If callback is called after the timer ignore it

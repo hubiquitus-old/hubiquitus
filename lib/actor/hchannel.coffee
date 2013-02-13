@@ -80,8 +80,8 @@ class Channel extends Actor
         delete hMessage.msgid
         delete hMessage.timeout
 
-        dbPool.getDb @properties.db.dbName, (dbInstance) =>
-          dbInstance.saveHMessage hMessage, @properties.db.dbCollection
+        dbPool.getDb @properties.db, (dbInstance) =>
+          dbInstance.saveHMessage hMessage, @properties.collection
 
         hMessage.persistent = true
         hMessage.msgid = hMessage._id

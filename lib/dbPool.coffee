@@ -42,8 +42,8 @@ class DbPool extends EventEmitter
     log.debug "dbPool started"
     events.call this
 
-  getDb: (dbName, cb) ->
-    dbName = dbName.replace(/\./g, "_")
+  getDb: (dbProperties, cb) ->
+    dbName = dbProperties.name.replace(/\./g, "_")
     dbInstance = dbInstances[dbName]
     if dbInstance
       if cb
@@ -61,12 +61,9 @@ class DbPool extends EventEmitter
       newInstance = new mongo()
       dbInstances[dbName] = newInstance
 
-      #Create regex to parse/test URI
-      matches = /^mongodb:\/\/(\w+)(:(\d+)|)\/(\w+)$/.exec(opts.options["mongo.URI"])
-
       #Parse URI
-      host = matches[1]
-      port = parseInt(matches[3]) or 27017
+      host = dbProperties.host or "localhost"
+      port = dbProperties.port or 27017
       uri = "mongodb://" + host + ":" + port + "/" + dbName
       newInstance.on "error", (err) ->
         log.error "Error Connecting to database", err

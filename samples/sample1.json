@@ -41,9 +41,11 @@
                 "broadcastOn": "tcp://127.0.0.1",
                 "subscribers": [],
                 "db":{
-                    "dbName": "admin",
-                    "dbCollection": "channel"
-                }
+                    "host": "localhost",
+                    "port": 27017,
+                    "name": "admin"
+                },
+                "collection": "channel"
             }
         }
     ],
@@ -57,9 +59,11 @@
                 "broadcastOn": "tcp://127.0.0.1",
                 "subscribers": [],
                 "db":{
-                    "dbName": "admin",
-                    "dbCollection": "trackChannel"
-                }
+                    "host": "localhost",
+                    "port": 27017,
+                    "name": "admin"
+                },
+                "collection": "trackChannel"
             }
         }
     },

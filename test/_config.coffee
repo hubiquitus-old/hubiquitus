@@ -7,8 +7,6 @@ user2Pass = 'u2'
 user3Urn = 'urn:localhost:u3'
 user3Pass = 'u3'
 
-mongoURI = 'mongodb://localhost/test'
-
 commandsPath = 'lib/hcommands'
 commandsTimeout = 5000
 
@@ -18,12 +16,10 @@ commandsTimeout = 5000
 # Available external classes
 exports.validators = undefined
 exports.codes = undefined
-exports.db = undefined
 
 # Available vars
 exports.logins = undefined
 exports.cmdParams = undefined
-exports.mongoURI = undefined
 exports.validURN = undefined
 exports.validDomain = undefined
 
@@ -47,10 +43,7 @@ codes = require('../lib/codes')
 validators = require('../lib/validator')
 winston = require('winston')
 
-db = require('../lib/dbPool').getDbPool().getDb("admin");
-
 exports.validators = validators
-exports.db = db
 exports.codes = codes
 
 validURN = 'urn:localhost:u1'
@@ -87,8 +80,6 @@ exports.cmdParams = {
   modulePath: commandsPath,
   timeout: commandsTimeout
 }
-
-exports.mongoURI = mongoURI
 
 exports.validURN = validURN;
 

@@ -55,6 +55,7 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
   hCommand = hMessage.payload
   params = hCommand.params
   actor = hMessage.actor
+  dbProperties = context.properties.db
 
   #Test for missing actor
   unless actor
@@ -72,8 +73,8 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
     quant = (if isNaN(quant) then @quant else quant)
 
     hMessages = []
-    dbPool.getDb context.properties.db.dbName, (dbInstance) ->
-      stream = dbInstance.get(context.properties.db.dbCollection).find({}).sort(published: -1).skip(0).stream()
+    dbPool.getDb dbProperties, (dbInstance) ->
+      stream = dbInstance.get(context.properties.collection).find({}).sort(published: -1).skip(0).stream()
       stream.on "data", (localhMessage) ->
         hMessages.actor = localhMessage._id
         delete localhMessage._id

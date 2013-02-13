@@ -43,9 +43,10 @@ hRelevantMessages::exec = (hMessage, context, cb) ->
   @validateCmd hMessage, context, (err, result) ->
     unless err
       channel = hMessage.actor
+      dbProperties = context.properties.db
       hMessages = []
-      dbPool.getDb context.properties.db.dbName, (dbInstance) ->
-        stream = dbInstance.get(context.properties.db.dbCollection).find(relevance:
+      dbPool.getDb dbProperties, (dbInstance) ->
+        stream = dbInstance.get(context.properties.collection).find(relevance:
           $gte: new Date().getTime()).sort(published: -1).skip(0).stream()
         stream.on "data", (localhMessage) ->
           localhMessage.msgid = localhMessage._id

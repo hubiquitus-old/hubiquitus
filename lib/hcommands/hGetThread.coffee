@@ -45,10 +45,12 @@ hGetThread::exec = (hMessage, context, cb) ->
       hMessages = []
       actor = hMessage.actor
       convid = hCommand.params.convid
+      dbProperties = context.properties.db
       sort = hCommand.params.sort or 1
       sort = 1  if hCommand.params.sort isnt -1 and hCommand.params.sort isnt 1
-      dbPool.getDb context.properties.db.dbName, (dbInstance) ->
-        stream = dbInstance.get(context.properties.db.dbCollection).find(convid: convid).sort(published: sort).skip(0).stream()
+
+      dbPool.getDb dbProperties, (dbInstance) ->
+        stream = dbInstance.get(context.properties.collection).find(convid: convid).sort(published: sort).skip(0).stream()
         firstElement = true
         stream.on "data", (localhMessage) ->
           localhMessage.actor = actor

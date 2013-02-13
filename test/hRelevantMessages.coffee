@@ -44,9 +44,11 @@ describe "hRelevantMessages", ->
         listenOn: "tcp://127.0.0.1:1221",
         broadcastOn: "tcp://127.0.0.1:2998",
         db:{
-          dbName: "test",
-          dbCollection: activeChan
-        }
+          host: "localhost",
+          port: 27017,
+          name: "test"
+        },
+        collection: activeChan
       }
     }
     hActor = actorModule.newActor(topology)

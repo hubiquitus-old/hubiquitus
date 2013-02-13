@@ -44,9 +44,11 @@ describe "hGetThread", ->
         subscribers:[existingCHID],
         broadcastOn: "tcp://127.0.0.1:2998",
         db:{
-          dbName: "test",
-          dbCollection: existingCHID
-        }
+          host: "localhost",
+          port: 27017,
+          name: "test"
+        },
+        collection: existingCHID
       }
     }
     hActor = actorModule.newActor(topology)

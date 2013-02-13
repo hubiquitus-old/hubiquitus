@@ -60,6 +60,7 @@ hGetThreads::mapReduce = (hMessage, context, cb) ->
   hCommand = hMessage.payload
   status = hCommand.params.status
   actor = hMessage.actor
+  dbProperties = context.properties.db
   self = this
   map = ->
     emit @convid,
@@ -74,8 +75,8 @@ hGetThreads::mapReduce = (hMessage, context, cb) ->
 
     chosenValue
 
-  dbPool.getDb context.properties.db.dbName, (dbInstance) ->
-    dbInstance.get(context.properties.db.dbCollection).mapReduce map, reduce, {out:replace: UUID.generate()}, (err, collection) ->
+  dbPool.getDb dbProperties, (dbInstance) ->
+    dbInstance.get(context.properties.collection).mapReduce map, reduce, {out:replace: UUID.generate()}, (err, collection) ->
       unless err
         convids = []
         stream = collection.find({}).stream()
@@ -95,9 +96,11 @@ hGetThreads::linear = (hMessage, context, cb) ->
   hCommand = hMessage.payload
   status = hCommand.params.status
   actor = hMessage.actor
+  dbProperties = context.properties.db
   self = this
-  dbPool.getDb context.properties.db.dbName, (dbInstance) ->
-    stream = dbInstance.get(context.properties.db.dbCollection).find(type: /hConvState/i).streamRecords()
+
+  dbPool.getDb dbProperties, (dbInstance) ->
+    stream = dbInstance.get(context.properties.collection).find(type: /hConvState/i).streamRecords()
     foundElements = {}
     stream.on "data", (hMessage) ->
       if foundElements[hMessage.convid]
@@ -113,6 +116,7 @@ hGetThreads::linear = (hMessage, context, cb) ->
 
 
 hGetThreads::filterMessages = (actor, convids, context, filter, cb) ->
+  dbProperties = context.properties.db
   filteredConvids = []
   regexConvids = "("
 
@@ -124,8 +128,8 @@ hGetThreads::filterMessages = (actor, convids, context, filter, cb) ->
     regexConvids += convids[i] + "|"
     i++
   regexConvids = regexConvids.slice(0, regexConvids.length - 1) + ")"
-  dbPool.getDb context.properties.db.dbName, (dbInstance) ->
-    stream = dbInstance.get(context.properties.db.dbCollection).find(
+  dbPool.getDb dbProperties, (dbInstance) ->
+    stream = dbInstance.get(context.properties.collection).find(
       convid: new RegExp(regexConvids)
       type:
         $ne: "hConvState"

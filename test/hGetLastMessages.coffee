@@ -34,7 +34,7 @@ describe "hGetLastMessages", ->
   existingCHID = "urn:localhost:#{config.getUUID()}"
   DateTab = []
 
-  before () ->
+  before (done) ->
     topology = {
       actor: existingCHID,
       type: "hchannel",
@@ -51,7 +51,16 @@ describe "hGetLastMessages", ->
       }
     }
     hActor = actorModule.newActor(topology)
+    hActor.setStatus "starting"
+    hActor.preStart ( =>
+      hActor.h_start ( =>
+        hActor.setStatus "started"
+        hActor.postStart ( =>
+          done())
+      )
+    )
 
+  before () ->
     topology = {
       actor: config.logins[0].urn,
       type: "hactor",

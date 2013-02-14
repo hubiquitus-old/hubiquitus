@@ -36,12 +36,13 @@ describe "hGetThreads", ->
   convids = []
   shouldNotAppearConvids = []
 
-  before () ->
+  before (done) ->
     topology = {
       actor: activeChannel,
       type: "hchannel",
       properties: {
         subscribers:[activeChannel],
+        listenOn: "tcp://127.0.0.1:1221",
         broadcastOn: "tcp://127.0.0.1:2998",
         db:{
           host: "localhost",
@@ -52,7 +53,16 @@ describe "hGetThreads", ->
       }
     }
     hActor = actorModule.newActor(topology)
+    hActor.setStatus "starting"
+    hActor.preStart ( =>
+      hActor.h_start ( =>
+        hActor.setStatus "started"
+        hActor.postStart ( =>
+          done())
+      )
+    )
 
+  before () ->
     topology = {
       actor: config.logins[0].urn,
       type: "hactor",

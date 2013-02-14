@@ -35,7 +35,7 @@ describe "hRelevantMessages", ->
   nbMsgs = 10
   activeChan = "urn:localhost:#{config.getUUID()}"
 
-  before () ->
+  before (done) ->
     topology = {
       actor: activeChan,
       type: "hchannel",
@@ -52,8 +52,16 @@ describe "hRelevantMessages", ->
       }
     }
     hActor = actorModule.newActor(topology)
+    hActor.setStatus "starting"
+    hActor.preStart ( =>
+      hActor.h_start ( =>
+        hActor.setStatus "started"
+        hActor.postStart ( =>
+          done())
+      )
+    )
 
-
+  before () ->
     topology = {
         actor: config.logins[0].urn,
         type: "hactor",

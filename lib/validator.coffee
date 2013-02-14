@@ -25,7 +25,6 @@
 
 codes = require("./codes.coffee").hResultStatus
 log = require("winston")
-dbPool = require("./dbPool.coffee").getDbPool()
 
 ###
 Checks if an hMessage is correctly formatted and has all the correct attributes

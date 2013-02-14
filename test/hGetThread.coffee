@@ -36,12 +36,13 @@ describe "hGetThread", ->
   convid = undefined
   publishedMessages = 0
 
-  before () ->
+  before (done) ->
     topology = {
       actor: existingCHID,
       type: "hchannel",
       properties: {
         subscribers:[existingCHID],
+        listenOn: "tcp://127.0.0.1:1221",
         broadcastOn: "tcp://127.0.0.1:2998",
         db:{
           host: "localhost",
@@ -52,7 +53,16 @@ describe "hGetThread", ->
       }
     }
     hActor = actorModule.newActor(topology)
+    hActor.setStatus "starting"
+    hActor.preStart ( =>
+      hActor.h_start ( =>
+        hActor.setStatus "started"
+        hActor.postStart ( =>
+          done())
+      )
+    )
 
+  before () ->
     topology = {
       actor: config.logins[0].urn,
       type: "hactor",

@@ -28,7 +28,7 @@ adapters = require "./../adapters/hAdapters"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "./../validator"
-dbPool = require("./../dbPool.coffee").getDbPool()
+mongo = require "mongodb"
 codes = require "./../codes"
 
 class Channel extends Actor
@@ -79,8 +79,10 @@ class Channel extends Actor
         delete hMessage.msgid
         delete hMessage.timeout
 
-        dbPool.getDb @properties.db, (dbInstance) =>
-          dbInstance.saveHMessage hMessage, @properties.collection
+        @dbInstance.collection(@properties.collection).save hMessage, {safe:true}, (err, res) =>
+          if err
+            @log "error", "Error while save hMessage in database"
+
 
         hMessage.persistent = true
         hMessage.msgid = hMessage._id
@@ -151,6 +153,24 @@ class Channel extends Actor
 
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
+
+  preStart: (done) ->
+    @h_connectToDatabase @properties.db, () ->
+      done()
+
+  h_connectToDatabase: (dbProperties, done) ->
+    host = dbProperties.host or "localhost"
+    port = dbProperties.port or 27017
+
+    #Create the Server and the DB to access mongo
+    new mongo.Db(dbProperties.name, new mongo.Server(host, port)).open (err, dbOpen) =>
+      unless err
+        @log "debug", "Correctly connect to mongo"
+        @dbInstance = dbOpen
+        done()
+      #Error opening database
+      else
+        @log "error", "Could not open database"
 
 exports.Channel = Channel
 exports.newActor = (properties) ->

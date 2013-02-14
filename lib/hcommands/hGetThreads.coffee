@@ -32,7 +32,6 @@ The default implementation is linear. to change set this.implementation to 'mapR
 ###
 hResultStatus = require("../codes").hResultStatus
 validator = require("../validator")
-dbPool = require("../dbPool").getDbPool()
 hFilter = require("../hFilter")
 hGetThreads = ->
   @implementation = "linear"
@@ -42,7 +41,7 @@ hGetThreads = ->
 Method executed each time an hCommand with cmd = 'hGetThreads' is received.
 Once the execution finishes we should call the callback.
 @param hMessage - hMessage received with hCommand with cmd = 'hGetThreads'
-@param context - Auxiliary functions,attrs from the controller.
+@param context - Actor's instance which call the command
 @param cb(status, result) - function that receives arg:
 status: //Constant from var status to indicate the result of the hCommand
 result: //An [] of hMessages
@@ -60,8 +59,6 @@ hGetThreads::mapReduce = (hMessage, context, cb) ->
   hCommand = hMessage.payload
   status = hCommand.params.status
   actor = hMessage.actor
-  dbProperties = context.properties.db
-  self = this
   map = ->
     emit @convid,
       status: @payload.status
@@ -75,20 +72,19 @@ hGetThreads::mapReduce = (hMessage, context, cb) ->
 
     chosenValue
 
-  dbPool.getDb dbProperties, (dbInstance) ->
-    dbInstance.get(context.properties.collection).mapReduce map, reduce, {out:replace: UUID.generate()}, (err, collection) ->
-      unless err
-        convids = []
-        stream = collection.find({}).stream()
-        stream.on "data", (elem) ->
-          convids.push elem._id  if elem.value.status is status and hFilter.checkFilterValidity(elem, hCommand.filter, {actor:context.actor}).result
+  context.dbInstance.collection(context.properties.collection).mapReduce map, reduce, {out:replace: UUID.generate()}, (err, collection) =>
+    unless err
+      convids = []
+      stream = collection.find({}).stream()
+      stream.on "data", (elem) =>
+        convids.push elem._id  if elem.value.status is status and hFilter.checkFilterValidity(elem, hCommand.filter, {actor:context.actor}).result
 
-        stream.on "close", ->
-          collection.drop()
-          self.filterMessages actor, convids, context, hCommand.filter, cb
+      stream.on "close", =>
+        collection.drop()
+        @filterMessages actor, convids, context, hCommand.filter, cb
 
-      else
-        cb hResultStatus.TECH_ERROR, JSON.stringify(err)
+    else
+      cb hResultStatus.TECH_ERROR, JSON.stringify(err)
 
 
 
@@ -96,27 +92,23 @@ hGetThreads::linear = (hMessage, context, cb) ->
   hCommand = hMessage.payload
   status = hCommand.params.status
   actor = hMessage.actor
-  dbProperties = context.properties.db
-  self = this
 
-  dbPool.getDb dbProperties, (dbInstance) ->
-    stream = dbInstance.get(context.properties.collection).find(type: /hConvState/i).streamRecords()
-    foundElements = {}
-    stream.on "data", (hMessage) ->
-      if foundElements[hMessage.convid]
-        foundElements[hMessage.convid] = hMessage  if foundElements[hMessage.convid].published < hMessage.published
-      else
-        foundElements[hMessage.convid] = hMessage
+  stream = context.dbInstance.collection(context.properties.collection).find(type: /hConvState/i).streamRecords()
+  foundElements = {}
+  stream.on "data", (hMessage) =>
+    if foundElements[hMessage.convid]
+      foundElements[hMessage.convid] = hMessage  if foundElements[hMessage.convid].published < hMessage.published
+    else
+      foundElements[hMessage.convid] = hMessage
 
-    stream.on "end", ->
-      convids = []
-      for convid of foundElements
-        convids.push convid  if foundElements[convid].payload.status is status
-      self.filterMessages actor, convids, context, hCommand.filter, cb
+  stream.on "end", =>
+    convids = []
+    for convid of foundElements
+      convids.push convid  if foundElements[convid].payload.status is status
+    @filterMessages actor, convids, context, hCommand.filter, cb
 
 
 hGetThreads::filterMessages = (actor, convids, context, filter, cb) ->
-  dbProperties = context.properties.db
   filteredConvids = []
   regexConvids = "("
 
@@ -128,27 +120,26 @@ hGetThreads::filterMessages = (actor, convids, context, filter, cb) ->
     regexConvids += convids[i] + "|"
     i++
   regexConvids = regexConvids.slice(0, regexConvids.length - 1) + ")"
-  dbPool.getDb dbProperties, (dbInstance) ->
-    stream = dbInstance.get(context.properties.collection).find(
-      convid: new RegExp(regexConvids)
-      type:
-        $ne: "hConvState"
-    ).stream()
-    convidDone = false
-    stream.on "data", (hMessage) ->
-      if hFilter.checkFilterValidity(hMessage, filter, {actor:context.actor}).result
-        if filteredConvids.length is 0
-          filteredConvids.push hMessage.convid
-        else
-          convidDone = false
-          i = 0
-          while i < filteredConvids.length
-            convidDone = true  if filteredConvids[i] is hMessage.convid
-            i++
-          filteredConvids.push hMessage.convid  if convidDone is false
+  stream = context.dbInstance.collection(context.properties.collection).find(
+    convid: new RegExp(regexConvids)
+    type:
+      $ne: "hConvState"
+  ).stream()
+  convidDone = false
+  stream.on "data", (hMessage) ->
+    if hFilter.checkFilterValidity(hMessage, filter, {actor:context.actor}).result
+      if filteredConvids.length is 0
+        filteredConvids.push hMessage.convid
+      else
+        convidDone = false
+        i = 0
+        while i < filteredConvids.length
+          convidDone = true  if filteredConvids[i] is hMessage.convid
+          i++
+        filteredConvids.push hMessage.convid  if convidDone is false
 
-    stream.on "close", ->
-      cb hResultStatus.OK, filteredConvids
+  stream.on "close", ->
+    cb hResultStatus.OK, filteredConvids
 
 
 hGetThreads::checkValidity = (hMessage, context, cb) ->

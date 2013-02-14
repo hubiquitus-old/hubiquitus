@@ -25,7 +25,6 @@
 status = require("../codes").hResultStatus
 validator = require("../validator")
 hFilter = require("../hFilter")
-dbPool = require("../dbPool").getDbPool()
 
 hRelevantMessages = ->
 
@@ -34,7 +33,7 @@ hRelevantMessages = ->
   Method executed each time an hCommand with cmd = 'hRelevantMessages' is received.
   Once the execution finishes we should call the callback.
   @param hMessage - hMessage received with hCommand with cmd = 'hRelevantMessages'
-  @param context - Auxiliary functions,attrs from the controller.
+  @param context - Actor's instance which call the command
   @param cb(status, result) - function that receives arg:
   status: //Constant from var status to indicate the result of the hCommand
   result: //Array of relevant hMessages
@@ -42,20 +41,17 @@ hRelevantMessages = ->
 hRelevantMessages::exec = (hMessage, context, cb) ->
   @validateCmd hMessage, context, (err, result) ->
     unless err
-      channel = hMessage.actor
-      dbProperties = context.properties.db
       hMessages = []
-      dbPool.getDb dbProperties, (dbInstance) ->
-        stream = dbInstance.get(context.properties.collection).find(relevance:
-          $gte: new Date().getTime()).sort(published: -1).skip(0).stream()
-        stream.on "data", (localhMessage) ->
-          localhMessage.msgid = localhMessage._id
-          delete hMessage._id
+      stream = context.dbInstance.collection(context.properties.collection).find(relevance:
+        $gte: new Date().getTime()).sort(published: -1).skip(0).stream()
+      stream.on "data", (localhMessage) ->
+        localhMessage.msgid = localhMessage._id
+        delete hMessage._id
 
-          hMessages.push localhMessage  if hFilter.checkFilterValidity(localhMessage, hMessage.payload.filter, {actor:context.actor}).result
+        hMessages.push localhMessage  if hFilter.checkFilterValidity(localhMessage, hMessage.payload.filter, {actor:context.actor}).result
 
-        stream.on "close", ->
-          cb status.OK, hMessages
+      stream.on "close", ->
+        cb status.OK, hMessages
 
 
     else

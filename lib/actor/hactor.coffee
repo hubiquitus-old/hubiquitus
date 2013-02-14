@@ -678,8 +678,12 @@ class Actor extends EventEmitter
   #
   updateAdapter: (name, properties) ->
     adapter = _.find @inboundAdapters, (inbound) =>
-      inbound.name = name
-    adapter.update(properties)
+      if inbound.properties and inbound.properties.name
+        inbound.properties.name is name
+    if adapter
+      adapter.update(properties)
+    else
+      @log "error", "Can't find adapter #{name} for update"
 
   ###*
     Method called to remove a actor from outboundAdapter

@@ -47,7 +47,6 @@ class TwitterInboundAdapter extends InboundAdapter
         @stream = stream
         stream.on "data", (data) =>
           unless data.disconnect
-            console.log data.user.lang
             if @properties.langFilter is undefined or data.user.lang is @properties.langFilter
               hTweet = {}
               hTweetAuthor = {}

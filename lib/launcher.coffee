@@ -58,6 +58,6 @@ main = ->
      #   clearInterval interval
 
   # starting engine
-  engine.h_init()
+  engine.h_start()
 
 main()

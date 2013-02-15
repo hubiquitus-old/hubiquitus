@@ -63,7 +63,7 @@ describe "hTracker", ->
 
     it "should remove peer when receive peer-info stopping", (done) ->
       hActor.stopAlert = (actor)->
-      info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"stopping", peerInbox:[]}})
+      info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"stopped", peerInbox:[]}})
       hActor.h_onMessageInternal info
       hActor.peers.length.should.be.equal(0)
       done()
@@ -83,7 +83,7 @@ describe "hTracker", ->
   describe "Peer-search", ->
     before () ->
       hActor.peers = [
-        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerStatus:"started", peerInbox:[{type:"socket_in", url:"url"}]},
+        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
         {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerStatus:"started", peerInbox:[]},
         {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerStatus:"stopped", peerInbox:[{type:"socket_in", url:"url"}]}
       ]
@@ -131,9 +131,9 @@ describe "hTracker", ->
     it "should send outboundAdapter when search actor with bareURN with load balancing", (done) ->
       @timeout(4000)
       hActor.peers = [
-        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerStatus:"started", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerStatus:"started", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerStatus:"started", peerInbox:[{type:"socket_in", url:"url"}]}
+        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+        {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+        {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
       ]
 
       goodResult = [config.logins[1].urn, config.logins[3].urn, config.logins[5].urn]

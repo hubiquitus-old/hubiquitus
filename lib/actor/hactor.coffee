@@ -52,8 +52,9 @@ class Actor extends EventEmitter
   # Possible running states of an actor
   STATUS_STARTING = "starting"
   STATUS_STARTED = "started"
-  STATUS_STOPPING = "stopping"
   STATUS_STOPPED = "stopped"
+  STATUS_READY = "ready"
+  STATUS_ERROR = "error"
 
   # Native Actors provided by hubiquitus. If forked they will be used
   H_ACTORS = {
@@ -99,18 +100,20 @@ class Actor extends EventEmitter
     # Initializing class variables
     @msgToBeAnswered = {}
     @timerOutAdapter = {}
+    @error = {}
     @timerTouch = undefined
     @parent = undefined
     @touchDelay = 60000
 
     # Initializing attributs
     @properties = topology.properties or {}
-    @status = STATUS_STOPPED
+    @status = null
     @children = []
     @trackers = []
     @inboundAdapters = []
     @outboundAdapters = []
     @subscriptions = []
+    @channelToSubscribe = []
 
     # Registering trackers
     if _.isArray(topology.trackers) and topology.trackers.length > 0
@@ -144,22 +147,7 @@ class Actor extends EventEmitter
     _.forEach topology.adapters, (adapterProps) =>
       adapterProps.owner = @
       if adapterProps.type is 'channel_in'
-        attempt = 1
-        @subscribe adapterProps.channel, adapterProps.quickFilter, (status, result) =>
-          unless status is codes.hResultStatus.OK
-            @log "debug", "Subscription attempt #{attempt} failed cause #{result} "
-            SubTimer = setInterval(=>
-              if attempt < 4
-                @subscribe adapterProps.channel, adapterProps.quickFilter, (status2, result2) =>
-                  if status2 is codes.hResultStatus.OK
-                    clearInterval(SubTimer)
-                  else
-                    attempt++
-                    @log "debug", "Subscription attempt #{attempt} failed cause #{result2} "
-              else
-                @log "debug", "Subscription attempt #{++attempt} failed cause #{result}, don't try again "
-                clearInterval(SubTimer)
-            , 5000)
+        @channelToSubscribe.push adapterProps
       else
         adapter = adapters.adapter(adapterProps.type, adapterProps)
         if adapter.direction is "in"
@@ -168,8 +156,9 @@ class Actor extends EventEmitter
           @outboundAdapters.push adapter
 
     # Adding children once started
-    @on "started", ->
-      @initChildren(topology.children)
+    @on "hStatus", (status) ->
+      if status is "started"
+        @initChildren(topology.children)
 
   ###*
     Private method called when the actor receive a hMessage.
@@ -196,7 +185,7 @@ class Actor extends EventEmitter
           if hMessage.type is "hSignal" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
             switch hMessage.payload.name
               when "start"
-                @h_init()
+                @h_start()
               when "stop"
                 @h_tearDown()
               else
@@ -469,7 +458,7 @@ class Actor extends EventEmitter
       if trackerProps.trackerId isnt @actor
         @log "debug", "touching tracker #{trackerProps.trackerId}"
         inboundAdapters = []
-        if @status isnt STATUS_STOPPING
+        if @status isnt STATUS_STOPPED
           for inbound in @inboundAdapters
             inboundAdapters.push {type:inbound.type, url:inbound.url}
         @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:inboundAdapters})
@@ -479,55 +468,54 @@ class Actor extends EventEmitter
     @status {string} New status to apply
   ###
   setStatus: (status) ->
-    # alter the state
-    @status = status
-    switch status
-      when STATUS_STARTED
-        @touchTrackers()
+    unless status is STATUS_READY and Object.keys(@error).length > 0
+      # alter the state
+      @status = status
+      if @timerTouch
+        clearInterval(@timerTouch)
+      @touchTrackers()
+
+      unless status is STATUS_STOPPED
         @timerTouch = setInterval(=>
           @touchTrackers()
         , @touchDelay)
-      when STATUS_STOPPING
-        @touchTrackers()
-        if @timerTouch
-          clearInterval(@timerTouch)
-    # advertise
-    @emit status
-    # Log
-    @log "debug", "new status:#{status}"
+
+      # advertise
+      @emit "hStatus", status
+      # Log
+      @log "debug", "new status:#{status}"
 
   ###*
     Function that starts the actor, including its inbound adapters
   ###
-  h_init: () ->
+  h_start: ()->
     @setStatus STATUS_STARTING
-    @preStart ( =>
-        @h_start ( =>
-          @setStatus STATUS_STARTED
-          @postStart ( => )
-        )
-    )
-
-  preStart: (done) ->
-    done()
-
-  h_start: (done)->
     _.invoke @inboundAdapters, "start"
     _.invoke @outboundAdapters, "start"
-    done()
+    @setStatus STATUS_STARTED
+    @initialize()
 
-  postStart: (done) ->
-    done()
+  initialize: (done) ->
+    for adapterProps in @channelToSubscribe
+      @subscribe adapterProps.channel, adapterProps.quickFilter, (status, result) =>
+        unless status is codes.hResultStatus.OK
+          @log "debug", "Subscription to #{adapterProps.channel} failed cause #{result}"
+          errorID = UUID.generate()
+          @h_raiseError(errorID, "Subscription to #{adapterProps.channel} failed")
+          @h_autoSubscribe(adapterProps, 500, errorID)
+    @setStatus STATUS_READY
+    if done and typeof done is "function"
+      done()
 
   ###*
     Function that stops the actor, including its children and adapters
   ###
   h_tearDown: () ->
-    @setStatus STATUS_STOPPING
+    @setStatus STATUS_STOPPED
     @preStop ( =>
         @h_stop ( =>
           @postStop ( =>
-            @setStatus STATUS_STOPPED)))
+            )))
 
   preStop: (done) ->
     done()
@@ -544,6 +532,30 @@ class Actor extends EventEmitter
   postStop: (done) ->
     @removeAllListeners()
     done()
+
+  h_autoSubscribe: (adapterProps, delay, errorID) ->
+    setTimeout(=>
+      @subscribe adapterProps.channel, adapterProps.quickFilter, (status2, result2) =>
+        unless status2 is codes.hResultStatus.OK
+          @log "debug", "Subscription attempt failed cause #{result2}"
+          if delay < 60000
+            delay *= 2
+          else
+            delay = 60000
+          @h_autoSubscribe(adapterProps, delay)
+        else
+          @h_popError(errorID)
+    , delay)
+
+  h_raiseError: (id, message) ->
+    @setStatus STATUS_ERROR
+    @error[id] = message
+
+  h_popError: (id) ->
+    delete @error[id]
+    if Object.keys(@error).length is 0
+      @setStatus STATUS_READY
+
 
   ###*
     Method called to set a filter on the actor

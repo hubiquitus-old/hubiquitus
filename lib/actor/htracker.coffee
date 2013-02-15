@@ -39,7 +39,6 @@ class Tracker extends Actor
     @timerPeers = {}
     @timeoutDelay = 180000
     super
-    #@on "started", -> @pingChannel(properties.broadcastUrl)
 
   h_onSignal: (hMessage) ->
     @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
@@ -52,7 +51,7 @@ class Tracker extends Actor
           clearTimeout(@timerPeers[hMessage.publisher])
           peers.peerStatus = hMessage.payload.params.peerStatus
           peers.peerInbox = hMessage.payload.params.peerInbox
-          if peers.peerStatus is "stopping"
+          if peers.peerStatus is "stopped"
             @stopAlert(hMessage.publisher)
             @peers.splice(index, 1)
             @removePeer(hMessage.publisher)
@@ -112,14 +111,14 @@ class Tracker extends Actor
     _.forEach @peers, (peers) =>
       if peers.peerFullId is actor
         unless outboundadapter
-          if peers.peerStatus is "started"
+          if peers.peerStatus isnt "starting" and peers.peerStatus isnt "stopped"
             _.forEach peers.peerInbox, (inbox) =>
               if inbox.type is "socket_in"
                 outboundadapter = {type: "socket_out", targetActorAid: actor, url: inbox.url}
     unless outboundadapter
       outTab = []
       _.forEach @peers, (peers) =>
-        if peers.peerId is validator.getBareURN(actor) and peers.peerStatus is "started" and peers.peerInbox.length > 0
+        if peers.peerId is validator.getBareURN(actor) and peers.peerStatus is "ready" and peers.peerInbox.length > 0
           outTab.push(peers)
       if outTab.length > 0
         lb_peers = outTab[Math.floor(Math.random() * outTab.length)]

@@ -51,14 +51,8 @@ describe "hGetLastMessages", ->
       }
     }
     hActor = actorModule.newActor(topology)
-    hActor.setStatus "starting"
-    hActor.preStart ( =>
-      hActor.h_start ( =>
-        hActor.setStatus "started"
-        hActor.postStart ( =>
-          done())
-      )
-    )
+    hActor.initialize () ->
+      done()
 
   before () ->
     topology = {

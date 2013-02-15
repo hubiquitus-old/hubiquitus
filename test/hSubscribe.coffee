@@ -116,15 +116,16 @@ describe "hSubscribe", ->
         ]
       }
       hActor2 = actorModule.newActor(topology)
+      hActor2.h_start()
 
       properties =
         listenOn: "tcp://127.0.0.1:2112",
         broadcastOn: "tcp://127.0.0.1:9289",
         subscribers: [config.logins[2].urn],
         db:{
-        dbName: "test",
-        dbCollection: existingCHID
+          name: "test",
         }
+        collection: existingCHID
       hActor2.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
         hChannel2 = child
 
@@ -133,9 +134,8 @@ describe "hSubscribe", ->
       hActor2 = null
 
     it "should have channel in for existing channel", (done) ->
-      @timeout(6000)
       hActor2.inboundAdapters.length.should.be.equal(0)
       setTimeout(=>
         hActor2.inboundAdapters.length.should.be.equal(1)
         done()
-      , 5000)
+      , 600)

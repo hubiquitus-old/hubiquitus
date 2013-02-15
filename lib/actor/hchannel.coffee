@@ -154,9 +154,9 @@ class Channel extends Actor
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
 
-  preStart: (done) ->
-    @h_connectToDatabase @properties.db, () ->
-      done()
+  initialize: (done) ->
+    @h_connectToDatabase @properties.db, () =>
+      super done
 
   h_connectToDatabase: (dbProperties, done) ->
     host = dbProperties.host or "localhost"

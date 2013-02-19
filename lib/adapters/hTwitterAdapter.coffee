@@ -45,6 +45,8 @@ class TwitterInboundAdapter extends InboundAdapter
       )
       @twit.stream "statuses/filter", track: @properties.tags, (stream) =>
         @stream = stream
+        stream.on "error", (type, code) =>
+          @owner.log "error", "Twitter stream error : #{type} #{code}"
         stream.on "data", (data) =>
           unless data.disconnect
             if @properties.langFilter is undefined or data.user.lang is @properties.langFilter

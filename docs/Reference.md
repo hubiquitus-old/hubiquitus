@@ -16,23 +16,33 @@ Hubiquitus see apps like small brains, clusters of neurons bound together throug
 
 How to better explain why latency is bad than Geek & Poke does ?
 
-![simply explained - latency](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/geeknpoke-simplyexplained-latency.jpg)
+![simply explained - latency](https://github.com/hubiquitus/hubiquitus/raw/master/images/geeknpoke-simplyexplained-latency.jpg)
 
-## The Hubiquitus framework
+## Framework overview
 
-### What it is ?
+The Hubiquitus framework is made of a set of complementary building blocks:
 
-#### An actor-based applications framework
+* an actor-based **applications container**
+* a rich set of **messaging protocols**
+* a powerful **messaging middleware**
 
-The Hubiquitus design follows the "everything is an actor" philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm. 
+## Container
 
-Actors are the *neurons* of our apps.
+First of all, Hubiquitus is an application container.
+
+### Technical design
+
+#### Introducing actors
+
+> Actors are the *neurons* of our apps.
+
+The Hubiquitus container design follows the "everything is an actor" philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model) paradigm. 
  
-**An actor is a form of lightweight computational entity that sequentially process incoming messages received on its inbox**
+> **An actor is a form of lightweight computational entity that process sequentially incoming messages it receives**
 
 The fundamental properties of an actor are:
 
-* each actor has an **inbox**, a kind of FIFO queue into which other actors can post messages to be processed,
+* each actor has an **inbox** for incoming messages, a kind of FIFO queue into which other actors can post messages to be processed,
 * each actor has its proper **behavior** that is triggered sequentially for each message received in its inbox,
 * each actor maintains its own **state** that it doesn't share with anyone else ("share nothing" principle); this state can be modified as the actor processes incoming messages.
 * each actor can itself send **messages** to other actors; posting message is asynchronous so that it never blocks the process in which the actor is running,
@@ -40,9 +50,11 @@ The fundamental properties of an actor are:
 
 The following figure summarizes these principles:
 
-![actor model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/ActorModel.png)
+![actor model](https://github.com/hubiquitus/hubiquitus/raw/master/images/ActorModel.png)
 
-The Hubiquitus framework is basically a lightweight container for actors. It is highly inspired by existing actor-based frameworks, such as [Erlang OTP](http://www.erlang.org/) or Akka, and other lightweight containers such as the [Spring Framework](http://www.springsource.org/spring-framework).
+#### A NodeJS-based lighweight container
+
+The Hubiquitus container is basically a lightweight container for actors. It is highly inspired by existing actor-based frameworks, such as [Erlang OTP](http://www.erlang.org/) or [Akka](http://akka.io), and other lightweight containers such as the [Spring Framework](http://www.springsource.org/spring-framework).
 
 The Hubiquitus actors engine is built on top of the [NodeJS](http://nodejs.org) evented programming platform.
 
@@ -52,19 +64,147 @@ NodeJS is a great choice as a container for actors since it provides features th
 * **Single threaded execution**: each NodeJS process run programs using a single execution thread, we are sure to never have to deal with concurrency issues.
 * **Child processes**: NodeJS natively supports creating forked process that communicates with their parent process using sockets, so that creating child actors as child processes becomes trivial.
 
-#### An open messaging protocol
 
-Since actors receive, process and send *messages*, so we need a messaging protocol. 
+## Protocols
 
-We designed this protocol with the following constraints in mind:
+Actors need to receive, process and send *messages* to each other. Hubiquitus specifies a set of protocols that define the contract that those messages must comply with:
 
-* **open**: messages should be able to carry any kind of data and metadata, allowing developers to design specialized protocols depending on their needs (a philosophy of design it shares with XMPP, SOAP and other XML-based protocols)
-* **format agnostic**: messages should be able to be serialized into different formats in such a way that the most efficient format will be used depending on the situation (JSON will be perfect in a browser, but MessagePack will surely be a better option on the server side).
-* **transport agnostic**: messages should not be tied to any particular transport, so that you can use the best one to carry out a message, depending on its format (do I need a carry out binary messages ?) and the availability of the transport itself (can I use WebSocket here ?).
+* the **Hubiquitus core messaging protocol** defines the common message structures that every actor must use when it comes to send messages
+* the **Hubiquitus pub/sub protocol** defines the way actors can exchange messages through a pub/sub messaging style
+* the **Hubiquitus naming protocol** defines a set of messages that actors use to discover the physical location of the other actors
+
+> * **fire and forget messaging** : an actor should be able to send a message to another actor without worrying if the message has been received or not
+* **request-response messaging**: an actor should be able to request another actor for specific data using messages
+* **pub/sub messaging**: actors should be able to broadcast messages to any recipient that manifest its interest in receiving such ones on a subscription basis
+
+### The Hubiquitus core messaging protocol
+
+> to be described
+
+We designed the hubiquitus messaging protocol with the following constraints in mind:
+
+* **standard structure** : every message payloads should be encapsulated into a common structure responsible for carrying the metatada that the middleware need to properly route and transport the messages through the network
+* **extensible structure** : the message structure  should though be able to carry any kind of data and metadata, allowing developers to design specialized protocols depending on their needs (a philosophy of design it shares with XMPP, SOAP and other XML-based protocols)
+
+### The Hubiquitus pub/sub protocol
+
+> TO BE DESCRIBED
+
+#### Channels
+
+> TO BE DESCRIBED
+
+### The Hubiquitus tracking protocol
+
+> TO BE DESCRIBED
+
+* **dynamic addressing and discovery**: actors should not need to know the location of each other to exchange messages
+
+#### Trackers
+
+In order to allow a dynamic topology of actors accross hosts and network, each actor only knowns the *names* of the other actors it needs to talk with: it doesn't know their *addresses*.
+
+To enable them to communicate, Hubiquitus dynamically wire their inboxes through a kind of *directory service* to which  each actor registers so that the address of its inbox can be resolved on demand at runtime. 
+
+This service take the form of a particular kind of actor called a ***tracker***. Each time an actor registers or unregisters to a tracker, this tracker will update its dictionary of peers.
+
+Like any other actor, a tracker can register itself to other trackers so that an address can be resolved accross multiple trackers. This mechanism allows federating multiple groups of actors together.
+
+> TO COME HERE: schema of the principles explained above ; links to the code
+
+## Middleware
+
+The set of protocols we specified before must be implemented by a middleware. The Hubiquitus framework also provides that middleware.
+
+> **The Hubiquitus middleware follows a decentralized and brokerless design**.
+
+### Features
+
+#### Transport
+
+The main purpose of a middleware is to transport data between emitters and recipients. 
+
+The Hubiquitus middleware thus provides the following key features:
+
+* **message encoding** : the middleware carries out the encoding and the decoding of the messages so that they can be transfered over the network.
+* **network transfer** : the middleware provides wire-level protocols to transfer the messages over the IP network.
+
+Hubiquitus allows using **multiple combinations of encoding formats and network protocols**. You can use the best one to transport a message, depending on its format (do I need a carry out binary messages ?) and the availability of the transport itself (can I use WebSocket here ?).
+
+#### Security
+
+The hubiquitus middleware also provides advanced security features:
+
+* **authentication** : each message emitter can be properly authenticated by the middleware so actors can trust the messages they receive
+* **authorization** : the middleware should allow protecting actors from receiving messages from unauthorized emitters
+* **encryption** : the middleware should guarantee the confidentiality of the communications by using wire-level encryption
+* **pattern-matching** : the middleware allows filtering messages that match a given pattern
+
+### Adapters
+
+**Adapters are the Hubiquitus components that provide the Hubiquitus middleware features**.
+
+You'll always need at least two adapters to enable a messaging communication link:
+
+* an adapter is used by the message emitter to send the message over the network
+* another adapter is used by the message receiver to received the message from the network
+
+The following figure explains this principle:
+![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/images/Adapters.png)
+
+#### Flow processing pipeline
+
+Adapters process the message flow as a sequence of processing steps, some of them being optional, as shown below:
+> TODO
+
+* guarantying that every message received by or sent to actors comply with the `hMessage` format (the common enveloppe)
+* eventually translating the messages written in other formats into a compliant `hMessage`  
+* carrying the messages through the network using multiple combinations of wire-level protocols and encoders
+* ensuring the confidentiality of the communications through transport-layer security mechanisms
+* guarantying the authenticity of the each message through proper authentication of each sender
+
+#### Provided transports
+
+Here is the list of `adapters` that Hubiquitus provides.
+
+Since `v0.6`:
+
+* `In memory`: default transport / useful to send direct messages to actors that run in the same process
+* `SocketInboundAdapter`: triggers the actor's behavior each time a message is received on a binded ZeroMQ PULL socket
+* `SocketOutboundAdapter`: uses a 0MQ PUSH socket to send messages to a target actor
+* `ChannelInboundAdapter`: uses a 0MQ SUB socket to suscribe and receive messages published through a `channel`
+* `ChannelOutboundAdapter`: used by `channels` to broadcast messages published through them to their subscribers ; uses a 0MQ PUB socket to publish data to subscribers 
+* `SocketIOAdapter`: uses the `SocketIO` library to make actors exchange messages with remote clients on the Internet
+* `TwitterAdapter`: used to make actors able to receive and send tweets
+
+In future releases:
+
+* MQTT
+* Google plus
+* Facebook
+* Instagram
+
+#### Provided encoders
+
+Hubiquitus provides multiple message encoders, each one being compatible with some of the adapters Hubiquitus provides.
+
+Here is the list of serializers that Hubiquitus provides.
+
+Since v0.6:
+
+* `JsonSerializer`: default format / compatible with all transports / shipped with Hubiquitus v0.6
+
+In future releases:
+
+* `MsgPackSerializer`: uses the MessagePack format / incompatible with SocketIO
 
 > TO BE COMPLETED
 
-#### A distributed applications framework
+#### Authenticators
+
+> TO BE DESCRIBED
+
+#### Filters
 
 > TO BE DESCRIBED
 
@@ -85,37 +225,10 @@ The 6 actors running states:
 
 > TODO : insert state diagram and explanations ; explain the interceptors
 
-#### Inversion of Control
-
-In order to allow a dynamic topology of actors accross hosts and network, each actor only knowns the *names* of the other actors it needs to talk with: it doesn't know their *addresses*.
-
-To enable them to communicate, Hubiquitus dynamically wire their inboxes through a kind of *directory service* to which  each actor registers so that the address of its inbox can be resolved on demand at runtime. 
-
-This service take the form of a particular kind of actor called a ***tracker***. Each time an actor registers or unregisters to a tracker, this tracker will update its dictionary of peers.
-
-Like any other actor, a tracker can register itself to other trackers so that an address can be resolved accross multiple trackers. This mechanism allows federating multiple groups of actors together.
-
-> TO COME HERE: schema of the principles explained above ; links to the code
-
-#### Transport adapters
-
-Neurons in a brain are connected through synapses. hActors are connected together through **transort adapters**. Adapters are network endpoints that allow hActors to receive and send messages.
-
-Hubiquitus provides a wide range of adapters that implement various network protocols:
-
-* Raw TCP 
-* **HTML5 Web Socket**
-* XHR Polling
-
-> TODO : reconsider this section
-
-#### Message serializers
-
-> TO BE DESCRIBED
-
 ### Topology of actors
 
 The caracteritics of each actor are described using a set of mandatory and optional properties that the Hubiquitus framework needs to be aware of in order to make it run properly.
+
 Each actor stores these properties in a JavaScript object that we call a **topology**.
 
 The examples below use a JSON representation of this object to make them better understandable to the reader of this guide.

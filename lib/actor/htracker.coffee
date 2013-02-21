@@ -35,7 +35,7 @@ class Tracker extends Actor
     #TODO check properties
     @peers = []
     @trackerChannelAid = topology.properties.channel.actor
-    topology.children.push topology.properties.channel
+    topology.children.unshift topology.properties.channel
     @timerPeers = {}
     @timeoutDelay = 180000
     super
@@ -79,13 +79,13 @@ class Tracker extends Actor
             index++
           @removePeer(hMessage.publisher)
         , @timeoutDelay)
-        outbox = @findOutbox(hMessage.publisher)
+        outbox = @findOutbox(hMessage.publisher, true)
         if outbox
           @outboundAdapters.push adapters.adapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
 
     else if hMessage.payload.name is "peer-search"
       # TODO reflexion sur le lookup et implementation
-      outboundadapter = @findOutbox(hMessage.payload.params.actor)
+      outboundadapter = @findOutbox(hMessage.payload.params.actor, false)
 
       if outboundadapter
         status = codes.OK
@@ -106,12 +106,12 @@ class Tracker extends Actor
       @createChild childProps.type, childProps.method, childProps
 
 
-  findOutbox: (actor) ->
+  findOutbox: (actor, tracker) ->
     outboundadapter = undefined
     _.forEach @peers, (peers) =>
       if peers.peerFullId is actor
         unless outboundadapter
-          if peers.peerStatus isnt "starting" and peers.peerStatus isnt "stopped"
+          if (peers.peerStatus isnt "starting" and peers.peerStatus isnt "stopped") or tracker is true
             _.forEach peers.peerInbox, (inbox) =>
               if inbox.type is "socket_in"
                 outboundadapter = {type: "socket_out", targetActorAid: actor, url: inbox.url}

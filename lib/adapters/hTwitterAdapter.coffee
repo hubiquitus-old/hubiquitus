@@ -87,6 +87,7 @@ class TwitterInboundAdapter extends InboundAdapter
     for props of properties
       @properties[props] = properties[props]
     @start()
+
 exports.TwitterInboundAdapter = TwitterInboundAdapter
 exports.newAdapter = (properties) ->
   new TwitterInboundAdapter(properties)

@@ -107,12 +107,10 @@ class Actor extends EventEmitter
 
     # Initializing attributs
     @sharedProperties = topology.sharedProperties or {}
-    console.log("sp 1: #{JSON.stringify(@sharedProperties)}")
     # Deep copy JSON object (value only, no reference)
     @properties = JSON.parse(JSON.stringify(@sharedProperties)) or {}
     for prop of topology.properties
       @properties[prop] = topology.properties[prop]
-    console.log("sp 2: #{JSON.stringify(@sharedProperties)}")
     @status = null
     @children = []
     @trackers = []
@@ -371,13 +369,12 @@ class Actor extends EventEmitter
     unless _.isString(classname) then throw new Error "'classname' parameter must be a string"
     unless _.isString(method) then throw new Error "'method' parameter must be a string"
 
-    unless topology.sharedProperties then topology.sharedProperties = @sharedProperties
-    # Deep copy JSON object (value only, no reference)
-    propChildInit = JSON.parse(JSON.stringify(topology.properties)) or {}
-    topology.properties = @sharedProperties
-    for prop of propChildInit
-      topology.properties[prop] = propChildInit[prop]
-
+    childSharedProps = {}
+    for prop of topology.sharedProperties
+      childSharedProps[prop] = topology.sharedProperties[prop]
+    topology.sharedProperties = @sharedProperties
+    for prop of childSharedProps
+      topology.sharedProperties[prop] = childSharedProps[prop]
     unless topology.trackers then topology.trackers = @trackers
     unless topology.log then topology.log = @log_properties
 
@@ -460,6 +457,8 @@ class Actor extends EventEmitter
   ###
   initChildren: (children)->
     _.forEach children, (childProps) =>
+      unless childProps.method
+        childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps
 
   ###*

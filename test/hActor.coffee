@@ -29,6 +29,7 @@ describe "hActor", ->
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hactor")
+  ###
   describe "#FilterMessage()", ->
     hMsg = undefined
     filter = undefined
@@ -1508,6 +1509,7 @@ describe "hActor", ->
           done()
 
         hActor.h_onMessageInternal hMsg
+  ###
   describe "sharedProperties", ->
     actorChild = undefined
     before () ->
@@ -1516,7 +1518,8 @@ describe "hActor", ->
         type: "hactor",
         sharedProperties: {
           "v1": "s1",
-          "v2": "s2"
+          "v2": "s2",
+          "v4": "s4"
         },
         properties: {
           "v2": "p2",
@@ -1531,14 +1534,13 @@ describe "hActor", ->
         properties: {
           "v2": "c2",
           "v3": "c3"
-        }
+        },
+        sharedProperties: {"v4": "t4"}
       }
       hActor.createChild "hactor", "inproc", childProp, (child) =>
         actorChild = child
 
     after () ->
-      console.log("_p : #{JSON.stringify(hActor.properties)}")
-      console.log("_c : #{JSON.stringify(actorChild.properties)}")
       hActor.h_tearDown()
       hActor = null
 
@@ -1553,4 +1555,7 @@ describe "hActor", ->
       done()
     it "child should have v2 value specified in his own topology rather than the one specified in his parent's sharedProperties", (done) ->
       actorChild.properties.should.have.property "v2", "c2"
+      done()
+    it "child should have v4 value specified in his own sharedProperties rather than the one specified in his parent's sharedProperties", (done) ->
+      actorChild.properties.should.have.property "v4", "t4"
       done()

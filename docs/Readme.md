@@ -49,8 +49,8 @@ $ git clone git://github.com/hubiquitus/hubiquitus.git
 
 ## How to use
 
-* See our [Getting Start](https://github.com/hubiquitus/hubiquitus/tree/master/docs/GettingStart)
-* See Hubiquitus [Data structure](https://github.com/hubiquitus/hubiquitus/tree/master/docs/DataStructure)
+* See our [Getting Start](https://github.com/hubiquitus/hubiquitus/blob/master/docs/GettingStart)
+* See Hubiquitus [Data structure](https://github.com/hubiquitus/hubiquitus/blob/master/docs/DataStructure)
 * See the details about our [Actors](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors) > (Coming Soon)
 * See the details about our [Adapters](https://github.com/hubiquitus/hubiquitus/tree/master/docs/adapters) > (Coming Soon)
 

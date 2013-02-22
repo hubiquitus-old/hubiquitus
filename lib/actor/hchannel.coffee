@@ -156,7 +156,7 @@ class Channel extends Actor
 
   initialize: (done) ->
     @h_connectToDatabase @properties.db, () =>
-      super done
+      done()
 
   h_connectToDatabase: (dbProperties, done) ->
     host = dbProperties.host or "localhost"

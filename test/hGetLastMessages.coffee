@@ -51,8 +51,11 @@ describe "hGetLastMessages", ->
       }
     }
     hActor = actorModule.newActor(topology)
-    hActor.initialize () ->
-      done()
+    hActor.initialize = (ready) =>
+      hActor.h_connectToDatabase hActor.properties.db, () =>
+        ready()
+        done()
+    hActor.h_start()
 
   before () ->
     topology = {

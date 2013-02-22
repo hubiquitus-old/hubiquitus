@@ -34,7 +34,7 @@ describe "hGetLastMessages", ->
   existingCHID = "urn:localhost:#{config.getUUID()}"
   DateTab = []
 
-  before () ->
+  before (done) ->
     topology = {
       actor: existingCHID,
       type: "hchannel",
@@ -43,13 +43,18 @@ describe "hGetLastMessages", ->
         listenOn: "tcp://127.0.0.1:1221",
         broadcastOn: "tcp://127.0.0.1:2998",
         db:{
-          dbName: "test",
-          dbCollection: existingCHID
-        }
+          host: "localhost",
+          port: 27017,
+          name: "test"
+        },
+        collection: existingCHID
       }
     }
     hActor = actorModule.newActor(topology)
+    hActor.initialize () ->
+      done()
 
+  before () ->
     topology = {
       actor: config.logins[0].urn,
       type: "hactor",
@@ -77,6 +82,7 @@ describe "hGetLastMessages", ->
       hMessage.payload.should.have.property "status", status.OK
       hMessage.payload.should.have.property('result').and.be.an.instanceof(Array);
       hMessage.payload.result.length.should.equal(0)
+      hActor.send = (hMessage) ->
       done()
 
     hActor.h_onMessageInternal cmd
@@ -181,6 +187,7 @@ describe "hGetLastMessages", ->
         hMessage.payload.should.have.property "status", status.OK
         hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
         hMessage.payload.result.length.should.be.equal(length)
+        hActor.send = (hMessage) ->
         done()
 
       hActor.h_onMessageInternal cmd

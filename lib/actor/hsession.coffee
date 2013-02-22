@@ -30,7 +30,6 @@ statuses = require("../codes").statuses
 errors = require("../codes").errors
 validator = require "../validator"
 codes = require "../codes"
-options = require("../options").options
 hFilter = require "../hFilter"
 adapters = require "../adapters/hAdapters"
 
@@ -95,11 +94,19 @@ class Session extends Actor
           else
             hMessage.publisher = @actor
             @log "debug", "Session received a hCommand to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-            @send hMessage
+            if hMessage.timeout > 0
+              @send hMessage, (hResult) =>
+                @hClient.emit "hMessage", hResult
+            else
+              @send hMessage
       else
         hMessage.publisher = @actor
         @log "debug", "Session received a hMessage to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-        @send hMessage
+        if hMessage.timeout > 0
+          @send hMessage, (hResult) =>
+            @hClient.emit "hMessage", hResult
+        else
+          @send hMessage
 
   ###
   Loads the hCommand module, sets the listener calls cb with the hResult.
@@ -123,7 +130,7 @@ class Session extends Actor
     if hCommand.params and typeof hCommand.params isnt "object"
       @send self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Params is settled but not an object")
       return
-    commandTimeout = module.timeout or options["hcommands.timeout"]
+    commandTimeout = module.timeout or 5000
 
     onResult = (status, result) =>
       #If callback is called after the timer ignore it
@@ -176,6 +183,12 @@ class Session extends Actor
     #  client.socket.emit "hMessage", hMessage
     @emit "hStatus", {status:statuses.CONNECTED, errorCode:errors.NO_ERROR}
     @emit "connect"
+
+  h_fillAttribut: (hMessage, cb) ->
+    #Complete hMessage
+    hMessage.publisher = @actor
+    hMessage.msgid = hMessage.msgid or @makeMsgId()
+    hMessage.sent = new Date().getTime()
 
 exports.Session = Session
 exports.newActor = (topology) ->

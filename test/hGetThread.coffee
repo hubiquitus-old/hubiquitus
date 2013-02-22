@@ -36,21 +36,27 @@ describe "hGetThread", ->
   convid = undefined
   publishedMessages = 0
 
-  before () ->
+  before (done) ->
     topology = {
       actor: existingCHID,
       type: "hchannel",
       properties: {
         subscribers:[existingCHID],
+        listenOn: "tcp://127.0.0.1:1221",
         broadcastOn: "tcp://127.0.0.1:2998",
         db:{
-          dbName: "test",
-          dbCollection: existingCHID
-        }
+          host: "localhost",
+          port: 27017,
+          name: "test"
+        },
+        collection: existingCHID
       }
     }
     hActor = actorModule.newActor(topology)
+    hActor.initialize () ->
+      done()
 
+  before () ->
     topology = {
       actor: config.logins[0].urn,
       type: "hactor",
@@ -226,6 +232,7 @@ describe "hGetThread", ->
       msgX = new Date(hMessage.payload.result[publishedMessages - 1].published).getTime()
       diff = msg1 - msgX
       diff.should.be.above 0
+      hActor.send = (hMessage) ->
       done()
 
     hActor.h_onMessageInternal cmd

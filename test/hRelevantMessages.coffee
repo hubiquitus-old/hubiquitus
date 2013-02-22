@@ -35,7 +35,7 @@ describe "hRelevantMessages", ->
   nbMsgs = 10
   activeChan = "urn:localhost:#{config.getUUID()}"
 
-  before () ->
+  before (done) ->
     topology = {
       actor: activeChan,
       type: "hchannel",
@@ -44,14 +44,19 @@ describe "hRelevantMessages", ->
         listenOn: "tcp://127.0.0.1:1221",
         broadcastOn: "tcp://127.0.0.1:2998",
         db:{
-          dbName: "test",
-          dbCollection: activeChan
-        }
+          host: "localhost",
+          port: 27017,
+          name: "test"
+        },
+        collection: activeChan
       }
     }
     hActor = actorModule.newActor(topology)
+    hActor.setStatus "starting"
+    hActor.initialize () ->
+      done()
 
-
+  before () ->
     topology = {
         actor: config.logins[0].urn,
         type: "hactor",

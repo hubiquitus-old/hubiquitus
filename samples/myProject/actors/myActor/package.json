@@ -1,0 +1,8 @@
+{
+    "name": "myActor",
+    "version": "1.0.0",
+    "dependencies": {
+        "hubiquitus": ">=0.5.10",
+        "myInboundAdapter": ">=1.0.0"
+    }
+}

@@ -33,7 +33,6 @@ tried and if not the default value of the command.
 status = require("../codes").hResultStatus
 validator = require("../validator")
 hFilter = require("../hFilter")
-dbPool = require("../dbPool").getDbPool()
 
 hGetLastMessages = ->
 
@@ -46,7 +45,7 @@ hGetLastMessages = ->
 Method executed each time an hCommand with cmd = 'hGetLastMessages' is received.
 Once the execution finishes we should call the callback.
 @param hMessage - hMessage received with cmd = 'hGetLastMessages'
-@param context - Models from the database to store/search data. See lib/mongo.js
+@param context - Actor's instance which call the command
 @param cb(status, result) - function that receives arg:
 status: //Constant from var status to indicate the result of the hCommand
 result: [hMessage]
@@ -55,13 +54,13 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
   hCommand = hMessage.payload
   params = hCommand.params
   actor = hMessage.actor
+  filter = hCommand.filter or {}
 
   #Test for missing actor
   unless actor
     return cb(status.MISSING_ATTR, "command missing actor")
   sender = hMessage.publisher.replace(/\/.*/, "")
   quant = @quant
-  console.log context.properties.subscribers
   if context.properties.subscribers.indexOf(sender) > -1 or context.properties.subscribers.length is 0
     if params
       quant = params.nbLastMsg or quant
@@ -73,18 +72,17 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
     quant = (if isNaN(quant) then @quant else quant)
 
     hMessages = []
-    dbPool.getDb context.properties.db.dbName, (dbInstance) ->
-      stream = dbInstance.get(context.properties.db.dbCollection).find({}).sort(published: -1).skip(0).stream()
-      stream.on "data", (localhMessage) ->
-        hMessages.actor = localhMessage._id
-        delete localhMessage._id
+    stream = context.dbInstance.collection(context.properties.collection).find({}).sort(published: -1).skip(0).stream()
+    stream.on "data", (localhMessage) ->
+      hMessages.actor = localhMessage._id
+      delete localhMessage._id
 
-        if localhMessage and hFilter.checkFilterValidity(localhMessage, hCommand.filter, {actor:context.actor}).result
-          hMessages.push localhMessage
-          stream.destroy()  if --quant is 0
+      if localhMessage and hFilter.checkFilterValidity(localhMessage, filter, {actor:context.actor}).result
+        hMessages.push localhMessage
+        stream.destroy()  if --quant is 0
 
-      stream.on "close", ->
-        cb status.OK, hMessages
+    stream.on "close", ->
+      cb status.OK, hMessages
   else
     cb status.NOT_AUTHORIZED, "not authorized to retrieve messages from \"" + actor
 

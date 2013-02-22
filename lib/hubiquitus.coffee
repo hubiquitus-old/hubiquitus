@@ -33,7 +33,6 @@
 adapter = require "./adapters/hAdapters"
 validator = require "./validator"
 filter = require "./hFilter"
-dbPool = require "./dbPool"
 codes = require "./codes"
 
 exports.Actor = Actor
@@ -46,5 +45,4 @@ exports.Tracker = Tracker
 exports.adapter = adapter
 exports.validator = validator
 exports.filter = filter
-exports.dbPool = dbPool
 exports.codes = codes

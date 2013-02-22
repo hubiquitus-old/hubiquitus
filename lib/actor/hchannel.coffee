@@ -28,9 +28,8 @@ adapters = require "./../adapters/hAdapters"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "./../validator"
-dbPool = require("./../dbPool.coffee").getDbPool()
+mongo = require "mongodb"
 codes = require "./../codes"
-options = require("./../options").options
 
 class Channel extends Actor
 
@@ -41,6 +40,7 @@ class Channel extends Actor
     @type = "channel"
     @inboundAdapters.push adapters.adapter("socket_in", {url: topology.properties.listenOn, owner: @})
     @outboundAdapters.push adapters.adapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
+    @properties.subscribers = topology.properties.subscribers or []
 
   onMessage: (hMessage) ->
     # If hCommand, execute it
@@ -79,8 +79,10 @@ class Channel extends Actor
         delete hMessage.msgid
         delete hMessage.timeout
 
-        dbPool.getDb @properties.db.dbName, (dbInstance) =>
-          dbInstance.saveHMessage hMessage, @properties.db.dbCollection
+        @dbInstance.collection(@properties.collection).save hMessage, {safe:true}, (err, res) =>
+          if err
+            @log "error", "Error while save hMessage in database"
+
 
         hMessage.persistent = true
         hMessage.msgid = hMessage._id
@@ -122,7 +124,7 @@ class Channel extends Actor
     if hCommand.params and typeof hCommand.params isnt "object"
       @send self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, "Invalid command. Params is settled but not an object")
       return
-    commandTimeout = module.timeout or options["hcommands.timeout"]
+    commandTimeout = module.timeout or 5000
 
     onResult = (status, result) =>
       #If callback is called after the timer ignore it
@@ -151,6 +153,24 @@ class Channel extends Actor
 
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
+
+  initialize: (done) ->
+    @h_connectToDatabase @properties.db, () =>
+      super done
+
+  h_connectToDatabase: (dbProperties, done) ->
+    host = dbProperties.host or "localhost"
+    port = dbProperties.port or 27017
+
+    #Create the Server and the DB to access mongo
+    new mongo.Db(dbProperties.name, new mongo.Server(host, port)).open (err, dbOpen) =>
+      unless err
+        @log "debug", "Correctly connect to mongo"
+        @dbInstance = dbOpen
+        done()
+      #Error opening database
+      else
+        @log "error", "Could not open database"
 
 exports.Channel = Channel
 exports.newActor = (properties) ->

@@ -25,7 +25,6 @@
 
 fs = require("fs")
 clients = {}
-options = require("../options").sioConnector
 validator = require "../validator"
 codes = require "../codes"
 
@@ -58,7 +57,7 @@ class SocketIO_Connector
       WARN: 1
       ERROR: 0
 
-    io.set "log level", logLevels[options.logLevel]
+    io.set "log level", logLevels[@owner.log_properties.logLevel]
 
     channel = io.on("connection", (socket) =>
       id = socket.id

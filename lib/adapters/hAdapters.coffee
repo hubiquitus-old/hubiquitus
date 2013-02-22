@@ -31,6 +31,7 @@ class Adapter
 
   constructor: (properties) ->
     @started = false
+    @properties = properties.properties
     if properties.owner
       @owner = properties.owner
     else
@@ -56,6 +57,9 @@ class Adapter
 
   stop: ->
     @started = false
+
+  update: (properties) ->
+    # Function to overide if you need to update adapter's properties
 
 class InboundAdapter extends Adapter
 
@@ -389,6 +393,9 @@ exports.adapter = (type, properties) ->
     when "http_out"
       httpOutAdapter = require("./hHttpAdapter")
       httpOutAdapter.newHttpOutboundAdapter(properties)
+    when "twitter_in"
+      twitterAdapter = require("./hTwitterAdapter")
+      twitterAdapter.newAdapter(properties)
     else
       try
         adapter = require(properties.type)

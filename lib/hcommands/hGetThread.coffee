@@ -25,7 +25,6 @@
 status = require("../codes").hResultStatus
 validator = require("../validator")
 hFilter = require("../hFilter")
-dbPool = require("../dbPool").getDbPool()
 hGetThread = ->
 
 
@@ -33,7 +32,7 @@ hGetThread = ->
   Method executed each time an hCommand with cmd = 'hGetThread' is received.
   Once the execution finishes we should call the callback.
   @param hMessage - hMessage received with hCommand with cmd = 'hGetThread'
-  @param context - Auxiliary functions,attrs from the controller.
+  @param context - Actor's instance which call the command
   @param cb(status, result) - function that receives arg:
   status: //Constant from var status to indicate the result of the hCommand
   result: //An [] of hMessages
@@ -43,25 +42,26 @@ hGetThread::exec = (hMessage, context, cb) ->
     unless err
       hCommand = hMessage.payload
       hMessages = []
+      filter = hCommand.filter or {}
       actor = hMessage.actor
       convid = hCommand.params.convid
       sort = hCommand.params.sort or 1
       sort = 1  if hCommand.params.sort isnt -1 and hCommand.params.sort isnt 1
-      dbPool.getDb context.properties.db.dbName, (dbInstance) ->
-        stream = dbInstance.get(context.properties.db.dbCollection).find(convid: convid).sort(published: sort).skip(0).stream()
-        firstElement = true
-        stream.on "data", (localhMessage) ->
-          localhMessage.actor = actor
-          localhMessage.msgid = localhMessage._id
-          delete localhMessage._id
 
-          if firstElement and hFilter.checkFilterValidity(localhMessage, hCommand.filter, {actor:context.actor}).result is false
-            stream.destroy()
-          firstElement = false
-          hMessages.push localhMessage
+      stream = context.dbInstance.collection(context.properties.collection).find(convid: convid).sort(published: sort).skip(0).stream()
+      firstElement = true
+      stream.on "data", (localhMessage) ->
+        localhMessage.actor = actor
+        localhMessage.msgid = localhMessage._id
+        delete localhMessage._id
 
-        stream.on "close", ->
-          cb status.OK, hMessages
+        if firstElement and hFilter.checkFilterValidity(localhMessage, filter, {actor:context.actor}).result is false
+          stream.destroy()
+        firstElement = false
+        hMessages.push localhMessage
+
+      stream.on "close", ->
+        cb status.OK, hMessages
 
 
     else

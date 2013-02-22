@@ -6,17 +6,14 @@
             "actor": "urn:localhost:gateway",
             "type": "hgateway",
             "method": "inproc",
-            "log":{
-                "logLevel":"debug"
-            },
             "children": [
-            	{
+                {
                     "actor": "urn:localhost:auth",
                     "type": "hauth",
                     "method": "inproc"
                 }
             ],
-            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:3993" } ],
+            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1" } ],
             "properties": {
                 "socketIOPort": 8080,
                 "authActor": "urn:localhost:auth",
@@ -24,30 +21,24 @@
             }
         },
         {
-            "actor": "urn:localhost:dispatcher",
-            "type": "hdispatcher",
+            "actor": "urn:localhost:myActor",
+            "type": "myActor",
             "method": "inproc",
+            "adapters": [ { "type": "myAdapter" } ],
             "properties": {
-                "workers": { "method": "fork", "type": "hactor", "nb": 2 }
-            },
-            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:2992" } ]
+                "myProps": "hello"
+            }
         },
         {
-            "actor": "urn:localhost:channel",
-            "type": "hchannel",
+            "actor": "urn:localhost:myActor2",
+            "type": "myActor2",
             "method": "inproc",
+            "adapters": [ { "type": "myInboundAdapter" }, { "type": "myOutboundAdapter", "targetActorAid": "urn:localhost:myActor" } ],
             "properties": {
-                "listenOn": "tcp://127.0.0.1",
-                "broadcastOn": "tcp://127.0.0.1",
-                "subscribers": [],
-                "db":{
-                    "host": "localhost",
-                    "port": 27017,
-                    "name": "admin"
-                },
-                "collection": "channel"
+                "myProps": "hello"
             }
         }
+
     ],
     "properties":{
         "channel": {
@@ -67,5 +58,5 @@
             }
         }
     },
-    "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:2997" } ]
+    "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1" } ]
 }

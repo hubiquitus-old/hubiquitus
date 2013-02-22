@@ -36,21 +36,27 @@ describe "hGetThreads", ->
   convids = []
   shouldNotAppearConvids = []
 
-  before () ->
+  before (done) ->
     topology = {
       actor: activeChannel,
       type: "hchannel",
       properties: {
         subscribers:[activeChannel],
+        listenOn: "tcp://127.0.0.1:1221",
         broadcastOn: "tcp://127.0.0.1:2998",
         db:{
-          dbName: "test",
-          dbCollection: activeChannel
-        }
+          host: "localhost",
+          port: 27017,
+          name: "test"
+        },
+        collection: activeChannel
       }
     }
     hActor = actorModule.newActor(topology)
+    hActor.initialize () ->
+      done()
 
+  before () ->
     topology = {
       actor: config.logins[0].urn,
       type: "hactor",

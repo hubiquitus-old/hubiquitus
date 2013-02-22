@@ -42,6 +42,7 @@ hGetThread::exec = (hMessage, context, cb) ->
     unless err
       hCommand = hMessage.payload
       hMessages = []
+      filter = hCommand.filter or {}
       actor = hMessage.actor
       convid = hCommand.params.convid
       sort = hCommand.params.sort or 1
@@ -54,7 +55,7 @@ hGetThread::exec = (hMessage, context, cb) ->
         localhMessage.msgid = localhMessage._id
         delete localhMessage._id
 
-        if firstElement and hFilter.checkFilterValidity(localhMessage, hCommand.filter, {actor:context.actor}).result is false
+        if firstElement and hFilter.checkFilterValidity(localhMessage, filter, {actor:context.actor}).result is false
           stream.destroy()
         firstElement = false
         hMessages.push localhMessage

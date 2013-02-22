@@ -41,6 +41,7 @@ hRelevantMessages = ->
 hRelevantMessages::exec = (hMessage, context, cb) ->
   @validateCmd hMessage, context, (err, result) ->
     unless err
+      filter = hMessage.payload.filter or {}
       hMessages = []
       stream = context.dbInstance.collection(context.properties.collection).find(relevance:
         $gte: new Date().getTime()).sort(published: -1).skip(0).stream()
@@ -48,7 +49,7 @@ hRelevantMessages::exec = (hMessage, context, cb) ->
         localhMessage.msgid = localhMessage._id
         delete hMessage._id
 
-        hMessages.push localhMessage  if hFilter.checkFilterValidity(localhMessage, hMessage.payload.filter, {actor:context.actor}).result
+        hMessages.push localhMessage  if hFilter.checkFilterValidity(localhMessage, filter, {actor:context.actor}).result
 
       stream.on "close", ->
         cb status.OK, hMessages

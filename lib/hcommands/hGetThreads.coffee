@@ -57,6 +57,7 @@ hGetThreads::exec = (hMessage, context, cb) ->
 
 hGetThreads::mapReduce = (hMessage, context, cb) ->
   hCommand = hMessage.payload
+  filter = hCommand.filter or {}
   status = hCommand.params.status
   actor = hMessage.actor
   map = ->
@@ -77,11 +78,11 @@ hGetThreads::mapReduce = (hMessage, context, cb) ->
       convids = []
       stream = collection.find({}).stream()
       stream.on "data", (elem) =>
-        convids.push elem._id  if elem.value.status is status and hFilter.checkFilterValidity(elem, hCommand.filter, {actor:context.actor}).result
+        convids.push elem._id  if elem.value.status is status and hFilter.checkFilterValidity(elem, filter, {actor:context.actor}).result
 
       stream.on "close", =>
         collection.drop()
-        @filterMessages actor, convids, context, hCommand.filter, cb
+        @filterMessages actor, convids, context, filter, cb
 
     else
       cb hResultStatus.TECH_ERROR, JSON.stringify(err)
@@ -90,6 +91,7 @@ hGetThreads::mapReduce = (hMessage, context, cb) ->
 
 hGetThreads::linear = (hMessage, context, cb) ->
   hCommand = hMessage.payload
+  filter = hCommand.filter or {}
   status = hCommand.params.status
   actor = hMessage.actor
 
@@ -105,7 +107,7 @@ hGetThreads::linear = (hMessage, context, cb) ->
     convids = []
     for convid of foundElements
       convids.push convid  if foundElements[convid].payload.status is status
-    @filterMessages actor, convids, context, hCommand.filter, cb
+    @filterMessages actor, convids, context, filter, cb
 
 
 hGetThreads::filterMessages = (actor, convids, context, filter, cb) ->

@@ -54,6 +54,7 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
   hCommand = hMessage.payload
   params = hCommand.params
   actor = hMessage.actor
+  filter = hCommand.filter or {}
 
   #Test for missing actor
   unless actor
@@ -76,7 +77,7 @@ hGetLastMessages::exec = (hMessage, context, cb) ->
       hMessages.actor = localhMessage._id
       delete localhMessage._id
 
-      if localhMessage and hFilter.checkFilterValidity(localhMessage, hCommand.filter, {actor:context.actor}).result
+      if localhMessage and hFilter.checkFilterValidity(localhMessage, filter, {actor:context.actor}).result
         hMessages.push localhMessage
         stream.destroy()  if --quant is 0
 

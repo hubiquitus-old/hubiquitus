@@ -39,15 +39,20 @@ sudo make install
 
 ###Installation
 
+If you just want to use Hubiquitus without modigy it, you are ready.
+
+If you want join us and work in Hubiquitus, you can do :
+
 ```
-$ npm install git://github.com/hubiquitus/hubiquitus.git
+$ git clone git://github.com/hubiquitus/hubiquitus.git
 ```
 
 ## How to use
 
-* See our [Getting Start](https://github.com/hubiquitus/hubiquitus/tree/master/docs/GettingStart) > (Coming Soon)
+* See our [Getting Start](https://github.com/hubiquitus/hubiquitus/tree/master/docs/GettingStart)
 * See Hubiquitus [Data structure](https://github.com/hubiquitus/hubiquitus/tree/master/docs/DataStructure)
-* See the details about our [Actors](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors/hActor) > (Coming Soon)
+* See the details about our [Actors](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors) > (Coming Soon)
+* See the details about our [Adapters](https://github.com/hubiquitus/hubiquitus/tree/master/docs/adapters) > (Coming Soon)
 
 This server needs a hAPI counterpart (ported to different languages),
 for example [hubiquitus4js](https://github.com/hubiquitus/hubiquitus4js).

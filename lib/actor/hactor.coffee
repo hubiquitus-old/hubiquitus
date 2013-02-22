@@ -493,19 +493,20 @@ class Actor extends EventEmitter
     _.invoke @inboundAdapters, "start"
     _.invoke @outboundAdapters, "start"
     @setStatus STATUS_STARTED
-    @initialize()
 
-  initialize: (done) ->
     for adapterProps in @channelToSubscribe
       @subscribe adapterProps.channel, adapterProps.quickFilter, (status, result) =>
         unless status is codes.hResultStatus.OK
           @log "debug", "Subscription to #{adapterProps.channel} failed cause #{result}"
           errorID = UUID.generate()
-          @h_raiseError(errorID, "Subscription to #{adapterProps.channel} failed")
+          @raiseError(errorID, "Subscription to #{adapterProps.channel} failed")
           @h_autoSubscribe(adapterProps, 500, errorID)
-    @setStatus STATUS_READY
-    if done and typeof done is "function"
-      done()
+
+    @initialize () =>
+      @setStatus STATUS_READY
+
+  initialize: (done) ->
+    done()
 
   ###*
     Function that stops the actor, including its children and adapters
@@ -542,16 +543,16 @@ class Actor extends EventEmitter
             delay *= 2
           else
             delay = 60000
-          @h_autoSubscribe(adapterProps, delay)
+          @h_autoSubscribe(adapterProps, delay, errorID)
         else
-          @h_popError(errorID)
+          @closeError(errorID)
     , delay)
 
-  h_raiseError: (id, message) ->
+  raiseError: (id, message) ->
     @setStatus STATUS_ERROR
     @error[id] = message
 
-  h_popError: (id) ->
+  closeError: (id) ->
     delete @error[id]
     if Object.keys(@error).length is 0
       @setStatus STATUS_READY

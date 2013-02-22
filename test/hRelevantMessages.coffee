@@ -53,8 +53,11 @@ describe "hRelevantMessages", ->
     }
     hActor = actorModule.newActor(topology)
     hActor.setStatus "starting"
-    hActor.initialize () ->
-      done()
+    hActor.initialize = (ready) =>
+      hActor.h_connectToDatabase hActor.properties.db, () =>
+        ready()
+        done()
+    hActor.h_start()
 
   before () ->
     topology = {

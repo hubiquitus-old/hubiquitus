@@ -106,7 +106,11 @@ class Actor extends EventEmitter
     @touchDelay = 60000
 
     # Initializing attributs
-    @properties = topology.properties or {}
+    @sharedProperties = topology.sharedProperties or {}
+    # Deep copy JSON object (value only, no reference)
+    @properties = JSON.parse(JSON.stringify(@sharedProperties)) or {}
+    for prop of topology.properties
+      @properties[prop] = topology.properties[prop]
     @status = null
     @children = []
     @trackers = []
@@ -354,23 +358,29 @@ class Actor extends EventEmitter
       hMessage.msgid = hMessage.msgid or @makeMsgId()
     hMessage.sent = new Date().getTime()
 
-  ###*
+  ###
     Method allowing that creates and start an actor as a child of this actor
     @classname {string} the
     @method {string} the method to use
     @properties {object} the properties of the child actor to create
   ###
-  createChild: (classname, method, properties, cb) ->
+  createChild: (classname, method, topology, cb) ->
 
     unless _.isString(classname) then throw new Error "'classname' parameter must be a string"
     unless _.isString(method) then throw new Error "'method' parameter must be a string"
 
-    unless properties.trackers then properties.trackers = @trackers
-    unless properties.log then properties.log = @log_properties
+    childSharedProps = {}
+    for prop of topology.sharedProperties
+      childSharedProps[prop] = topology.sharedProperties[prop]
+    topology.sharedProperties = @sharedProperties
+    for prop of childSharedProps
+      topology.sharedProperties[prop] = childSharedProps[prop]
+    unless topology.trackers then topology.trackers = @trackers
+    unless topology.log then topology.log = @log_properties
 
     # prefixing actor's id automatically
     unless classname is "hchannel"
-      properties.actor = "#{properties.actor}/#{UUID.generate()}"
+      topology.actor = "#{topology.actor}/#{UUID.generate()}"
 
     if H_ACTORS[classname]
       classname = "#{__dirname}/#{classname}"
@@ -378,28 +388,28 @@ class Actor extends EventEmitter
     switch method
       when "inproc"
         actorModule = require "#{classname}"
-        childRef = actorModule.newActor(properties)
-        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
+        childRef = actorModule.newActor(topology)
+        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: topology.actor , ref: childRef)
         childRef.outboundAdapters.push adapters.adapter(method, owner: childRef, targetActorAid: @actor , ref: @)
         childRef.parent = @
         # Starting the child
-        @send @buildSignal(properties.actor, "start", {})
+        @send @buildSignal(topology.actor, "start", {})
 
       when "fork"
-        childRef = forker.fork __dirname+"/childlauncher", [classname , JSON.stringify(properties)]
-        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: properties.actor , ref: childRef)
+        childRef = forker.fork __dirname+"/childlauncher", [classname , JSON.stringify(topology)]
+        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: topology.actor , ref: childRef)
         childRef.on "message", (msg) =>
           if msg.state is 'ready'
-            @send @buildSignal(properties.actor, "start", {})
+            @send @buildSignal(topology.actor, "start", {})
       else
         throw new Error "Invalid method"
 
     if cb
       cb childRef
     # adding aid to referenced children
-    @children.push properties.actor
+    @children.push topology.actor
 
-    properties.actor
+    topology.actor
 
   ###*
     Method called by constructor to initializing logger
@@ -447,6 +457,8 @@ class Actor extends EventEmitter
   ###
   initChildren: (children)->
     _.forEach children, (childProps) =>
+      unless childProps.method
+        childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps
 
   ###*

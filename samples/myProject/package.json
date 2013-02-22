@@ -1,0 +1,10 @@
+{
+    "name": "myProject",
+    "description": "My wonderful project",
+    "version": "1.0.0",
+    "dependencies": {
+        "hubiquitus": ">=0.5.10",
+        "myActor": ">=1.0.0",
+        "myActor2": ">=1.0.0"
+    }
+}

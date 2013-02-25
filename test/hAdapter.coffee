@@ -79,25 +79,29 @@ describe "hAdapter", ->
           listenOn: "tcp://127.0.0.1:1221",
           broadcastOn: "tcp://127.0.0.1:2998",
           db:{
-            dbName: "test",
-            dbCollection: config.logins[1].urn
-          }
+            host: "localhost",
+            port: 27017,
+            name: "test"
+          },
+          collection: config.logins[1].urn
         }
       }
       hActor = actorModuleChannel.newActor(topology)
       hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
 
       topology = {
-        actor: config.logins[1].urn,
+        actor: config.logins[3].urn,
         type: "hchannel",
         properties: {
           subscribers:[config.logins[1].urn, config.logins[2].urn],
           listenOn: "tcp://127.0.0.1:2112",
           broadcastOn: "tcp://127.0.0.1:2998",
           db:{
-            dbName: "test",
-            dbCollection: config.logins[1].urn
-          }
+            host: "localhost",
+            port: 27017,
+            name: "test"
+          },
+          collection: config.logins[3].urn
         }
       }
       hActor2 = actorModuleChannel.newActor(topology)

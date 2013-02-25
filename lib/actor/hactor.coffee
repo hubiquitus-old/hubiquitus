@@ -57,15 +57,14 @@ class Actor extends EventEmitter
   STATUS_ERROR = "error"
 
   # Native Actors provided by hubiquitus. If forked they will be used
-  H_ACTORS = {
-  hauth: true,
-  hchannel: true,
-  hdispatcher: true,
-  hgateway: true,
-  hsession: true,
-  htracker: true,
-  hactor: true
-  }
+  H_ACTORS =
+    hauth: true
+    hchannel: true
+    hdispatcher: true
+    hgateway: true
+    hsession: true
+    htracker: true
+    hactor: true
 
   # @property {object} log properties
   log_properties: undefined
@@ -80,17 +79,17 @@ class Actor extends EventEmitter
   # @property {object}
   filter: undefined
   # @property {object}
-  msgToBeAnswered: {}
+  msgToBeAnswered: undefined
   # @property {object}
-  timerOutAdapter: {}
+  timerOutAdapter: undefined
   # @property {object}
-  error: {}
+  error: undefined
   # @property {number}
   timerTouch: undefined
   # @property {Actor}
   parent: undefined
   # @property {number}
-  touchDelay: 60000
+  touchDelay: undefined
   # @property {object}
   sharedProperties: undefined
   # @property {object}
@@ -140,8 +139,15 @@ class Actor extends EventEmitter
           # TODO arreter l'acteur
           @log "debug", "Invalid filter stopping actor"
 
+    # Initializing class variables
+    @msgToBeAnswered = {}
+    @timerOutAdapter = {}
+    @error = {}
+    @touchDelay = 60000
+
     # Initializing attributs
     @properties = topology.properties or {}
+    @status = null
     @children = []
     @trackers = []
     @inboundAdapters = []

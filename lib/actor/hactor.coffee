@@ -84,7 +84,7 @@ class Actor extends EventEmitter
   timerOutAdapter: undefined
   # @property {object}
   error: undefined
-  # @property {number}
+  # @property {object}
   timerTouch: undefined
   # @property {Actor}
   parent: undefined
@@ -117,11 +117,11 @@ class Actor extends EventEmitter
     # init logger
     if topology.log
       @log_properties = topology.log
-      @initLogger(topology.log.logLevel or "info", topology.log.logFile)
+      @h_initLogger(topology.log.logLevel or "info", topology.log.logFile)
     else
       @log_properties =
         logLevel: "info"
-      @initLogger("info")
+      @h_initLogger("info")
 
     # setting up instance attributes
     if(validator.validateFullURN(topology.actor))
@@ -147,7 +147,7 @@ class Actor extends EventEmitter
 
     # Initializing attributs
     @properties = topology.properties or {}
-    @status = null
+    @status = STATUS_STOPPED
     @children = []
     @trackers = []
     @inboundAdapters = []
@@ -168,9 +168,9 @@ class Actor extends EventEmitter
     @on "message", (hMessage) =>
       #complete msgid
       if hMessage.msgid
-        hMessage.msgid = hMessage.msgid + "#" + @makeMsgId()
+        hMessage.msgid = hMessage.msgid + "#" + @h_makeMsgId()
       else
-        @makeMsgId()
+        hMessage.msgid = @h_makeMsgId()
       ref = undefined
       if hMessage and hMessage.ref and typeof hMessage.ref is "string"
         ref = hMessage.ref.split("#")[0]
@@ -299,7 +299,7 @@ class Actor extends EventEmitter
       # if don't have cached adapter, send lookup demand to the tracker
     else
       if @trackers[0]
-        msg = @buildSignal(@trackers[0].trackerId, "peer-search", {actor: hMessage.actor}, {timeout: 5000})
+        msg = @h_buildSignal(@trackers[0].trackerId, "peer-search", {actor: hMessage.actor}, {timeout: 5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
             # Subscribe to trackChannel to be alerting when actor disconnect
@@ -393,9 +393,9 @@ class Actor extends EventEmitter
     #Complete hMessage
     hMessage.publisher = @actor
     if cb
-      hMessage.msgid = @makeMsgId()
+      hMessage.msgid = @h_makeMsgId()
     else
-      hMessage.msgid = hMessage.msgid or @makeMsgId()
+      hMessage.msgid = hMessage.msgid or @h_makeMsgId()
     hMessage.sent = new Date().getTime()
 
   #
@@ -426,14 +426,14 @@ class Actor extends EventEmitter
         childRef.outboundAdapters.push adapters.adapter(method, owner: childRef, targetActorAid: @actor, ref: @)
         childRef.parent = @
         # Starting the child
-        @send @buildSignal(topology.actor, "start", {})
+        @send @h_buildSignal(topology.actor, "start", {})
 
       when "fork"
         childRef = forker.fork __dirname + "/childlauncher", [classname , JSON.stringify(topology)]
         @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: topology.actor, ref: childRef)
         childRef.on "message", (msg) =>
           if msg.state is 'ready'
-            @send @buildSignal(topology.actor, "start", {})
+            @send @h_buildSignal(topology.actor, "start", {})
       else
         throw new Error "Invalid method"
 
@@ -446,10 +446,11 @@ class Actor extends EventEmitter
 
   #
   # Method called by constructor to initializing logger
+  # @private
   # @param {string} logLevel
   # @param {string} logFile
   #
-  initLogger: (logLevel, logFile) ->
+  h_initLogger: (logLevel, logFile) ->
     logLevels =
       debug: 0,
       info: 1,
@@ -507,13 +508,14 @@ class Actor extends EventEmitter
         if @status isnt STATUS_STOPPED
           for inbound in @inboundAdapters
             inboundAdapters.push {type: inbound.type, url: inbound.url}
-        @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType: @type, peerId: validator.getBareURN(@actor), peerStatus: @status, peerInbox: inboundAdapters})
+        @send @h_buildSignal(trackerProps.trackerId, "peer-info", {peerType: @type, peerId: validator.getBareURN(@actor), peerStatus: @status, peerInbox: inboundAdapters})
 
   #
   # Method called when the actor status change
+  # @private
   # @param {string} status New status to apply
   #
-  setStatus: (status) ->
+  h_setStatus: (status) ->
     unless status is STATUS_READY and Object.keys(@error).length > 0
       # alter the state
       @status = status
@@ -536,10 +538,10 @@ class Actor extends EventEmitter
   # @private
   #
   h_start: ()->
-    @setStatus STATUS_STARTING
+    @h_setStatus STATUS_STARTING
     _.invoke @inboundAdapters, "start"
     _.invoke @outboundAdapters, "start"
-    @setStatus STATUS_STARTED
+    @h_setStatus STATUS_STARTED
 
     for adapterProps in @channelToSubscribe
       @subscribe adapterProps.channel, adapterProps.quickFilter, (status, result) =>
@@ -550,7 +552,7 @@ class Actor extends EventEmitter
           @h_autoSubscribe(adapterProps, 500, errorID)
 
     @initialize () =>
-      @setStatus STATUS_READY
+      @h_setStatus STATUS_READY
 
   #
   # @param {function} done
@@ -563,7 +565,7 @@ class Actor extends EventEmitter
   # @private
   #
   h_tearDown: () ->
-    @setStatus STATUS_STOPPED
+    @h_setStatus STATUS_STOPPED
     @preStop ( =>
       @h_stop ( =>
         @postStop ( =>
@@ -578,7 +580,7 @@ class Actor extends EventEmitter
   h_stop: (done) ->
     # Stop children first
     _.forEach @children, (childAid) =>
-      @send @buildSignal(childAid, "stop", {})
+      @send @h_buildSignal(childAid, "stop", {})
     # Stop adapters second
     _.invoke @inboundAdapters, "stop"
     _.invoke @outboundAdapters, "stop"
@@ -618,7 +620,7 @@ class Actor extends EventEmitter
   # @param {string} message error's message
   #
   raiseError: (id, message) ->
-    @setStatus STATUS_ERROR
+    @h_setStatus STATUS_ERROR
     @error[id] = message
 
   #
@@ -628,7 +630,7 @@ class Actor extends EventEmitter
   closeError: (id) ->
     delete @error[id]
     if Object.keys(@error).length is 0
-      @setStatus STATUS_READY
+      @h_setStatus STATUS_READY
 
 
   #
@@ -819,7 +821,7 @@ class Actor extends EventEmitter
     hMessage.timeout = options.timeout  if options.timeout
     hMessage
 
-  buildSignal: (actor, name, params, options) ->
+  h_buildSignal: (actor, name, params, options) ->
     params = params or {}
     options = options or {}
     options.persistent = options.persistent or false
@@ -880,8 +882,9 @@ class Actor extends EventEmitter
 
   #
   # Create a unique message id
+  # @private
   #
-  makeMsgId: () ->
+  h_makeMsgId: () ->
     msgId = UUID.generate()
     msgId
 

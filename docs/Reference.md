@@ -16,7 +16,7 @@ Hubiquitus see apps like small brains, clusters of neurons bound together throug
 
 How to better explain why latency is bad than Geek & Poke does ?
 
-![simply explained - latency](https://github.com/hubiquitus/hubiquitus/raw/master/images/geeknpoke-simplyexplained-latency.jpg)
+![simply explained - latency](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/geeknpoke-simplyexplained-latency.jpg)
 
 ## Framework overview
 
@@ -50,7 +50,7 @@ The fundamental properties of an actor are:
 
 The following figure summarizes these principles:
 
-![actor model](https://github.com/hubiquitus/hubiquitus/raw/master/images/ActorModel.png)
+![actor model](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/ActorModel.png)
 
 #### A NodeJS-based lighweight container
 
@@ -150,7 +150,7 @@ You'll always need at least two adapters to enable a messaging communication lin
 * another adapter is used by the message receiver to received the message from the network
 
 The following figure explains this principle:
-![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/images/Adapters.png)
+![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/Adapters.png)
 
 #### Flow processing pipeline
 
@@ -367,7 +367,7 @@ The structure of Hubiquitus apps take the form of a "russian doll" with four nes
 
 The following figure summarize this topology:
 
-![hubiquitus exec model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/HubiquitusExecModel.png)
+![hubiquitus exec model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/docs/images/HubiquitusExecModel.png)
 
 #### The root and the forest
 

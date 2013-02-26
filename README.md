@@ -8,9 +8,9 @@ Hubiquitus is an ubiquitous framework for build context-aware live apps.
 
 The whole documentation of the Hubiquitus project is available in the `docs` subdirectory of this repo.
 
-For a short short intro of what Hubiquitus is and why we build it, maybe you should [read this first](/hubiquitus/hubiquitus/blob/master/docs/Introduction.md).
+For a short short intro of what Hubiquitus is and why we build it, maybe you should [read this first](/docs/Introduction.md).
 
-If you have some time and motivation, you should then [go deep into Hubiquitus](/hubiquitus/hubiquitus/blob/master/docs/Reference.md).
+If you have some time and motivation, you should then [go deep into Hubiquitus](/docs/Reference.md).
 
 ## Code
 

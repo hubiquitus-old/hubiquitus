@@ -5,10 +5,4 @@ node_js:
 services: mongodb  
 before_install:
  - sudo apt-get update -qq
- - yes | sudo apt-get install mongodb -y -qq
- - sudo apt-get install -qq coffeescript
- - sudo add-apt-repository ppa:travis-ci/zero-mq -y
- - sudo apt-get update -qq
- - sudo apt-get install libzmq3 --reinstall
- - sudo service mongodb start
- - sleep 3
+ - sudo npm install -g coffee-script

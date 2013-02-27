@@ -34,6 +34,7 @@ adapter = require "./adapters/hAdapters"
 validator = require "./validator"
 filter = require "./hFilter"
 codes = require "./codes"
+factory = require "./hfactory"
 
 exports.Actor = Actor
 exports.Auth = Auth
@@ -46,3 +47,15 @@ exports.adapter = adapter
 exports.validator = validator
 exports.filter = filter
 exports.codes = codes
+
+exports.withActor = (type, actor) ->
+  factory.withActor type, actor
+  module.exports
+
+exports.start = (topology) ->
+  engine = factory.newActor topology.type, topology
+  engine.on "started", ->
+  process.on "SIGINT", ->
+    engine.h_tearDown()
+    process.exit()
+  engine.h_start()

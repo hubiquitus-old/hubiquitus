@@ -45,8 +45,10 @@ describe "hTracker", ->
             broadcastOn: "tcp://127.0.0.1:2998",
             subscribers: [],
             db:
-              dbName: "test",
-              dbCollection: "trackChannel"
+              host: "localhost",
+              port: 27017,
+              name: "test"
+            collection: "trackChannel"
 
     hActor = actorModule.newActor(topology)
 

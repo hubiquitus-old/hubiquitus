@@ -41,7 +41,7 @@ describe "hHttpAdapter", ->
         adapters: [ { type: "http_in", url: "http://127.0.0.1:8888" } ]
       }
       hActor = actorModule.newActor(topology)
-      hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
+      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
     after () ->
       hActor.h_tearDown()
@@ -92,7 +92,7 @@ describe "hHttpAdapter", ->
         adapters: [ {type: "http_out", url: "127.0.0.1", targetActorAid :"http_out_box" ,path: "/" ,port: 8989 } ]
       }
       hActor = actorModule.newActor(topology)
-      hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
+      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
     after () ->
       hActor.h_tearDown()

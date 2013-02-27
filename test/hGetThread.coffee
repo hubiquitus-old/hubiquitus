@@ -49,7 +49,7 @@ describe "hGetThread", ->
           port: 27017,
           name: "test"
         },
-        collection: existingCHID
+        collection: existingCHID.replace(/[-.]/g, "")
       }
     }
     hActor = actorModule.newActor(topology)

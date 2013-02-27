@@ -49,7 +49,7 @@ describe "hGetThreads", ->
           port: 27017,
           name: "test"
         },
-        collection: activeChannel
+        collection: activeChannel.replace(/[-.]/g, "")
       }
     }
     hActor = actorModule.newActor(topology)

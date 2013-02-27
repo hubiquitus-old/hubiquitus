@@ -83,7 +83,7 @@ describe "hAdapter", ->
             port: 27017,
             name: "test"
           },
-          collection: config.logins[1].urn
+          collection: (config.logins[1].urn).replace(/[-.]/g, "")
         }
       }
       hActor = actorModuleChannel.newActor(topology)
@@ -101,7 +101,7 @@ describe "hAdapter", ->
             port: 27017,
             name: "test"
           },
-          collection: config.logins[3].urn
+          collection: (config.logins[3].urn).replace(/[-.]/g, "")
         }
       }
       hActor2 = actorModuleChannel.newActor(topology)

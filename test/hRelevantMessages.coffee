@@ -48,7 +48,7 @@ describe "hRelevantMessages", ->
           port: 27017,
           name: "test"
         },
-        collection: activeChan
+        collection: activeChan.replace(/[-.]/g, "")
       }
     }
     hActor = actorModule.newActor(topology)

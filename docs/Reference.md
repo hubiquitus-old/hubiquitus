@@ -4,19 +4,41 @@
 
 This document describes the internals of the Hubiquitus framework.
 
-## Philosophy
+## Hubiquitus at a glance
 
-> key concepts: decentralized topology, like the internet ; no-latency ; feedback loops
+Hubiquitus aims to provide a simple way to develop distributed applications as networks of *smart agents*, hosted on various software platforms and user devices, that pass messages to each other to communicate.
 
-### Apps are small brains
+### Actors
 
-Hubiquitus see apps like small brains, clusters of neurons bound together through a complex  network of synapses, the topology of which is highly elastic. Nervous systems are so able to reconfigure themselves in adding new neurons, removing others and changing their connections, thus allowing a great ability to adapt to unpredictable situations.
+The *smart agents* of Hubiquitus are indeed *actors*, as the [Actor Model](http://en.wikipedia.org/wiki/Actor_model) paradigm define them:
 
-### Latency is the enemy
+> **An actor is a form of lightweight computational entity that process sequentially incoming messages it receives**
 
-How to better explain why latency is bad than Geek & Poke does ?
+The fundamental properties of an actor are:
 
-![simply explained - latency](https://github.com/hubiquitus/hubiquitus/raw/master/images/geeknpoke-simplyexplained-latency.jpg)
+* each actor has an **inbox** for incoming messages, a kind of FIFO queue into which other actors can post messages to be processed,
+* each actor has its proper **behavior** that is triggered sequentially for each message received in its inbox,
+* each actor maintains its own **state** that it doesn't share with anyone else ("share nothing" principle); this state can be modified as the actor processes incoming messages.
+* each actor can itself send **messages** to other actors; posting message is asynchronous so that it never blocks the process in which the actor is running,
+* each actor can create **children** to which it will then be able to post messages as to any other actor.
+
+The following figure summarizes these principles:
+
+![actor model](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/ActorModel.png)
+
+### Adapters
+
+Actors send messages to each other using *adapters* ; both the message emitter and the message receiver need an adapter to enable the communication link:
+
+* an adapter is used by the message emitter to send the message over the network
+* another adapter is used by the message receiver to received the message from the network
+
+The figure below explains this principle:
+![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/Adapters.png)
+
+### Channels
+
+> TO BE DESCRIBED
 
 ## Framework overview
 
@@ -31,26 +53,6 @@ The Hubiquitus framework is made of a set of complementary building blocks:
 First of all, Hubiquitus is an application container.
 
 ### Technical design
-
-#### Introducing actors
-
-> Actors are the *neurons* of our apps.
-
-The Hubiquitus container design follows the "everything is an actor" philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model) paradigm. 
- 
-> **An actor is a form of lightweight computational entity that process sequentially incoming messages it receives**
-
-The fundamental properties of an actor are:
-
-* each actor has an **inbox** for incoming messages, a kind of FIFO queue into which other actors can post messages to be processed,
-* each actor has its proper **behavior** that is triggered sequentially for each message received in its inbox,
-* each actor maintains its own **state** that it doesn't share with anyone else ("share nothing" principle); this state can be modified as the actor processes incoming messages.
-* each actor can itself send **messages** to other actors; posting message is asynchronous so that it never blocks the process in which the actor is running,
-* each actor can create **children** to which it will then be able to post messages as to any other actor.
-
-The following figure summarizes these principles:
-
-![actor model](https://github.com/hubiquitus/hubiquitus/raw/master/images/ActorModel.png)
 
 #### A NodeJS-based lighweight container
 
@@ -138,11 +140,11 @@ The hubiquitus middleware also provides advanced security features:
 * **authentication** : each message emitter can be properly authenticated by the middleware so actors can trust the messages they receive
 * **authorization** : the middleware should allow protecting actors from receiving messages from unauthorized emitters
 * **encryption** : the middleware should guarantee the confidentiality of the communications by using wire-level encryption
-* **pattern-matching** : the middleware allows filtering messages that match a given pattern
+* **pattern-matching** : the middleware allows filtering ingoing and outgoing messages that match a given pattern
 
 ### Adapters
 
-**Adapters are the Hubiquitus components that provide the Hubiquitus middleware features**.
+**The Hubiquitus middleware features are implemented by a family of components we call 'adapters'**.
 
 You'll always need at least two adapters to enable a messaging communication link:
 
@@ -150,7 +152,7 @@ You'll always need at least two adapters to enable a messaging communication lin
 * another adapter is used by the message receiver to received the message from the network
 
 The following figure explains this principle:
-![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/images/Adapters.png)
+![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/Adapters.png)
 
 #### Flow processing pipeline
 
@@ -367,7 +369,7 @@ The structure of Hubiquitus apps take the form of a "russian doll" with four nes
 
 The following figure summarize this topology:
 
-![hubiquitus exec model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/HubiquitusExecModel.png)
+![hubiquitus exec model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/docs/images/HubiquitusExecModel.png)
 
 #### The root and the forest
 

@@ -2,7 +2,4 @@ language: node_js
 node_js:
   - 0.8
 
-services: mongodb  
-before_install:
- - sudo apt-get update -qq
- - sudo npm install -g coffee-script
+services: mongodb 

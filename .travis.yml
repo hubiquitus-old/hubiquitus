@@ -11,6 +11,7 @@ before_install:
   - sudo apt-get install uuid-dev
   - git clone --depth 1 $ZMQ zmqlib
   - cd zmqlib
+  - ./autogen.sh
   - ./configure
   - make
   - sudo make install

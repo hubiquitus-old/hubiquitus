@@ -2,4 +2,17 @@ language: node_js
 node_js:
   - 0.8
 
-services: mongodb 
+services: mongodb
+
+env:
+  - ZMQ="git://github.com/zeromq/zeromq3-x.git"
+
+before_install:	
+  - sudo apt-get install uuid-dev
+  - git clone --depth 1 $ZMQ zmqlib
+  - cd zmqlib
+  - ./configure
+ 	- make	
+  - sudo make install
+ 	- sudo /sbin/ldconfig
+  - cd ..

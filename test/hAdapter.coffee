@@ -44,7 +44,7 @@ describe "hAdapter", ->
         adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2112" } ]
       }
       hActor = actorModule.newActor(topology)
-      hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
+      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
       topology = {
         actor: config.logins[3].urn,
@@ -53,7 +53,7 @@ describe "hAdapter", ->
         adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2112" } ]
       }
       hActor2 = actorModule.newActor(topology)
-      hActor2.h_onMessageInternal(hActor2.buildSignal(hActor2.actor, "start", {}))
+      hActor2.h_onMessageInternal(hActor2.h_buildSignal(hActor2.actor, "start", {}))
 
     after () ->
       hActor.h_tearDown()
@@ -83,11 +83,11 @@ describe "hAdapter", ->
             port: 27017,
             name: "test"
           },
-          collection: config.logins[1].urn
+          collection: (config.logins[1].urn).replace(/[-.]/g, "")
         }
       }
       hActor = actorModuleChannel.newActor(topology)
-      hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
+      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
       topology = {
         actor: config.logins[3].urn,
@@ -101,11 +101,11 @@ describe "hAdapter", ->
             port: 27017,
             name: "test"
           },
-          collection: config.logins[3].urn
+          collection: (config.logins[3].urn).replace(/[-.]/g, "")
         }
       }
       hActor2 = actorModuleChannel.newActor(topology)
-      hActor2.h_onMessageInternal(hActor2.buildSignal(hActor2.actor, "start", {}))
+      hActor2.h_onMessageInternal(hActor2.h_buildSignal(hActor2.actor, "start", {}))
 
     after () ->
       hActor.h_tearDown()

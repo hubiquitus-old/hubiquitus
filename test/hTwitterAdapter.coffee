@@ -51,7 +51,7 @@ describe "hTwitterAdapter", ->
         } ]
       }
       hActor = actorModule.newActor(topology)
-      hActor.h_onMessageInternal(hActor.buildSignal(hActor.actor, "start", {}))
+      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
     after () ->
       hActor.h_tearDown()

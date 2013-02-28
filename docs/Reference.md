@@ -55,19 +55,36 @@ The following figure summarizes these principles:
 
 ![actor model](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/ActorModel.png)
 
+### Messages
+
+Actors communicate in an asynchronous manner using **messages**.
+
+A message can be seen as an atomic piece of transferable data composed of two distinct parts:
+
+* a **payload**: a piece of data that is the fundamental purpose of the transmission
+* an **enveloppe**: a piece of related metadata providing information necessary to the proper delivery of the message 
+
+Hubiquitus defines a **standard data structure** for messages so that they can be properly delivered to actors and processed by them.
+
 ### Adapters
 
-**Adapters** are special Hubiquitus components that provide messaging features to actors :
+**Adapters are special Hubiquitus components that provide core messaging features to actors**:
 
-* actors need **inbound adapters** to listen to ingoing messages from the outside world
-* actors need **outbound adapters** to send outgoing messages to the outside world
+* actors need **inbound adapters**, kind of *sockets*, to listen to ingoing messages from the outside world, including actors
+* actors need **outbound adapters**, kind of *plugs* to send outgoing messages to the outside world, including actors
 
-The figure below explains this principle:
+The figure below explains this principle with an actor called 'Sender' sending messages to an actor called 'Recipient':
 ![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/Adapters.png)
 
 ### Channels
 
-> TO BE DESCRIBED
+**Channels are built-in Hubiquitus actors that implement the Publish-Subscribe pattern**.
+
+Publish–Subscribe is a messaging pattern where senders of messages, called publishers, do not program the messages to be sent directly to specific receivers, called subscribers. Instead, published messages are characterized into classes, without knowledge of what, if any, subscribers there may be. Similarly, subscribers express interest in one or more classes, and only receive messages that are of interest, without knowledge of what, if any, publishers there are.
+
+Channels implement those *classes* as shown in the diagram below:
+
+![channels](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/Channels.png)
 
 ## Framework overview
 
@@ -172,16 +189,6 @@ The hubiquitus middleware also provides advanced security features:
 * **pattern-matching** : the middleware allows filtering ingoing and outgoing messages that match a given pattern
 
 ### Adapters
-
-**The Hubiquitus middleware features are implemented by a family of components we call 'adapters'**.
-
-You'll always need at least two adapters to enable a messaging communication link:
-
-* an adapter is used by the message emitter to send the message over the network
-* another adapter is used by the message receiver to received the message from the network
-
-The following figure explains this principle:
-![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/Adapters.png)
 
 #### Flow processing pipeline
 

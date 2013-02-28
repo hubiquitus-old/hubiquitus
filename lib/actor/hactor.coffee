@@ -146,8 +146,12 @@ class Actor extends EventEmitter
     @touchDelay = 60000
 
     # Initializing attributs
-    @properties = topology.properties or {}
     @status = STATUS_STOPPED
+    @sharedProperties = topology.sharedProperties or {}
+    # Deep copy JSON object (value only, no reference)
+    @properties = JSON.parse(JSON.stringify(@sharedProperties)) or {}
+    for prop of topology.properties
+      @properties[prop] = topology.properties[prop]
     @children = []
     @trackers = []
     @inboundAdapters = []
@@ -408,6 +412,13 @@ class Actor extends EventEmitter
     unless _.isString(classname) then throw new Error "'classname' parameter must be a string"
     unless _.isString(method) then throw new Error "'method' parameter must be a string"
 
+    childSharedProps = {}
+    for prop of topology.sharedProperties
+      childSharedProps[prop] = topology.sharedProperties[prop]
+    topology.sharedProperties = @sharedProperties
+    for prop of childSharedProps
+      topology.sharedProperties[prop] = childSharedProps[prop]
+
     unless topology.trackers then topology.trackers = @trackers
     unless topology.log then topology.log = @log_properties
 
@@ -494,6 +505,8 @@ class Actor extends EventEmitter
   #
   initChildren: (children)->
     _.forEach children, (childProps) =>
+      unless childProps.method
+        childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps
 
   #

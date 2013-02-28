@@ -5,15 +5,13 @@
         {
             "actor": "urn:localhost:gateway",
             "type": "hgateway",
-            "method": "inproc",
             "log":{
                 "logLevel":"debug"
             },
             "children": [
             	{
                     "actor": "urn:localhost:auth",
-                    "type": "hauth",
-                    "method": "inproc"
+                    "type": "hauth"
                 }
             ],
             "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:3993" } ],
@@ -26,7 +24,6 @@
         {
             "actor": "urn:localhost:dispatcher",
             "type": "hdispatcher",
-            "method": "inproc",
             "properties": {
                 "workers": { "method": "fork", "type": "hactor", "nb": 2 }
             },
@@ -35,7 +32,6 @@
         {
             "actor": "urn:localhost:channel",
             "type": "hchannel",
-            "method": "inproc",
             "properties": {
                 "listenOn": "tcp://127.0.0.1",
                 "broadcastOn": "tcp://127.0.0.1",
@@ -53,7 +49,6 @@
         "channel": {
             "actor": "urn:localhost:trackChannel",
             "type": "hchannel",
-            "method": "inproc",
             "properties": {
                 "listenOn": "tcp://127.0.0.1",
                 "broadcastOn": "tcp://127.0.0.1",

@@ -4,20 +4,49 @@
 
 This document describes the internals of the Hubiquitus framework.
 
-## Hubiquitus at a glance
+## Introduction
 
-Hubiquitus aims to provide a simple way to develop distributed applications as networks of *smart agents*, hosted on various software platforms and user devices, that pass messages to each other to communicate.
+### The question
+
+The post-PC era has come, marked by the emergence of plenty of digital devices - e-readers, smartphones, tablets, TVs, home weather stations, watches, snowboard goggles, tennis rackets, running shoes, boilers, supply meters, and so on - each of them especially adapted to a specific range of use cases and contexts.
+
+More than screens, such devices now ship with an ever growing list of sensors - accelerometers, gyrometers, compass, microphones, cameras, GPS - that permanently observe their immediate proximity, thus enriching the global context data - time, social network posts, open data updates - with local live measures.
+
+Taking advantage of this new digital space involves new requirements regarding the way we build apps:
+
+* **ubiquity**: we need to deploy our apps to any kind of device, operating system or platform.
+* **awareness**: we need to be able to collect any kind of context data - should it come from local sensors, social networks, open data APIs or any other API providing live context data - and send it to any application that could need it.
+* **immediacy**: context moves quickly so its state should be streamed and processed as fast as possible.
+* **persistence**: we should be able to store the context data so that it could be further queried, processed or even replayed.
+
+### Our answer
+
+Hubiquitus aims to provide a simple way to develop apps that fulfill with these requirements. It is basically an ubiquitous programming model for building context-aware distributed live apps as networks of *smart agents*, deployed to various platforms and devices, that use messages to communicate with each other in near real-time.
+
+![agents network](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/AgentsNetwork.jpg)
+
+The Hubiquitus framework provides the following features:
+
+* **actor-based apps**: the *smart agents* developed using Hubiquitus are basically made of actors, a lightweight form of concurrent computational entities that sequentially process messages from an event-driven receive loop called a Reactor. Each actor makes its own decisions regarding what to do with incoming messages.
+* **message-driven communication**: like humans, Hubiquitus actors are autonomous entities which state is not shared nor synchronized with other actors state. This "share nothing" strategy is enforced by using an asynchronous message-driven communication between actors. Hubiquitus actors can exchange messages through either a point-to-point, a request-reply, a publish-subscribe, a master-worker strategy or a combination of these patterns. Hubiquitus also provides a dynamic content-based message filtering system.
+* **p2p connections**: Hubiquitus adopts a broker-less P2P distribution model in which actors discover and connect each other dynamically at runtime, thus allowing to implement easily resilient and elastic architectures. Peering also provides more direct connections which contribute to reduce communication latency.
+* **fast & lightweight transport**: actors connect each other using various forms of sockets used to transport messages using a very small footprint transport protocol  ; the combination of PGM, TCP and HTML5 Web sockets allows covering most network topologies.
+* **historical data**: the whole messaging history can be transparently logged into various persistent stores.
+* **JavaScript SDK**: the dynamic scripting language of the web may not be the perfect language we all dream about, but it is undoubtedly the most ubiquitous one. It allows developers to code apps that are able to reach practically any device running a JavaScript engine.
+* **bridges to the outside world**: even JavaScript can't run on every platforms, so Hubiquitus provides native bindings for major platforms such as iOS, Android and Windows 8. Hubiquitus also provides a wide range of network adapters allowing to integrate your apps with social networks (Twitter, Google+, …), push notification services (APNS, GCM, …)
+
+## Hubiquitus concepts
 
 ### Actors
 
-The *smart agents* of Hubiquitus are indeed *actors*, as the [Actor Model](http://en.wikipedia.org/wiki/Actor_model) paradigm define them:
+The *smart agents* of Hubiquitus are made of *actors*, as the [Actor Model](http://en.wikipedia.org/wiki/Actor_model) paradigm defines them:
 
 > **An actor is a form of lightweight computational entity that process sequentially incoming messages it receives**
 
 The fundamental properties of an actor are:
 
-* each actor has an **inbox** for incoming messages, a kind of FIFO queue into which other actors can post messages to be processed,
-* each actor has its proper **behavior** that is triggered sequentially for each message received in its inbox,
+* each actor has an **inbox**, a kind of FIFO queue into which other actors and programs can post messages to be processed,
+* each actor implements its own **behavior**, a function that is triggered sequentially for each message received in its inbox,
 * each actor maintains its own **state** that it doesn't share with anyone else ("share nothing" principle); this state can be modified as the actor processes incoming messages.
 * each actor can itself send **messages** to other actors; posting message is asynchronous so that it never blocks the process in which the actor is running,
 * each actor can create **children** to which it will then be able to post messages as to any other actor.
@@ -28,10 +57,10 @@ The following figure summarizes these principles:
 
 ### Adapters
 
-Actors send messages to each other using *adapters* ; both the message emitter and the message receiver need an adapter to enable the communication link:
+**Adapters** are special Hubiquitus components that provide messaging features to actors :
 
-* an adapter is used by the message emitter to send the message over the network
-* another adapter is used by the message receiver to received the message from the network
+* actors need **inbound adapters** to listen to ingoing messages from the outside world
+* actors need **outbound adapters** to send outgoing messages to the outside world
 
 The figure below explains this principle:
 ![adapters](https://github.com/hubiquitus/hubiquitus/raw/master/docs/images/Adapters.png)

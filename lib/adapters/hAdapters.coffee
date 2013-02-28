@@ -149,8 +149,10 @@ class ChannelInboundAdapter extends InboundAdapter
     @sock = zmq.socket "sub"
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
-      hMessage = data.toString().replace(/^.*\$/, "")
-      hMessage = JSON.parse(hMessage)
+      splitString = data.toString().replace(/^[^{]*\$?{/, "{")
+      splitData = new Buffer(splitString)
+      cleanData = data.slice(data.length - splitData.length, data.length)
+      hMessage = JSON.parse(cleanData)
       hMessage.actor = @owner.actor
       @owner.emit "message", hMessage
 

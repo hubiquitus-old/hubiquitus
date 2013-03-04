@@ -36,7 +36,7 @@ adapters = require "./../adapters/hAdapters"
 validator = require "./../validator"
 codes = require "./../codes.coffee"
 hFilter = require "./../hFilter"
-
+factory = require "../hfactory"
 
 _.mixin toDict: (arr, key) ->
   throw new Error('_.toDict takes an Array') unless _.isArray arr
@@ -416,12 +416,11 @@ class Actor extends EventEmitter
       topology.actor = "#{topology.actor}/#{UUID.generate()}"
 
     if H_ACTORS[classname]
-      classname = "#{__dirname}/#{classname}"
+      path = "#{__dirname}/#{classname}"
 
     switch method
       when "inproc"
-        actorModule = require "#{classname}"
-        childRef = actorModule.newActor(topology)
+        childRef = factory.newActor classname, topology
         @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: topology.actor, ref: childRef)
         childRef.outboundAdapters.push adapters.adapter(method, owner: childRef, targetActorAid: @actor, ref: @)
         childRef.parent = @
@@ -429,7 +428,7 @@ class Actor extends EventEmitter
         @send @h_buildSignal(topology.actor, "start", {})
 
       when "fork"
-        childRef = forker.fork __dirname + "/childlauncher", [classname , JSON.stringify(topology)]
+        childRef = forker.fork __dirname + "/childlauncher", [path , JSON.stringify(topology)]
         @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: topology.actor, ref: childRef)
         childRef.on "message", (msg) =>
           if msg.state is 'ready'

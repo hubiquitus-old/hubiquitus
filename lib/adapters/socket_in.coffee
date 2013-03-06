@@ -22,22 +22,47 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+{InboundAdapter} = require "./hadapter"
+zmq = require "zmq"
 
-main = ->
 
-  args = process.argv.slice(2)
+class SocketInboundAdapter extends InboundAdapter
 
-  actorProps = JSON.parse args[1]
-  actorModule = require "#{args[0]}"
+  # @property {object} zeromq socket
+  sock: undefined
 
-  actor = actorModule.newActor(actorProps);
+  constructor: (properties) ->
+    super
+    @formatUrl properties.url
+    @type = "socket_in"
+    @initSocket()
 
-  # Acknowledging parent process that the job has been done
-  process.send( {state: "ready"} )
+  initSocket: () ->
+    @sock = zmq.socket "pull"
+    @sock.identity = "SocketIA_of_#{@owner.actor}"
+    @sock.on "message", (data) =>
+      @owner.emit "message", JSON.parse(data)
 
-  # Transmitting any message from parent actor to child actor
-  process.on "message" , (msg) ->
-    #console.log("Child process got message",msg)
-    actor.emit "message", msg
+  start: ->
+    while @started is false
+      try
+        @sock.bindSync @url
+        @owner.log "debug", "#{@sock.identity} listening on #{@url}"
+        super
+      catch err
+        if err.message is "Address already in use"
+          @sock = null
+          @initSocket()
+          @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
+          @owner.log "error", 'Change listening port to avoid collision :',err
 
-main()
+  stop: ->
+    if @started
+      if @sock._zmq.state is 0
+        @sock.close()
+      super
+
+
+exports.SocketInboundAdapter = SocketInboundAdapter
+exports.newAdapter = (properties) ->
+  new SocketInboundAdapter properties

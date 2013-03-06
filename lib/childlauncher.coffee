@@ -22,42 +22,24 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-
-fs = require "fs"
-adapters = require "./adapters/hAdapters"
-{Actor} = require "./actor/hactor"
-os = require "os"
-_ = require "underscore"
-
-createActor = (properties) ->
-  actorModule = require "#{__dirname}/actor/#{properties.type}"
-  actor = actorModule.newActor(properties)
+require "coffee-script"
+factory = require "./hfactory"
 
 main = ->
 
-  topologyPath = process.argv[2] or "samples/sample1.json"
-  hTopology = `undefined`
-  try
-    hTopology = eval("(" + fs.readFileSync(topologyPath, "utf8") + ")")
-  catch err
-    console.log "erreur : ",err
-  unless hTopology
-    console.log "No config file or malformated config file. Can not start actor"
-    process.exit 1
+  console.log process.argv
 
+  args = process.argv.slice(2)
 
-  mockActor = { actor: "process"+process.pid }
+  actorProps = JSON.parse args[1]
+  actor = factory.newActor args[0], actorProps
 
-  engine = createActor(hTopology)
+  # Acknowledging parent process that the job has been done
+  process.send( {state: "ready"} )
 
-  engine.on "started", ->
-    _.forEach ["SIGINT"], (signal) ->
-      process.on signal, ->
-        engine.h_tearDown()
-        process.exit()
-     #   clearInterval interval
-
-  # starting engine
-  engine.h_start()
+  # Transmitting any message from parent actor to child actor
+  process.on "message" , (msg) ->
+    #console.log("Child process got message",msg)
+    actor.emit "message", msg
 
 main()

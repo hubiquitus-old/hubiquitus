@@ -1,4 +1,4 @@
-{OutboundAdapter} = require("hubiquitus").adapter
+{OutboundAdapter} = require "hubiquitus"
 
 class myInboundAdapter extends OutboundAdapter
 

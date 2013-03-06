@@ -24,10 +24,10 @@
 #
 
 {Actor} = require "./hactor"
-adapters = require "./../adapters/hAdapters"
+factory = require "../hfactory"
 _ = require "underscore"
-codes = require("./../codes.coffee").hResultStatus
-validator = require "./../validator.coffee"
+codes = require("../codes").hResultStatus
+validator = require "../validator"
 
 class Tracker extends Actor
 
@@ -81,7 +81,7 @@ class Tracker extends Actor
         , @timeoutDelay)
         outbox = @findOutbox(hMessage.publisher, true)
         if outbox
-          @outboundAdapters.push adapters.adapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
+          @outboundAdapters.push factory.newAdapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
 
     else if hMessage.payload.name is "peer-search"
       # TODO reflexion sur le lookup et implementation

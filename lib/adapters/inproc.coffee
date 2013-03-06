@@ -22,42 +22,26 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-
-fs = require "fs"
-adapters = require "./adapters/hAdapters"
-{Actor} = require "./actor/hactor"
-os = require "os"
-_ = require "underscore"
-
-createActor = (properties) ->
-  actorModule = require "#{__dirname}/actor/#{properties.type}"
-  actor = actorModule.newActor(properties)
-
-main = ->
-
-  topologyPath = process.argv[2] or "samples/sample1.json"
-  hTopology = `undefined`
-  try
-    hTopology = eval("(" + fs.readFileSync(topologyPath, "utf8") + ")")
-  catch err
-    console.log "erreur : ",err
-  unless hTopology
-    console.log "No config file or malformated config file. Can not start actor"
-    process.exit 1
+{OutboundAdapter} = require "./hadapter"
 
 
-  mockActor = { actor: "process"+process.pid }
+class LocalOutboundAdapter extends OutboundAdapter
 
-  engine = createActor(hTopology)
+  constructor: (properties) ->
+    super
+    if properties.ref
+      @ref = properties.ref
+    else
+      throw new Error "You must explicitely pass an actor as reference to a LocalOutboundAdapter"
 
-  engine.on "started", ->
-    _.forEach ["SIGINT"], (signal) ->
-      process.on signal, ->
-        engine.h_tearDown()
-        process.exit()
-     #   clearInterval interval
+  start: ->
+    super
 
-  # starting engine
-  engine.h_start()
+  send: (message) ->
+    @start() unless @started
+    @ref.emit "message", message
 
-main()
+
+exports.LocalOutboundAdapter = LocalOutboundAdapter
+exports.newAdapter = (properties) ->
+  new LocalOutboundAdapter properties

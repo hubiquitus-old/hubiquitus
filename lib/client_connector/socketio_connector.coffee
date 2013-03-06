@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-fs = require("fs")
+fs = require "fs"
 clients = {}
 validator = require "../validator"
 codes = require "../codes"

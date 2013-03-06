@@ -22,42 +22,41 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-
-fs = require "fs"
-adapters = require "./adapters/hAdapters"
-{Actor} = require "./actor/hactor"
-os = require "os"
-_ = require "underscore"
-
-createActor = (properties) ->
-  actorModule = require "#{__dirname}/actor/#{properties.type}"
-  actor = actorModule.newActor(properties)
-
-main = ->
-
-  topologyPath = process.argv[2] or "samples/sample1.json"
-  hTopology = `undefined`
-  try
-    hTopology = eval("(" + fs.readFileSync(topologyPath, "utf8") + ")")
-  catch err
-    console.log "erreur : ",err
-  unless hTopology
-    console.log "No config file or malformated config file. Can not start actor"
-    process.exit 1
+{OutboundAdapter} = require "./hadapter"
+zmq = require "zmq"
 
 
-  mockActor = { actor: "process"+process.pid }
+class SocketOutboundAdapter extends OutboundAdapter
 
-  engine = createActor(hTopology)
+  # @property {object} zeromq socket
+  sock: undefined
 
-  engine.on "started", ->
-    _.forEach ["SIGINT"], (signal) ->
-      process.on signal, ->
-        engine.h_tearDown()
-        process.exit()
-     #   clearInterval interval
+  constructor: (properties) ->
+    super
+    if properties.url
+      @url = properties.url
+    else
+      throw new Error "You must explicitely pass a valid url to a SocketOutboundAdapter"
+    @sock = zmq.socket "push"
+    @sock.identity = "SocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
-  # starting engine
-  engine.h_start()
+  start:->
+    super
+    @sock.connect @url
+    @owner.log "debug", "#{@sock.identity} writing on #{@url}"
 
-main()
+
+  stop: ->
+    if @started
+      if @sock._zmq.state is 0
+        @sock.close()
+      super
+
+  send: (message) ->
+    @start() unless @started
+    @sock.send JSON.stringify(message)
+
+
+exports.SocketOutboundAdapter = SocketOutboundAdapter
+exports.newAdapter = (properties) ->
+  new SocketOutboundAdapter properties

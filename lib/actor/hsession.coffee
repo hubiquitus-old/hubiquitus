@@ -31,7 +31,7 @@ errors = require("../codes").errors
 validator = require "../validator"
 codes = require "../codes"
 hFilter = require "../hFilter"
-adapters = require "../adapters/hAdapters"
+factory = require "../hfactory"
 
 
 class Session extends Actor
@@ -159,7 +159,7 @@ class Session extends Actor
 
   initListener: (client) =>
     delete client["hClient"]
-    socketIOAdapter = adapters.adapter("socketIO", {targetActorAid: @actor, owner: @, socket: client.socket})
+    socketIOAdapter = factory.newAdapter("socketIO", {targetActorAid: @actor, owner: @, socket: client.socket})
     @hClient = client.socket
 
     @on "hStatus", (msg) ->

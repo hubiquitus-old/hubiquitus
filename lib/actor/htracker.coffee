@@ -103,6 +103,8 @@ class Tracker extends Actor
         trackerUrl : @inboundAdapters[0].url,
         trackerChannel : @trackerChannelAid
         }]
+      unless childProps.method
+        childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps
 
 

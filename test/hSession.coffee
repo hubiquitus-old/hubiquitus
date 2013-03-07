@@ -45,9 +45,11 @@ describe "hSession", ->
       broadcastOn: "tcp://127.0.0.1:2998",
       subscribers: [config.logins[0].urn],
       db:{
-        dbName: "test",
-        dbCollection: existingCHID
-      }
+        host: "localhost",
+        port: 27017,
+        name: "test"
+      },
+      collection: existingCHID.replace(/[-.]/g, "")
     hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
       hChannel = child
 

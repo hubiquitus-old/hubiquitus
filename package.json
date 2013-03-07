@@ -33,6 +33,6 @@
       "socket.io-client": "=0.9.10"
   },
    "scripts": {
-      "test": "mocha --compilers coffee:coffee-script test/*"
+      "test": "mocha --compilers coffee:coffee-script -R spec test/*"
   }
 }

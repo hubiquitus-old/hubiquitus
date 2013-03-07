@@ -127,7 +127,7 @@ describe "hSubscribe", ->
         db:{
           name: "test",
         }
-        collection: existingCHID
+        collection: existingCHID.replace(/[-.]/g, "")
       hActor2.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
         hChannel2 = child
 

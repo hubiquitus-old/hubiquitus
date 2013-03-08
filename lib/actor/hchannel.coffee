@@ -24,12 +24,12 @@
 #
 
 {Actor} = require "./hactor"
-adapters = require "./../adapters/hAdapters"
 zmq = require "zmq"
 _ = require "underscore"
-validator = require "./../validator"
+validator = require "../validator"
 mongo = require "mongodb"
-codes = require "./../codes"
+codes = require "../codes"
+factory = require "../hfactory"
 
 class Channel extends Actor
 
@@ -38,8 +38,8 @@ class Channel extends Actor
     super
     @actor = validator.getBareURN(topology.actor)
     @type = "channel"
-    @inboundAdapters.push adapters.adapter("socket_in", {url: topology.properties.listenOn, owner: @})
-    @outboundAdapters.push adapters.adapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
+    @inboundAdapters.push factory.newAdapter("socket_in", {url: topology.properties.listenOn, owner: @})
+    @outboundAdapters.push factory.newAdapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
     @properties.subscribers = topology.properties.subscribers or []
 
   onMessage: (hMessage) ->

@@ -22,8 +22,9 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{InboundAdapter} = require "./hAdapters.coffee"
+{InboundAdapter} = require "./hadapter"
 twitter = require "ntwitter"
+
 
 class TwitterInboundAdapter extends InboundAdapter
 
@@ -88,6 +89,7 @@ class TwitterInboundAdapter extends InboundAdapter
       @properties[props] = properties[props]
     @start()
 
+
 exports.TwitterInboundAdapter = TwitterInboundAdapter
 exports.newAdapter = (properties) ->
-  new TwitterInboundAdapter(properties)
+  new TwitterInboundAdapter properties

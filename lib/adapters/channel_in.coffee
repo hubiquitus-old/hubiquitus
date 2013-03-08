@@ -47,20 +47,22 @@ class ChannelInboundAdapter extends InboundAdapter
     @sock = zmq.socket "sub"
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
-      hMessage = data.toString().replace(/^.*\$/, "")
-      hMessage = JSON.parse(hMessage)
+      splitString = data.toString().replace(/^[^{]*\$?{/, "{")
+      splitData = new Buffer(splitString)
+      cleanData = data.slice(data.length - splitData.length, data.length)
+      hMessage = JSON.parse(cleanData)
       hMessage.actor = @owner.actor
       @owner.emit "message", hMessage
 
   addFilter: (quickFilter) ->
     @owner.log "debug", "Add quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
-    @sock.subscribe(quickFilter)
+    @sock.subscribe quickFilter
     @listQuickFilter.push quickFilter
 
   removeFilter: (quickFilter, cb) ->
     @owner.log "debug", "Remove quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
     if @sock._zmq.state is 0
-      @sock.unsubscribe(quickFilter)
+      @sock.unsubscribe quickFilter
     index = 0
     for qckFilter in @listQuickFilter
       if qckFilter is quickFilter

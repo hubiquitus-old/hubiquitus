@@ -29,7 +29,7 @@ describe "hActor", ->
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
   actorModule = require("../lib/actor/hactor")
-
+  ###
   describe "#FilterMessage()", ->
     hMsg = undefined
     filter = undefined
@@ -1559,3 +1559,92 @@ describe "hActor", ->
     it "child should have v4 value specified in his own sharedProperties rather than the one specified in his parent's sharedProperties", (done) ->
       actorChild.properties.should.have.property "v4", "t4"
       done()
+  ###
+  describe "Channel Stop & Restart", ->
+    hc1 = undefined
+    ha1 = undefined
+    before () ->
+      topology =  {
+      "actor":"urn:localhost:tracker",
+      "type":"htracker",
+      "children":[],
+      "properties":{
+      "channel":{
+      "actor":"urn:localhost:trackChannel",
+      "type":"hchannel",
+      "properties":{
+      "listenOn":"tcp://127.0.0.1",
+      "broadcastOn":"tcp://127.0.0.1",
+      "subscribers":[
+
+      ],
+      "db":{
+      "host":"localhost",
+      "port":27017,
+      "name":"admin"
+      },
+      "collection":"trackChannel",
+      "log":{
+      "logLevel":"debug"
+      }
+      }
+      }
+      },
+      "adapters":[
+        {
+        "type":"socket_in",
+        "url":"tcp://127.0.0.1:2997"
+        }
+      ]
+      }
+      hActor = actorModule.newActor(topology)
+      hActor.h_start()
+
+      actorH1Props = {
+        actor: config.logins[1].urn,
+        type: "hactor",
+        adapters: [
+          {type: "socket_in", url: "tcp://127.0.0.1:2992" },
+        #  {type: "channel_in", channel: config.logins[2].urn}
+        ]
+      }
+      channelC0Props = {
+        actor:config.logins[2].urn,
+        type:"hchannel",
+        properties: {
+          listenOn:"tcp://127.0.0.1",
+          broadcastOn:"tcp://127.0.0.1",
+          subscribers:[],
+          db:{
+            host:"localhost",
+            port:27017,
+            name:"admin"
+            },
+          collection:"channel"
+        }
+      }
+
+      hActor.createChild "hchannel", "inproc", channelC0Props, (child) =>
+        hc1 = child
+
+      hActor.createChild "hactor", "inproc", actorH1Props, (child) =>
+        ha1 = child
+
+      hc1.h_tearDown()
+      hc1.h_start()
+
+    after () ->
+      hActor.h_tearDown()
+      hActor = null
+
+    it "Channel should be restarted correctly", (done) ->
+      hActor.should.have.property "status", "ready"
+      ha1.should.have.property "status", "ready"
+      oldSetStatus = hc1.h_setStatus
+      nbCalls = 0;
+      hc1.h_setStatus = (newStatus) ->
+        oldSetStatus.call(hc1, newStatus)
+        if newStatus is "ready"
+          nbCalls++
+          if nbCalls is 1
+            done()

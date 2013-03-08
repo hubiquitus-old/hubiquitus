@@ -74,7 +74,6 @@ class SocketInboundAdapter extends InboundAdapter
     super
     @formatUrl(properties.url)
     @type = "socket_in"
-    @initSocket()
 
   initSocket: () ->
     @sock = zmq.socket "pull"
@@ -83,6 +82,7 @@ class SocketInboundAdapter extends InboundAdapter
       @owner.emit "message", JSON.parse(data)
 
   start: ->
+    @initSocket()
     while @started is false
       try
         @sock.bindSync @url
@@ -100,6 +100,8 @@ class SocketInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
 class LBSocketInboundAdapter extends InboundAdapter
 
@@ -146,6 +148,8 @@ class ChannelInboundAdapter extends InboundAdapter
     @type = "channel_in"
     @listQuickFilter = []
     @filter = properties.filter or ""
+
+  initSocket: () ->
     @sock = zmq.socket "sub"
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
@@ -176,6 +180,7 @@ class ChannelInboundAdapter extends InboundAdapter
       cb false
 
   start: ->
+    @initSocket()
     unless @started
       @sock.connect @url
       @addFilter(@filter)
@@ -187,6 +192,8 @@ class ChannelInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
 
 class OutboundAdapter extends Adapter
@@ -250,10 +257,13 @@ class SocketOutboundAdapter extends OutboundAdapter
       @url = properties.url
     else
       throw new Error("You must explicitely pass a valid url to a SocketOutboundAdapter")
+
+  initSocket: ->
     @sock = zmq.socket "push"
     @sock.identity = "SocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
   start:->
+    @initSocket()
     super
     @sock.connect @url
     @owner.log "debug", "#{@sock.identity} writing on #{@url}"
@@ -264,6 +274,8 @@ class SocketOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
   send: (message) ->
     @start() unless @started
@@ -277,11 +289,13 @@ class LBSocketOutboundAdapter extends OutboundAdapter
       @url = properties.url
     else
       throw new Error("You must explicitely pass a valid url to a LBSocketOutboundAdapter")
+
+  initsocket: ->
     @sock = zmq.socket "push"
     @sock.identity = "LBSocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
   start:->
-
+    @initsocket()
     @sock.bindSync @url
     @owner.log "debug", "#{@sock.identity} bound on #{@url}"
     super
@@ -291,6 +305,8 @@ class LBSocketOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
   send: (message) ->
     @start() unless @started
@@ -312,13 +328,13 @@ class ChannelOutboundAdapter extends OutboundAdapter
         @url = url.format(url_props)
     else
       @url = "tcp://127.0.0.1:#{@genListenPort}"
-    @initSocket()
 
   initSocket: () ->
     @sock = zmq.socket "pub"
     @sock.identity = "ChannelOA_of_#{@owner.actor}"
 
   start:->
+    @initSocket()
     while @started is false
       try
         @sock.bindSync @url
@@ -336,6 +352,8 @@ class ChannelOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
   send: (hMessage) ->
     @start() unless @started

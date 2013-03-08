@@ -27,7 +27,7 @@
 socketIO = require "../client_connector/socketio_connector"
 zmq = require "zmq"
 _ = require "underscore"
-validator = require "./../validator"
+validator = require "../validator"
 
 class Gateway extends Actor
 

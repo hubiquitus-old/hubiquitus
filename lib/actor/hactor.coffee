@@ -31,12 +31,10 @@ zmq = require "zmq"
 winston = require "winston"
 _ = require "underscore"
 #Hactor modules
-{OutboundAdapter} = require "./../adapters/hAdapters"
-adapters = require "./../adapters/hAdapters"
-validator = require "./../validator"
-codes = require "./../codes.coffee"
+validator = require "../validator"
+codes = require "../codes"
 hFilter = require "./../hFilter"
-
+factory = require "../hfactory"
 
 _.mixin toDict: (arr, key) ->
   throw new Error('_.toDict takes an Array') unless _.isArray arr
@@ -113,7 +111,7 @@ class Actor extends EventEmitter
   # Actor's constructor
   # @param {object} topology Launch topology of the actor
   #
-  constructor: (topology) ->
+  constructor: (topology, callback) ->
     # init logger
     if topology.log
       @log_properties = topology.log
@@ -164,7 +162,7 @@ class Actor extends EventEmitter
       _.forEach topology.trackers, (trackerProps) =>
         @log "debug", "registering tracker #{trackerProps.trackerId}"
         @trackers.push trackerProps
-        @outboundAdapters.push adapters.adapter("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
+        @outboundAdapters.push factory.newAdapter("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
     else
       @log "debug", "no tracker was provided"
 
@@ -193,7 +191,7 @@ class Actor extends EventEmitter
       if adapterProps.type is 'channel_in'
         @channelToSubscribe.push adapterProps
       else
-        adapter = adapters.adapter(adapterProps.type, adapterProps)
+        adapter = factory.newAdapter(adapterProps.type, adapterProps)
         if adapter.direction is "in"
           @inboundAdapters.push adapter
         else if adapter.direction is "out"
@@ -314,7 +312,7 @@ class Actor extends EventEmitter
                 hMessage.actor = outbound.targetActorAid
                 outboundAdapter = outbound
             unless found
-              outboundAdapter = adapters.adapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
+              outboundAdapter = factory.newAdapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
               @outboundAdapters.push outboundAdapter
               if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
                 @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
@@ -426,22 +424,18 @@ class Actor extends EventEmitter
     unless classname is "hchannel"
       topology.actor = "#{topology.actor}/#{UUID.generate()}"
 
-    if H_ACTORS[classname]
-      classname = "#{__dirname}/#{classname}"
-
     switch method
       when "inproc"
-        actorModule = require "#{classname}"
-        childRef = actorModule.newActor(topology)
-        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: topology.actor, ref: childRef)
-        childRef.outboundAdapters.push adapters.adapter(method, owner: childRef, targetActorAid: @actor, ref: @)
+        childRef = factory.newActor classname, topology
+        @outboundAdapters.push factory.newAdapter(method, owner: @, targetActorAid: topology.actor, ref: childRef)
+        childRef.outboundAdapters.push factory.newAdapter(method, owner: childRef, targetActorAid: @actor, ref: @)
         childRef.parent = @
         # Starting the child
         @send @h_buildSignal(topology.actor, "start", {})
 
       when "fork"
-        childRef = forker.fork __dirname + "/childlauncher", [classname , JSON.stringify(topology)]
-        @outboundAdapters.push adapters.adapter(method, owner: @, targetActorAid: topology.actor, ref: childRef)
+        childRef = forker.fork __dirname + "/../childlauncher", [classname, JSON.stringify(topology)]
+        @outboundAdapters.push factory.newAdapter(method, owner: @, targetActorAid: topology.actor, ref: childRef)
         childRef.on "message", (msg) =>
           if msg.state is 'ready'
             @send @h_buildSignal(topology.actor, "start", {})
@@ -713,7 +707,7 @@ class Actor extends EventEmitter
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout: 3000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
-        channelInbound = adapters.adapter("channel_in", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
+        channelInbound = factory.newAdapter("channel_in", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
         @inboundAdapters.push channelInbound
         channelInbound.start()
         @subscriptions.push hChannel
@@ -923,6 +917,6 @@ UUID._ha = (a, b) ->
   c
 
 exports.Actor = Actor
-exports.newActor = (topology) ->
-  new Actor(topology)
+exports.newActor = (topology, callback) ->
+  new Actor(topology, callback)
 

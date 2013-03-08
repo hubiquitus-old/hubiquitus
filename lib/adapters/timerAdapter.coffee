@@ -22,42 +22,55 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+{InboundAdapter} = require "./hadapter"
+cronJob = require("cron").CronJob
 
-fs = require "fs"
-adapters = require "./adapters/hAdapters"
-{Actor} = require "./actor/hactor"
-os = require "os"
-_ = require "underscore"
+class TimerAdapter extends InboundAdapter
 
-createActor = (properties) ->
-  actorModule = require "#{__dirname}/actor/#{properties.type}"
-  actor = actorModule.newActor(properties)
+  constructor: (properties) ->
+    super
+    @job = undefined
 
-main = ->
+  startJob: =>
+    current = new Date().getTime()
+    msg = @owner.buildMessage(@owner.actor, "hAlert", {alert:@properties.alert}, {published:current})
+    @owner.emit "message", msg
 
-  topologyPath = process.argv[2] or "samples/sample1.json"
-  hTopology = `undefined`
-  try
-    hTopology = eval("(" + fs.readFileSync(topologyPath, "utf8") + ")")
-  catch err
-    console.log "erreur : ",err
-  unless hTopology
-    console.log "No config file or malformated config file. Can not start actor"
-    process.exit 1
+  stopJob: =>
+    # This function is executed when the job stops
+
+  launchTimer: ->
+    if @properties.mode is "millisecond"
+      @job = setInterval(=>
+        @startJob()
+      , @properties.period)
+    else if @properties.mode is "crontab"
+      try
+        @job = new cronJob(@properties.crontab, =>
+          @startJob()
+        , =>
+          @stopJob()
+        , true, "Europe/London")
+      catch err
+        @owner.log "error", "Couldn't setup timer adapter : #{err}"
+    else
+      @owner.log "error", "Timer adapter : Unhandled mode #{@properties}"
+
+  start: ->
+    unless @started
+      @launchTimer()
+      @owner.log "debug", "#{@owner.actor} launch TimerAdapter"
+      super
+
+  stop: ->
+    if @started
+      if @properties.mode is "crontab" and @job
+        @job.stop()
+      else if @properties.mode is "millisecond" and @job
+        clearInterval(@job)
+      super
 
 
-  mockActor = { actor: "process"+process.pid }
-
-  engine = createActor(hTopology)
-
-  engine.on "started", ->
-    _.forEach ["SIGINT"], (signal) ->
-      process.on signal, ->
-        engine.h_tearDown()
-        process.exit()
-     #   clearInterval interval
-
-  # starting engine
-  engine.h_start()
-
-main()
+exports.TimerAdapter = TimerAdapter
+exports.newAdapter = (properties) ->
+  new TimerAdapter properties

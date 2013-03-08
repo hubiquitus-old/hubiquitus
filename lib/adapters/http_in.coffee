@@ -22,9 +22,9 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{InboundAdapter} = require "./hAdapters"
-{OutboundAdapter} = require "./hAdapters"
+{InboundAdapter} = require "./hadapter"
 url = require "url"
+
 
 class HttpInboundAdapter extends InboundAdapter
   constructor: (properties) ->
@@ -61,50 +61,6 @@ class HttpInboundAdapter extends InboundAdapter
     server.listen @port,@serverPath
 
 
-class HttpOutboundAdapter extends OutboundAdapter
-  constructor: (properties) ->
-    super
-
-    if properties.url
-      url_props = url.parse(properties.url)
-      if url_props.port then @port = url_props.port else @port = 8888
-      if url_props.hostname then @server_url = url_props.hostname else @server_url = "127.0.0.1"
-      if properties.path then @path = properties.path else @path = "/"
-    else
-      throw new Error "You must provide a writing url"
-
-    @owner.log "debug", "HttpOutboundAdapter used -> [ url: #{@server_url} port : #{@port} path: #{@path} ]"
-
-  send: (message) ->
-    @start() unless @started
-
-    @querystring = require 'querystring'
-    @http = require 'http'
-
-    # Setting the configuration
-    post_options =
-      host: @server_url
-      port: @port
-      path: @path
-      method: "POST"
-      headers:
-        "Content-Type": "application/x-www-form-urlencoded"
-        "Content-Length": JSON.stringify(message.payload).length
-
-    post_req = @http.request post_options, (res) =>
-
-    post_req.on "error", (e) ->
-      @owner.log "warn", "problem with request: " + e.message
-
-    # write parameters to post body
-    post_req.write JSON.stringify(message.payload)
-    post_req.end()
-
-
 exports.HttpInboundAdapter = HttpInboundAdapter
-exports.newHttpInboundAdapter = (properties) ->
-  new HttpInboundAdapter(properties)
-
-exports.HttpOutboundAdapter = HttpOutboundAdapter
-exports.newHttpOutboundAdapter = (properties) ->
-  new HttpOutboundAdapter(properties)
+exports.newAdapter = (properties) ->
+  new HttpInboundAdapter properties

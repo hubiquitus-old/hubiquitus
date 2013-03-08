@@ -53,3 +53,5 @@ $RECYCLE.BIN/
 *.un~
 Session.vim
 .netrwhist
+
+node_modules/

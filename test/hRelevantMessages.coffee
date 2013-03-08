@@ -48,11 +48,11 @@ describe "hRelevantMessages", ->
           port: 27017,
           name: "test"
         },
-        collection: activeChan
+        collection: activeChan.replace(/[-.]/g, "")
       }
     }
     hActor = actorModule.newActor(topology)
-    hActor.setStatus "starting"
+    hActor.h_setStatus "starting"
     hActor.initialize = (ready) =>
       hActor.h_connectToDatabase hActor.properties.db, () =>
         ready()

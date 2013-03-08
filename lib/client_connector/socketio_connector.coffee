@@ -144,7 +144,7 @@ class SocketIO_Connector
       client.socket.disconnect()  if client.socket
       delete clients[client.id]
 
-    @owner.send @owner.buildSignal(client.child, "stop", {}) if client.child
+    @owner.send @owner.h_buildSignal(client.child, "stop", {}) if client.child
 
 
   start: ->

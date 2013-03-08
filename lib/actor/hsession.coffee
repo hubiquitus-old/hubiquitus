@@ -48,7 +48,7 @@ class Session extends Actor
       @log "debug", "touching tracker #{trackerProps.trackerId}"
       if @status is "stopping"
         @trackInbox = []
-      @send @buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:@trackInbox})
+      @send @h_buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:@trackInbox})
 
   validateFilter: (hMessage) ->
     unless validator.getBareURN(hMessage.publisher) is validator.getBareURN(@actor)
@@ -187,7 +187,7 @@ class Session extends Actor
   h_fillAttribut: (hMessage, cb) ->
     #Complete hMessage
     hMessage.publisher = @actor
-    hMessage.msgid = hMessage.msgid or @makeMsgId()
+    hMessage.msgid = hMessage.msgid or @h_makeMsgId()
     hMessage.sent = new Date().getTime()
 
 exports.Session = Session

@@ -54,7 +54,7 @@ class SocketInboundAdapter extends InboundAdapter
           @sock = null
           @initSocket()
           @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
-          @owner.log "error", 'Change listening port to avoid collision :',err
+          @owner.log "info", 'Change listening port to avoid collision :',err
 
   stop: ->
     if @started

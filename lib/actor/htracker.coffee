@@ -103,6 +103,8 @@ class Tracker extends Actor
         trackerUrl : @inboundAdapters[0].url,
         trackerChannel : @trackerChannelAid
         }]
+      unless childProps.method
+        childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps
 
 
@@ -128,7 +130,7 @@ class Tracker extends Actor
     outboundadapter
 
   stopAlert: (actor) ->
-    @send @buildSignal(@trackerChannelAid, "hStopAlert", actor, {headers:{h_quickFilter: actor}})
+    @send @h_buildSignal(@trackerChannelAid, "hStopAlert", actor, {headers:{h_quickFilter: actor}})
 
 exports.Tracker = Tracker
 exports.newActor = (topology) ->

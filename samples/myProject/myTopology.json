@@ -24,7 +24,7 @@
             "actor": "urn:localhost:myActor",
             "type": "myActor",
             "method": "inproc",
-            "adapters": [ { "type": "myAdapter" } ],
+            "adapters": [ { "type": "myInboundAdapter" } ],
             "properties": {
                 "myProps": "hello"
             }

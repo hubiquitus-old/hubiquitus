@@ -11,7 +11,6 @@
   "maintainers": [{"name": "Gauthier Boivin"
 		 ,"email":"gauthierboivin@gmail.com"
 		 }],
-  "bin": { "launcher": "./lib/launcher.coffee"},
   "main": "./lib/hubiquitus",
   "engines": {
     "node": ">0.8.0"

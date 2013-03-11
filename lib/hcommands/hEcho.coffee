@@ -27,7 +27,7 @@
 hEcho receives an hCommand and responds with a result
 with the same <params> that were in the hCommand.
 ###
-status = require("./../codes").hResultStatus
+status = require("../codes").hResultStatus
 hEcho = ->
 
 

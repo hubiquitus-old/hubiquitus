@@ -22,30 +22,24 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+require "coffee-script"
+factory = require "./hfactory"
 
-{Actor} = require "./hactor"
-socketIO = require "../client_connector/socketio_connector"
-zmq = require "zmq"
-_ = require "underscore"
-validator = require "../validator"
+main = ->
 
-class Gateway extends Actor
+  console.log process.argv
 
-  constructor: (topology) ->
-    super
-    # Setting outbound adapters
-    @type = 'gateway'
-    if topology.properties.socketIOPort
-      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
+  args = process.argv.slice(2)
 
-  onMessage: (hMessage) ->
-    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
-      @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-      @send hMessage
+  actorProps = JSON.parse args[1]
+  actor = factory.newActor args[0], actorProps
 
-  h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
+  # Acknowledging parent process that the job has been done
+  process.send( {state: "ready"} )
 
-exports.Gateway = Gateway
-exports.newActor = (topology) ->
-  new Gateway(topology)
+  # Transmitting any message from parent actor to child actor
+  process.on "message" , (msg) ->
+    #console.log("Child process got message",msg)
+    actor.emit "message", msg
+
+main()

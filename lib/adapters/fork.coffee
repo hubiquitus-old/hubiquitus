@@ -22,54 +22,31 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{InboundAdapter} = require "./hAdapters.coffee"
-cronJob = require("cron").CronJob
+{OutboundAdapter} = require "./hadapter"
 
-class TimerAdapter extends InboundAdapter
+
+class ChildprocessOutboundAdapter extends OutboundAdapter
 
   constructor: (properties) ->
     super
-    @job = undefined
-
-  startJob: =>
-    current = new Date().getTime()
-    msg = @owner.buildMessage(@owner.actor, "hAlert", {alert:@properties.alert}, {published:current})
-    @owner.emit "message", msg
-
-  stopJob: =>
-    # This function is executed when the job stops
-
-  launchTimer: ->
-    if @properties.mode is "millisecond"
-      @job = setInterval(=>
-        @startJob()
-      , @properties.period)
-    else if @properties.mode is "crontab"
-      try
-        @job = new cronJob(@properties.crontab, =>
-          @startJob()
-        , =>
-          @stopJob()
-        , true, "Europe/London")
-      catch err
-        @owner.log "error", "Couldn't setup timer adapter : #{err}"
+    if properties.ref
+      @ref = properties.ref
     else
-      @owner.log "error", "Timer adapter : Unhandled mode #{@properties}"
+      throw new Error "You must explicitely pass an actor child process as reference to a ChildOutboundAdapter"
 
   start: ->
-    unless @started
-      @launchTimer()
-      @owner.log "debug", "#{@owner.actor} launch TimerAdapter"
-      super
+    super
 
   stop: ->
     if @started
-      if @properties.mode is "crontab" and @job
-        @job.stop()
-      else if @properties.mode is "millisecond" and @job
-        clearInterval(@job)
-      super
+      @ref.kill()
+    super
 
-exports.TimerAdapter = TimerAdapter
-exports.newTimerAdapter = (properties) ->
-  new TimerAdapter(properties)
+  send: (message) ->
+    @start() unless @started
+    @ref.send message
+
+
+exports.ChildprocessOutboundAdapter = ChildprocessOutboundAdapter
+exports.newAdapter = (properties) ->
+  new ChildprocessOutboundAdapter properties

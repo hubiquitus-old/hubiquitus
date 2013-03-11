@@ -22,30 +22,45 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-
-{Actor} = require "./hactor"
-socketIO = require "../client_connector/socketio_connector"
+{OutboundAdapter} = require "./hadapter"
 zmq = require "zmq"
-_ = require "underscore"
-validator = require "../validator"
 
-class Gateway extends Actor
 
-  constructor: (topology) ->
+class LBSocketOutboundAdapter extends OutboundAdapter
+
+  # @property {object} zeromq socket
+  sock: undefined
+
+  constructor: (properties) ->
     super
-    # Setting outbound adapters
-    @type = 'gateway'
-    if topology.properties.socketIOPort
-      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
+    if properties.url
+      @url = properties.url
+    else
+      throw new Error "You must explicitely pass a valid url to a LBSocketOutboundAdapter"
 
-  onMessage: (hMessage) ->
-    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
-      @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-      @send hMessage
+  initsocket: ->
+    @sock = zmq.socket "push"
+    @sock.identity = "LBSocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
-  h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
+  start:->
+    @initsocket()
+    @sock.bindSync @url
+    @owner.log "debug", "#{@sock.identity} bound on #{@url}"
+    super
 
-exports.Gateway = Gateway
-exports.newActor = (topology) ->
-  new Gateway(topology)
+  stop: ->
+    if @started
+      if @sock._zmq.state is 0
+        @sock.close()
+      super
+      @sock.on "message",()=>
+      @sock=null
+
+  send: (message) ->
+    @start() unless @started
+    @sock.send JSON.stringify(message)
+
+
+exports.LBSocketOutboundAdapter = LBSocketOutboundAdapter
+exports.newAdapter = (properties) ->
+  new LBSocketOutboundAdapter properties

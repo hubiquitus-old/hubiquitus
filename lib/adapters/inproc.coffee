@@ -22,22 +22,26 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+{OutboundAdapter} = require "./hadapter"
 
-main = ->
 
-  args = process.argv.slice(2)
+class LocalOutboundAdapter extends OutboundAdapter
 
-  actorProps = JSON.parse args[1]
-  actorModule = require "#{args[0]}"
+  constructor: (properties) ->
+    super
+    if properties.ref
+      @ref = properties.ref
+    else
+      throw new Error "You must explicitely pass an actor as reference to a LocalOutboundAdapter"
 
-  actor = actorModule.newActor(actorProps);
+  start: ->
+    super
 
-  # Acknowledging parent process that the job has been done
-  process.send( {state: "ready"} )
+  send: (message) ->
+    @start() unless @started
+    @ref.emit "message", message
 
-  # Transmitting any message from parent actor to child actor
-  process.on "message" , (msg) ->
-    #console.log("Child process got message",msg)
-    actor.emit "message", msg
 
-main()
+exports.LocalOutboundAdapter = LocalOutboundAdapter
+exports.newAdapter = (properties) ->
+  new LocalOutboundAdapter properties

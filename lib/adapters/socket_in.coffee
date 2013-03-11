@@ -22,30 +22,49 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-
-{Actor} = require "./hactor"
-socketIO = require "../client_connector/socketio_connector"
+{InboundAdapter} = require "./hadapter"
 zmq = require "zmq"
-_ = require "underscore"
-validator = require "../validator"
 
-class Gateway extends Actor
 
-  constructor: (topology) ->
+class SocketInboundAdapter extends InboundAdapter
+
+  # @property {object} zeromq socket
+  sock: undefined
+
+  constructor: (properties) ->
     super
-    # Setting outbound adapters
-    @type = 'gateway'
-    if topology.properties.socketIOPort
-      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
+    @formatUrl properties.url
+    @type = "socket_in"
 
-  onMessage: (hMessage) ->
-    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
-      @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-      @send hMessage
+  initSocket: () ->
+    @sock = zmq.socket "pull"
+    @sock.identity = "SocketIA_of_#{@owner.actor}"
+    @sock.on "message", (data) =>
+      @owner.emit "message", JSON.parse(data)
 
-  h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
+  start: ->
+    @initSocket()
+    while @started is false
+      try
+        @sock.bindSync @url
+        @owner.log "debug", "#{@sock.identity} listening on #{@url}"
+        super
+      catch err
+        if err.message is "Address already in use"
+          @sock = null
+          @initSocket()
+          @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
+          @owner.log "info", 'Change listening port to avoid collision :',err
 
-exports.Gateway = Gateway
-exports.newActor = (topology) ->
-  new Gateway(topology)
+  stop: ->
+    if @started
+      if @sock._zmq.state is 0
+        @sock.close()
+      super
+      @sock.on "message",()=>
+      @sock=null
+
+
+exports.SocketInboundAdapter = SocketInboundAdapter
+exports.newAdapter = (properties) ->
+  new SocketInboundAdapter properties

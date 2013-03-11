@@ -22,30 +22,55 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+{InboundAdapter} = require "./hadapter"
+cronJob = require("cron").CronJob
 
-{Actor} = require "./hactor"
-socketIO = require "../client_connector/socketio_connector"
-zmq = require "zmq"
-_ = require "underscore"
-validator = require "../validator"
+class TimerAdapter extends InboundAdapter
 
-class Gateway extends Actor
-
-  constructor: (topology) ->
+  constructor: (properties) ->
     super
-    # Setting outbound adapters
-    @type = 'gateway'
-    if topology.properties.socketIOPort
-      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
+    @job = undefined
 
-  onMessage: (hMessage) ->
-    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
-      @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-      @send hMessage
+  startJob: =>
+    current = new Date().getTime()
+    msg = @owner.buildMessage(@owner.actor, "hAlert", {alert:@properties.alert}, {published:current})
+    @owner.emit "message", msg
 
-  h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
+  stopJob: =>
+    # This function is executed when the job stops
 
-exports.Gateway = Gateway
-exports.newActor = (topology) ->
-  new Gateway(topology)
+  launchTimer: ->
+    if @properties.mode is "millisecond"
+      @job = setInterval(=>
+        @startJob()
+      , @properties.period)
+    else if @properties.mode is "crontab"
+      try
+        @job = new cronJob(@properties.crontab, =>
+          @startJob()
+        , =>
+          @stopJob()
+        , true, "Europe/London")
+      catch err
+        @owner.log "error", "Couldn't setup timer adapter : #{err}"
+    else
+      @owner.log "error", "Timer adapter : Unhandled mode #{@properties}"
+
+  start: ->
+    unless @started
+      @launchTimer()
+      @owner.log "debug", "#{@owner.actor} launch TimerAdapter"
+      super
+
+  stop: ->
+    if @started
+      if @properties.mode is "crontab" and @job
+        @job.stop()
+      else if @properties.mode is "millisecond" and @job
+        clearInterval(@job)
+      super
+
+
+exports.TimerAdapter = TimerAdapter
+exports.newAdapter = (properties) ->
+  new TimerAdapter properties

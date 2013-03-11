@@ -22,30 +22,30 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+{OutboundAdapter} = require "./hadapter"
 
-{Actor} = require "./hactor"
-socketIO = require "../client_connector/socketio_connector"
-zmq = require "zmq"
-_ = require "underscore"
-validator = require "../validator"
 
-class Gateway extends Actor
+class SocketIOAdapter extends OutboundAdapter
 
-  constructor: (topology) ->
+  constructor: (properties) ->
     super
-    # Setting outbound adapters
-    @type = 'gateway'
-    if topology.properties.socketIOPort
-      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
+    @type = "socketIO"
+    @sock = properties.socket
+    @sock.identity = "socketIO_of_#{@owner.actor}"
+    @sock.on "hMessage", (hMessage) =>
+      @owner.emit "message", hMessage
 
-  onMessage: (hMessage) ->
-    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
-      @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
-      @send hMessage
+  start: ->
+    super
 
-  h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
+  stop: ->
+    super
 
-exports.Gateway = Gateway
-exports.newActor = (topology) ->
-  new Gateway(topology)
+  send: (hMessage) ->
+    @start() unless @started
+    @sock.emit "hMessage", hMessage
+
+
+exports.SocketIOAdapter = SocketIOAdapter
+exports.newAdapter = (properties) ->
+  new SocketIOAdapter properties

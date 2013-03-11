@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-codes = require("./codes.coffee").hResultStatus
+codes = require("./codes").hResultStatus
 log = require("winston")
 
 ###

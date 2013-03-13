@@ -58,13 +58,14 @@ newActor = (type, properties) ->
   if not type then throw new Error "actor's type undefined"
   if not actors[type] then actors[type] = require "#{__dirname}/actor/#{type}"
   else if typeof actors[type] is "string" then actors[type] = require actors[type]
-  actors[type].newActor properties
+  console.log actors[type]
+  new actors[type] properties
 
 newAdapter = (type, properties) ->
   if not type then throw new Error "adapter's type undefined"
   if not adapters[type] then adapters[type] = require "#{__dirname}/adapters/#{type}"
   else if typeof adapters[type] is "string" then adapters[type] = require adapters[type]
-  adapters[type].newAdapter properties
+  new adapters[type] properties
 
 
 scan = (path, callback) ->

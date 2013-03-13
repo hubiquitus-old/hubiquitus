@@ -33,7 +33,7 @@ describe "hSubscribe", ->
   hChannel = undefined
   hChannel2 = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hactor")
+  Actor = require "../lib/actor/hactor"
   existingCHID = "urn:localhost:#{config.getUUID()}"
 
   before () ->
@@ -41,7 +41,7 @@ describe "hSubscribe", ->
       actor: config.logins[0].urn,
       type: "hactor"
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Actor topology
 
     properties =
       listenOn: "tcp://127.0.0.1:1221",
@@ -117,7 +117,7 @@ describe "hSubscribe", ->
           { type: "channel_in", url: "tcp://127.0.0.1:2992", channel:existingCHID }
         ]
       }
-      hActor2 = actorModule.newActor(topology)
+      hActor2 = new Actor topology
       hActor2.h_start()
 
       properties =

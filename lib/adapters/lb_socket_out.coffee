@@ -57,6 +57,4 @@ class LBSocketOutboundAdapter extends OutboundAdapter
     @sock.send JSON.stringify(message)
 
 
-exports.LBSocketOutboundAdapter = LBSocketOutboundAdapter
-exports.newAdapter = (properties) ->
-  new LBSocketOutboundAdapter properties
+module.exports = LBSocketOutboundAdapter

@@ -80,6 +80,4 @@ class ChannelOutboundAdapter extends OutboundAdapter
       @sock.send JSON.stringify(hMessage)
 
 
-exports.ChannelOutboundAdapter = ChannelOutboundAdapter
-exports.newAdapter = (properties) ->
-  new ChannelOutboundAdapter properties
+module.exports = ChannelOutboundAdapter

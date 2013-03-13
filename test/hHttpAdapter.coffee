@@ -28,7 +28,7 @@ describe "hHttpAdapter", ->
   hActor = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hactor")
+  Actor = require "../lib/actor/hactor"
 
   describe "Http_inbound", ->
     http = require "http"
@@ -40,7 +40,7 @@ describe "hHttpAdapter", ->
         properties: {},
         adapters: [ { type: "http_in", url: "http://127.0.0.1:8888" } ]
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Actor topology
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
     after () ->
@@ -91,7 +91,7 @@ describe "hHttpAdapter", ->
         properties: {},
         adapters: [ {type: "http_out", url: "127.0.0.1", targetActorAid :"http_out_box" ,path: "/" ,port: 8989 } ]
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Actor(topology)
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
     after () ->

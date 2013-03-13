@@ -61,6 +61,4 @@ class HttpInboundAdapter extends InboundAdapter
     server.listen @port,@serverPath
 
 
-exports.HttpInboundAdapter = HttpInboundAdapter
-exports.newAdapter = (properties) ->
-  new HttpInboundAdapter properties
+module.exports = HttpInboundAdapter

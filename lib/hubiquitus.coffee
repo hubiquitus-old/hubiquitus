@@ -23,59 +23,34 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./actor/hactor"
-{Auth} = require "./actor/hauth"
-{Channel} = require "./actor/hchannel"
-{Dispatcher} = require "./actor/hdispatcher"
-{Gateway} = require "./actor/hgateway"
-{Session} = require "./actor/hsession"
-{Tracker} = require "./actor/htracker"
-
-{InboundAdapter} = require "./adapters/hadapter"
-{OutboundAdapter} = require "./adapters/hadapter"
-{ChannelInboundAdapter} = require "./adapters/channel_in"
-{ChannelOutboundAdapter} = require "./adapters/channel_out"
-{ChildprocessOutboundAdapter} = require "./adapters/fork"
-{HttpInboundAdapter} = require "./adapters/http_in"
-{HttpOutboundAdapter} = require "./adapters/http_out"
-{LocalOutboundAdapter} = require "./adapters/inproc"
-{LBSocketInboundAdapter} = require "./adapters/lb_socket_in"
-{LBSocketOutboundAdapter} = require "./adapters/lb_socket_out"
-{SocketInboundAdapter} = require "./adapters/socket_in"
-{SocketOutboundAdapter} = require "./adapters/socket_out"
-{SocketIOAdapter} = require "./adapters/socketIO"
-{TimerAdapter} = require "./adapters/timerAdapter"
-{TwitterInboundAdapter} = require "./adapters/twitter_in"
-
 validator = require "./validator"
 filter = require "./hFilter"
 codes = require "./codes"
 factory = require "./hfactory"
-_ = require "underscore"
 
-exports.Actor = Actor
-exports.Auth = Auth
-exports.Channel = Channel
-exports.Dispatcher = Dispatcher
-exports.Gateway = Gateway
-exports.Session = Session
-exports.Tracker = Tracker
+exports.Actor = require "./actor/hactor"
+exports.Auth = require "./actor/hauth"
+exports.Channel = require "./actor/hchannel"
+exports.Dispatcher = require "./actor/hdispatcher"
+exports.Gateway = require "./actor/hgateway"
+exports.Session = require "./actor/hsession"
+exports.Tracker = require "./actor/htracker"
 
-exports.InboundAdapter = InboundAdapter
-exports.OutboundAdapter = OutboundAdapter
-exports.ChannelInboundAdapter = ChannelInboundAdapter
-exports.ChannelOutboundAdapter = ChannelOutboundAdapter
-exports.ChildprocessOutboundAdapter = ChildprocessOutboundAdapter
-exports.HttpInboundAdapter = HttpInboundAdapter
-exports.HttpOutboundAdapter = HttpOutboundAdapter
-exports.LocalOutboundAdapter = LocalOutboundAdapter
-exports.LBSocketInboundAdapter = LBSocketInboundAdapter
-exports.LBSocketOutboundAdapter = LBSocketOutboundAdapter
-exports.SocketInboundAdapter = SocketInboundAdapter
-exports.SocketOutboundAdapter = SocketOutboundAdapter
-exports.SocketIOAdapter = SocketIOAdapter
-exports.TimerAdapter = TimerAdapter
-exports.TwitterInboundAdapter = TwitterInboundAdapter
+exports.InboundAdapter = require("./adapters/hadapter").InboundAdapter
+exports.OutboundAdapter = require("./adapters/hadapter").OutboundAdapter
+exports.ChannelInboundAdapter = require "./adapters/channel_in"
+exports.ChannelOutboundAdapter = require "./adapters/channel_out"
+exports.ChildprocessOutboundAdapter = require "./adapters/fork"
+exports.HttpInboundAdapter = require "./adapters/http_in"
+exports.HttpOutboundAdapter = require "./adapters/http_out"
+exports.LocalOutboundAdapter = require "./adapters/inproc"
+exports.LBSocketInboundAdapter = require "./adapters/lb_socket_in"
+exports.LBSocketOutboundAdapter = require "./adapters/lb_socket_out"
+exports.SocketInboundAdapter = require "./adapters/socket_in"
+exports.SocketOutboundAdapter = require "./adapters/socket_out"
+exports.SocketIOAdapter = require "./adapters/socketIO"
+exports.TimerAdapter = require "./adapters/timerAdapter"
+exports.TwitterInboundAdapter = require "./adapters/twitter_in"
 
 exports.validator = validator
 exports.filter = filter

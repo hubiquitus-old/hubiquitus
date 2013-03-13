@@ -25,13 +25,13 @@
 
 fs = require "fs"
 adapters = require "./adapters/hAdapters"
-{Actor} = require "./actor/hactor"
+Actor = require "./actor/hactor"
 os = require "os"
 _ = require "underscore"
 
 createActor = (properties) ->
   actorModule = require "#{__dirname}/actor/#{properties.type}"
-  actor = actorModule.newActor(properties)
+  actor = new actorModule properties
 
 main = ->
 

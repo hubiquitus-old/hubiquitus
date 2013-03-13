@@ -28,7 +28,7 @@ describe "hActor", ->
   hActor2 = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hactor")
+  Actor = require("../lib/actor/hactor")
 
   describe "#FilterMessage()", ->
     hMsg = undefined
@@ -39,7 +39,7 @@ describe "hActor", ->
         actor: config.logins[0].urn,
         type: "hactor"
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Actor(topology)
       hActor.onMessage = (hMessage) ->
         if hMessage.timeout > 0
           hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, hResultStatus.OK, "")
@@ -1527,7 +1527,7 @@ describe "hActor", ->
         }
 
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Actor(topology)
       childProp = {
         actor: config.logins[2].urn,
         type: "hactor",

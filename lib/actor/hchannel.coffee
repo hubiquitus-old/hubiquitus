@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "../validator"
@@ -172,6 +172,5 @@ class Channel extends Actor
       else
         @log "error", "Could not open database"
 
-exports.Channel = Channel
-exports.newActor = (properties) ->
-  new Channel(properties)
+
+module.exports = Channel

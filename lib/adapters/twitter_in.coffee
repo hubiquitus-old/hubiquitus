@@ -90,6 +90,4 @@ class TwitterInboundAdapter extends InboundAdapter
     @start()
 
 
-exports.TwitterInboundAdapter = TwitterInboundAdapter
-exports.newAdapter = (properties) ->
-  new TwitterInboundAdapter properties
+module.exports = TwitterInboundAdapter

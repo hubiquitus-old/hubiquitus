@@ -28,7 +28,7 @@ describe "hTimerAdapter", ->
   hActor = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hactor")
+  Actor = require "../lib/actor/hactor"
 
   describe "millisecond", ->
     before () ->
@@ -38,7 +38,7 @@ describe "hTimerAdapter", ->
         properties: {},
         adapters: [ { type: "timerAdapter", properties: {alert:"timer_milli", mode: "millisecond", period:100}} ]
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Actor topology
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
     after () ->
@@ -64,7 +64,7 @@ describe "hTimerAdapter", ->
         properties: {},
         adapters: [ { type: "timerAdapter", properties: {alert:"timer_cron", mode: "crontab", crontab:"* * * * * *"}} ]
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Actor topology
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
     after () ->

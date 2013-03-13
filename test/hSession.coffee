@@ -30,7 +30,7 @@ describe "hSession", ->
   hActor = undefined
   hChannel = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hsession")
+  Session = require "../lib/actor/hsession"
   existingCHID = "urn:localhost:#{config.getUUID()}"
 
   before () ->
@@ -38,7 +38,7 @@ describe "hSession", ->
       actor: config.logins[0].urn,
       type: "hsession"
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Session topology
 
     properties =
       listenOn: "tcp://127.0.0.1:1221",

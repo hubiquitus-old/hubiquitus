@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 statuses = require("../codes").statuses
@@ -190,6 +190,5 @@ class Session extends Actor
     hMessage.msgid = hMessage.msgid or @h_makeMsgId()
     hMessage.sent = new Date().getTime()
 
-exports.Session = Session
-exports.newActor = (topology) ->
-  new Session(topology)
+
+module.exports = Session

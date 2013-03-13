@@ -66,6 +66,4 @@ class HttpOutboundAdapter extends OutboundAdapter
     post_req.end()
 
 
-exports.HttpOutboundAdapter = HttpOutboundAdapter
-exports.newAdapter = (properties) ->
-  new HttpOutboundAdapter properties
+module.exports = HttpOutboundAdapter

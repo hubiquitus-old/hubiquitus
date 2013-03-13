@@ -27,8 +27,6 @@ factory = require "./hfactory"
 
 main = ->
 
-  console.log process.argv
-
   args = process.argv.slice(2)
 
   actorProps = JSON.parse args[1]

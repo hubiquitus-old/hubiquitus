@@ -28,7 +28,7 @@ config = require("./_config")
 describe "hTracker", ->
   hActor = undefined
   hResultStatus = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/htracker")
+  Tracket = require "../lib/actor/htracker"
 
   before () ->
     topology =
@@ -50,7 +50,7 @@ describe "hTracker", ->
               name: "test"
             collection: "trackChannel"
 
-    hActor = actorModule.newActor(topology)
+    hActor = new Tracket topology
 
   after () ->
     hActor.h_tearDown()

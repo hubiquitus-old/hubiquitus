@@ -23,8 +23,8 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
-socketIO = require "../client_connector/socketio_connector"
+Actor = require "./hactor"
+SocketIO_Connector = require "../client_connector/socketio_connector"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "../validator"
@@ -36,7 +36,7 @@ class Gateway extends Actor
     # Setting outbound adapters
     @type = 'gateway'
     if topology.properties.socketIOPort
-      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
+      new SocketIO_Connector({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
 
   onMessage: (hMessage) ->
     if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
@@ -46,6 +46,5 @@ class Gateway extends Actor
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
 
-exports.Gateway = Gateway
-exports.newActor = (topology) ->
-  new Gateway(topology)
+
+module.exports = Gateway

@@ -42,6 +42,4 @@ class LocalOutboundAdapter extends OutboundAdapter
     @ref.emit "message", message
 
 
-exports.LocalOutboundAdapter = LocalOutboundAdapter
-exports.newAdapter = (properties) ->
-  new LocalOutboundAdapter properties
+module.exports = LocalOutboundAdapter

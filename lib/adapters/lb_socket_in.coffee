@@ -63,6 +63,4 @@ class LBSocketInboundAdapter extends InboundAdapter
       super
 
 
-exports.LBSocketInboundAdapter = LBSocketInboundAdapter
-exports.newAdapter = (properties) ->
-  new LBSocketInboundAdapter properties
+module.exports = LBSocketInboundAdapter

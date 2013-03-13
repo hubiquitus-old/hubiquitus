@@ -31,7 +31,7 @@ describe "hChannel", ->
   hChild = undefined
   hChildFilter = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hchannel")
+  Channel = require "../lib/actor/hchannel"
 
   describe "publish", ->
     before () ->
@@ -58,7 +58,7 @@ describe "hChannel", ->
           collection: "channel"
 
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Channel topology
       hActor.h_start()
 
     before () ->

@@ -27,8 +27,8 @@ describe "hAuth", ->
   hAuth = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  authModule = require("../lib/actor/hauth")
-  sessionModule = require("../lib/actor/hsession")
+  Auth = require "../lib/actor/hauth"
+  Session = require "../lib/actor/hsession"
   codes = require "../lib/codes"
 
   userUrn = config.logins[0].urn
@@ -40,7 +40,7 @@ describe "hAuth", ->
       actor: authUrn,
       type: "hauth"
     }
-    hAuth = authModule.newActor(topology)
+    hAuth = new Auth topology
 
   after () ->
     hAuth.h_tearDown()

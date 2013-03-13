@@ -71,6 +71,4 @@ class TimerAdapter extends InboundAdapter
       super
 
 
-exports.TimerAdapter = TimerAdapter
-exports.newAdapter = (properties) ->
-  new TimerAdapter properties
+module.exports = TimerAdapter

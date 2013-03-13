@@ -63,6 +63,4 @@ class SocketInboundAdapter extends InboundAdapter
       super
 
 
-exports.SocketInboundAdapter = SocketInboundAdapter
-exports.newAdapter = (properties) ->
-  new SocketInboundAdapter properties
+module.exports = SocketInboundAdapter

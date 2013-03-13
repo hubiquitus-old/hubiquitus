@@ -29,8 +29,8 @@ describe "hGetLastMessages", ->
   hActor = undefined
   hActor2 = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hchannel")
-  actorModule2 = require("../lib/actor/hactor")
+  Channel = require "../lib/actor/hchannel"
+  Actor = require "../lib/actor/hactor"
   existingCHID = "urn:localhost:#{config.getUUID()}"
   DateTab = []
 
@@ -50,7 +50,7 @@ describe "hGetLastMessages", ->
         collection: existingCHID.replace(/[-.]/g, "")
       }
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Channel topology
     hActor.initialize = (ready) =>
       hActor.h_connectToDatabase hActor.properties.db, () =>
         ready()
@@ -63,7 +63,7 @@ describe "hGetLastMessages", ->
       type: "hactor",
       properties: {}
     }
-    hActor2 = actorModule2.newActor(topology)
+    hActor2 = new Actor topology
 
   after () ->
     hActor.h_tearDown()

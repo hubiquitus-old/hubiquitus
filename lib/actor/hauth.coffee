@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 statuses = require("../codes").statuses
@@ -63,6 +63,4 @@ class Auth extends Actor
       cb undefined, codes.errors.AUTH_FAILED, "invalid publisher or password"
 
 
-exports.Auth = Auth
-exports.newActor = (properties) ->
-  new Auth(properties)
+module.exports = Auth

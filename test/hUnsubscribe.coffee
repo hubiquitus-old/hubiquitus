@@ -33,7 +33,7 @@ describe "hUnsubscribe", ->
   hActor = undefined
   hChannel = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hactor")
+  Actor = require "../lib/actor/hactor"
   existingCHID = "urn:localhost:#{config.getUUID()}"
   existingCHID2 = "urn:localhost:#{config.getUUID()}"
 
@@ -42,7 +42,7 @@ describe "hUnsubscribe", ->
       actor: config.logins[0].urn,
       type: "hactor"
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Actor topology
 
     properties =
       listenOn: "tcp://127.0.0.1:1221",

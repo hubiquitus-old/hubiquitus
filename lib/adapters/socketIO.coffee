@@ -46,6 +46,4 @@ class SocketIOAdapter extends OutboundAdapter
     @sock.emit "hMessage", hMessage
 
 
-exports.SocketIOAdapter = SocketIOAdapter
-exports.newAdapter = (properties) ->
-  new SocketIOAdapter properties
+module.exports = SocketIOAdapter

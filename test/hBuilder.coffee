@@ -27,13 +27,13 @@ config = require("./_config")
 
 describe "builder", ->
   hActor = undefined
-  actorModule = require("../lib/actor/hactor")
+  Actor = require "../lib/actor/hactor"
 
   before () ->
     topology = {
       actor: config.logins[0].urn,
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Actor(topology)
   #
   # Because the throws are in another file, the condition should.throw() does not work.
   # Using instead: try-catch + should in the caught error

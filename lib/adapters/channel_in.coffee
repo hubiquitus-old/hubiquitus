@@ -87,6 +87,4 @@ class ChannelInboundAdapter extends InboundAdapter
       super
 
 
-exports.ChannelInboundAdapter = ChannelInboundAdapter
-exports.newAdapter = (properties) ->
-  new ChannelInboundAdapter properties
+module.exports = ChannelInboundAdapter

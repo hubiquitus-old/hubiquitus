@@ -111,7 +111,7 @@ class Actor extends EventEmitter
   # Actor's constructor
   # @param {object} topology Launch topology of the actor
   #
-  constructor: (topology, callback) ->
+  constructor: (topology) ->
     # init logger
     if topology.log
       @log_properties = topology.log
@@ -916,7 +916,5 @@ UUID._ha = (a, b) ->
     e += e
   c
 
-exports.Actor = Actor
-exports.newActor = (topology, callback) ->
-  new Actor(topology, callback)
 
+module.exports = Actor

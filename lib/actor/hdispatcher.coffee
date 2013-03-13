@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 factory = require "../hfactory"
 zmq = require "zmq"
 validator = require "../validator"
@@ -55,6 +55,5 @@ class Dispatcher extends Actor
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
 
-exports.Dispatcher = Dispatcher
-exports.newActor = (topology) ->
-  new Dispatcher(topology)
+
+module.exports = Dispatcher

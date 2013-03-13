@@ -47,6 +47,4 @@ class ChildprocessOutboundAdapter extends OutboundAdapter
     @ref.send message
 
 
-exports.ChildprocessOutboundAdapter = ChildprocessOutboundAdapter
-exports.newAdapter = (properties) ->
-  new ChildprocessOutboundAdapter properties
+module.exports = ChildprocessOutboundAdapter

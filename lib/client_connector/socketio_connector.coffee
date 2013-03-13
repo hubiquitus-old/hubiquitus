@@ -154,5 +154,4 @@ class SocketIO_Connector
     @started = false
 
 
-exports.socketIO = (properties) ->
-  new SocketIO_Connector(properties)
+module.exports = SocketIO_Connector

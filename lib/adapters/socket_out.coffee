@@ -57,6 +57,4 @@ class SocketOutboundAdapter extends OutboundAdapter
     @sock.send JSON.stringify(message)
 
 
-exports.SocketOutboundAdapter = SocketOutboundAdapter
-exports.newAdapter = (properties) ->
-  new SocketOutboundAdapter properties
+module.exports = SocketOutboundAdapter

@@ -28,7 +28,7 @@ describe "hTwitterAdapter", ->
   hActor = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hactor")
+  Actor = require "../lib/actor/hactor"
   newProperties = {}
 
   describe "Receive tweet", ->
@@ -50,7 +50,7 @@ describe "hTwitterAdapter", ->
           }
         } ]
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Actor topology
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
     after () ->

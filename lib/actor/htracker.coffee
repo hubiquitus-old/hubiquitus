@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 factory = require "../hfactory"
 _ = require "underscore"
 codes = require("../codes").hResultStatus
@@ -132,6 +132,5 @@ class Tracker extends Actor
   stopAlert: (actor) ->
     @send @h_buildSignal(@trackerChannelAid, "hStopAlert", actor, {headers:{h_quickFilter: actor}})
 
-exports.Tracker = Tracker
-exports.newActor = (topology) ->
-  new Tracker(topology)
+
+module.exports = Tracker

@@ -29,8 +29,8 @@ describe "hGetThreads", ->
   hActor = undefined
   hActor2 = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hchannel")
-  actorModule2 = require("../lib/actor/hactor")
+  Channel = require "../lib/actor/hchannel"
+  Actor = require "../lib/actor/hactor"
   activeChannel = "urn:localhost:#{config.getUUID()}"
   correctStatus = config.getUUID()
   convids = []
@@ -52,7 +52,7 @@ describe "hGetThreads", ->
         collection: activeChannel.replace(/[-.]/g, "")
       }
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Channel topology
     hActor.initialize = (ready) =>
       hActor.h_connectToDatabase hActor.properties.db, () =>
         ready()
@@ -65,7 +65,7 @@ describe "hGetThreads", ->
       type: "hactor",
       properties: {}
     }
-    hActor2 = actorModule2.newActor(topology)
+    hActor2 = new Actor topology
 
   after () ->
     hActor.h_tearDown()

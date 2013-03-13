@@ -43,7 +43,7 @@ class Session extends Actor
     @trackInbox = topology.trackInbox
     @hClient = undefined
 
-  touchTrackers: ->
+  h_touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
       @log "debug", "touching tracker #{trackerProps.trackerId}"
       if @status is "stopping"

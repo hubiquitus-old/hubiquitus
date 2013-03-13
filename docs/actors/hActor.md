@@ -29,12 +29,12 @@ Every actor need a topology to run. This topology describe every attributes of t
             <td>The type of the hActor. It contains the name of the implementation used for the hActor.<br/>
                 Possible values :
                 <ul>
-                    <li>hChannel</li>
-                    <li>hTracker</li>
-                    <li>hGateway</li>
-                    <li>hAuth</li>
-                    <li>hSession</li>
-                    <li>hDispatcher</li>
+                    <li>hchannel</li>
+                    <li>htracker</li>
+                    <li>hgateway</li>
+                    <li>hauth</li>
+                    <li>hsession</li>
+                    <li>hdispatcher</li>
                     <li><em>Your own type of actor</em></li>
                 </ul>
             </td>
@@ -198,7 +198,7 @@ When you start an actor you have access to some class variables :
             <td>n/a</td>
         </tr>
         <tr>
-            <td>ressource</td>
+            <td>resource</td>
             <td>String</td>
             <td>Resource of the actor's URN</td>
             <td>n/a</td>
@@ -292,7 +292,7 @@ When you start an actor you have access to some class variables :
         <tr>
             <td>outboundAdapters</td>
             <td>Array</td>
-            <td>List all the actor's inbound adapter</td>
+            <td>List all the actor's outbound adapter</td>
             <td>[ ]</td>
         </tr>
         <tr>
@@ -314,52 +314,718 @@ When you start an actor you have access to some class variables :
 
 ## Methods
 
-### onMessage
+### onMessage (hMessage)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>hMessage</td>
+            <td>Object</td>
+            <td>The incoming hMessage, receive by the actor</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called when an actor receive an incoming message.
+By default this method has no effect. You need to override it in your actor.
 
-### send
+### send (hMessage, cb)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>hMessage</td>
+            <td>Object  </td>
+            <td>The incoming hMessage, receive by the actor</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>cb</td>
+            <td>Function</td>
+            <td>The function to call when an answer is receive</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+This method must be call when you want to send a hMessage to another actor.
+It will check for an outboundAdapter and ask to the tracker if needed.
+If you use the `cb` parameter, the send function will call your callback function when it receive the answer of the send message.
 
-### createChild
+### createChild (classname, method, topology, cb)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>classname</td>
+            <td>String</td>
+            <td>The type of the hActor. It contains the name of the implementation used for the hActor.<br/>
+                Possible values :
+                <ul>
+                    <li>hchannel</li>
+                    <li>htracker</li>
+                    <li>hgateway</li>
+                    <li>hauth</li>
+                    <li>hsession</li>
+                    <li>hdispatcher</li>
+                    <li><em>Your own type of actor</em></li>
+                </ul>
+            </td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>method</td>
+            <td>String</td>
+            <td>The method use to create the actor.<br/>
+                Possible values :
+                <ul>
+                    <li>"inproc" : The actor will be create in the same process</li>
+                    <li>"fork" : The actor will be create in a new process</li>
+                </ul>
+            </td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>topology</td>
+            <td>Object</td>
+            <td>The topology of the actor which will be create</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>cb</td>
+            <td>Function</td>
+            <td>A function call when the actor is create. It return the child instance as parameters</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+This method is used to create and start a child actor.
 
-### log
+### log (type, message)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>type</td>
+            <td>String</td>
+            <td>The log level of the message</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>message</td>
+            <td>String</td>
+            <td>The log message</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method enrich a message with actor details and logs it in the console and/or in a log file
 
-### initChildren
+### initChildren (children)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>children</td>
+            <td>Array of Object</td>
+            <td>Array containing the topology of the actor's children</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This Method is called by the constructor to initializing actor's children
 
-### touchTrackers
+### initialize (done)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>done</td>
+            <td>Function</td>
+            <td>Callback use when the initialization is done</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called after starting an actor.
+You have to override it if you need a specific initialization before considering your actor ready.
 
-### initialize
+### preStop (done)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>done</td>
+            <td>Function</td>
+            <td>Callback use when the preStop is done</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called before stopping an actor.
+You have to override it if you need specifics treatments before stopping the actor.
 
-### preStop
+### postStop (done)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>done</td>
+            <td>Function</td>
+            <td>Callback use when the postStop is done</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called after stopping an actor.
+You have to override it if you need specifics treatments after stopping the actor.
 
-### postStop
+### raiseError (id, message)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>id</td>
+            <td>String</td>
+            <td>The identifier of an error <em>(must be unique)</em></td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>message</td>
+            <td>String</td>
+            <td>The message which describe the error to raise</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method if your actor is in error and it don't be able to treat message.
+Your actor status become `error` and he receive only message specifically send to him (with fullURN)
 
-### raiseError
 
-### closeError
+### closeError (id)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>id</td>
+            <td>String</td>
+            <td>The identifier of the error to close</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method when an error previously rise is ended.
+It will close the error and update the actor status to `ready` if they don't have other error rise
 
-### setFilter
+### setFilter (hCondition, cb)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>hCondition</td>
+            <td>Object</td>
+            <td>The hMessage checked with the actor's filter</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>cb</td>
+            <td>Function</td>
+            <td>The callback called after setting the filter</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is used when you want to set a filter on an actor.
+A filter must have the [hCondition](https://github.com/hubiquitus/hubiquitus/blob/master/docs/DataStructure.md) structure.
 
-### validateFilter
+### validateFilter (hMessage)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>hMessage</td>
+            <td>Object</td>
+            <td>The hMessage checked with the actor's filter</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called on incoming message to check if the hMessage respect the actor's filter
 
-### subscribe
+### subscribe (hChannel, quickFilter, cb)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>hChannel</td>
+            <td>String</td>
+            <td>The URN of the channel the actor will subscribe</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>quickFilter</td>
+            <td>String</td>
+            <td>With a quickFilter you will receive only the message compliant with this quickFilter (like a topic)</td>
+            <td>No</td>
+        </tr>
+        <tr>
+            <td>cb</td>
+            <td>Function</td>
+            <td>The callback called after setting the filter</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called to subscribe to a channel
+If a quickFilter is specified, the method subscribe the actor just for this quickFilter (like his subscribe to a topic)
 
-### unsubscribe
+### unsubscribe (hChannel, quickFilter, cb)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>hChannel</td>
+            <td>String</td>
+            <td>The URN of the channel the actor will unsubscribe</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>quickFilter</td>
+            <td>String</td>
+            <td>With a quickFilter you will be unsubscribe only of the message compliant with this quickFilter (like a topic)</td>
+            <td>No</td>
+        </tr>
+        <tr>
+            <td>cb</td>
+            <td>Function</td>
+            <td>The callback called after setting the filter</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called to unsubscribe to a channel
+If a quickFilter is specified, the method unsubscribe the actor just for this quickFilter (like his subscribe to a topic).
 
-### getSubscriptions
+### getSubscriptions ()
+This method is called to get the actor subscription.
+It return an array of string containing the URN of the subscribe channel
 
-### updateAdapter
+### updateAdapter (name, properties)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>name</td>
+            <td>String</td>
+            <td>The name of the adapter you want to update</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>properties</td>
+            <td>Object</td>
+            <td>The new properties to apply to the adapter</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called when you want to update an adapter.
+To use it, your adapter must have a `name` propertie.
 
-### removePeer
+### removePeer (actor)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>actor</td>
+            <td>String</td>
+            <td>The URN of the actor to remove</td>
+            <td>Yes</td>
+        </tr>
+    </tbody>
+</table>
+This method is called to remove a actor from outboundAdapter
+It automatically call when an actor don't use an outbound adapter during 90 seconds
 
-### buildMessage
+### buildMessage (actor, type, payload, options)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>actor</td>
+            <td>String</td>
+            <td>URN of the target of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>type</td>
+            <td>String</td>
+            <td>Type of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>payload</td>
+            <td>Object</td>
+            <td>Content of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>options</td>
+            <td>Object</td>
+            <td>Optionals attributes of the hMessage</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method to easily build a correct hMessage
 
-### buildCommand
+### buildCommand (actor, cmd, params, options)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>actor</td>
+            <td>String</td>
+            <td>URN of the target of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>cmd</td>
+            <td>String</td>
+            <td>The type of the hCommand</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>params</td>
+            <td>Object</td>
+            <td>The parameters of the hCommand</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>options</td>
+            <td>Object</td>
+            <td>Optionals attributes of the hMessage</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method to easily build a correct hMessage whit an hCommand payload
 
-### buildResult
+### buildResult (actor, ref, status, result, options)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>actor</td>
+            <td>String</td>
+            <td>URN of the target of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>ref</td>
+            <td>String</td>
+            <td>The msgid of the message refered to</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>status</td>
+            <td>Integer</td>
+            <td>The status of the operation</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>result</td>
+            <td>Object, Array, String, Boolean, Number</td>
+            <td>The result of a command operation</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>options</td>
+            <td>Object</td>
+            <td>Optionals attributes of the hMessage</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method to easily build a correct hMessage whit an hResult payload
 
-### buildMeasure
+### buildMeasure (actor, value, unit, options)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>actor</td>
+            <td>String</td>
+            <td>URN of the target of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>value</td>
+            <td>Number</td>
+            <td>The value of the measure</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>unit</td>
+            <td>String</td>
+            <td>The unit in which the measure is expressed</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>options</td>
+            <td>Object</td>
+            <td>Optionals attributes of the hMessage</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method to easily build a correct hMessage whit an hMeasure payload
 
-### buildAlert
+### buildAlert (actor, alert, options)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>actor</td>
+            <td>String</td>
+            <td>URN of the target of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>alert</td>
+            <td>String</td>
+            <td>The message provided by the author to describe the alert</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>options</td>
+            <td>Object</td>
+            <td>Optionals attributes of the hMessage</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method to easily build a correct hMessage whit an hAlert payload
 
-### buildAck
+### buildAck (actor, ref, ack, options)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>actor</td>
+            <td>String</td>
+            <td>URN of the target of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>ref</td>
+            <td>String</td>
+            <td>The msgid of the hMessage refered to</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>ack</td>
+            <td>String</td>
+            <td>The status of the acknowledgement</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>options</td>
+            <td>Object</td>
+            <td>Optionals attributes of the hMessage</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method to easily build a correct hMessage whit an hAck payload
 
-### buildConvState
+### buildConvState (actor, convid, status, options)
+<table>
+    <thead>
+        <tr>
+            <th>Parameters</th>
+            <th width="55pt">Type</th>
+            <th width="550pt">Description</th>
+            <th>Mandatory</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>actor</td>
+            <td>String</td>
+            <td>URN of the target of the hMessage</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>convid</td>
+            <td>String</td>
+            <td>Convid of the thread describe by the status</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>status</td>
+            <td>String</td>
+            <td>The status of the thread</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>options</td>
+            <td>Object</td>
+            <td>Optionals attributes of the hMessage</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+You can call this method to easily build a correct hMessage whit an hConvState payload

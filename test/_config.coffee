@@ -55,7 +55,7 @@ exports.logins = [
     password: user1Pass
   },
   {
-    urn: user1Urn + '/testRessource',
+    urn: user1Urn + '/testResource',
     password: user1Pass
   },
   {
@@ -63,7 +63,7 @@ exports.logins = [
     password: user2Pass
   },
   {
-    urn: user2Urn + '/testRessource',
+    urn: user2Urn + '/testResource',
     password: user2Pass
   },
   {
@@ -71,7 +71,7 @@ exports.logins = [
     password: user3Pass
   },
   {
-    urn: user3Urn + '/testRessource',
+    urn: user3Urn + '/testResource',
     password: user3Pass
   }
 ];

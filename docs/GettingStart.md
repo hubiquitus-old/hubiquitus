@@ -32,24 +32,30 @@ sudo make install
 ```
 > Note that you need at least v3.2.2
 
-* To install correctly CoffeeScript you can use `npm install -g coffee-script`
-
 ###Installation
 
-If you just want to use Hubiquitus without modigy it, you are ready.
+If you just want to use Hubiquitus without modify it, you are ready. You can build your Hubiquitus project.
 
-If you want join us and work in Hubiquitus, you can do :
+If you want join us and work on Hubiquitus, you can do :
 
 ```
 $ git clone git://github.com/hubiquitus/hubiquitus.git
 ```
 ## Run an example
 
-You're now ready to use Hubiquitus.
-We provide a topology's sample you can use to execute a Hubiquitus.
-To launch it, use this command in you `hubiquitus` folder
+To launch your first hubiquitus example :
+* Download hubiquitus using the previous command line
+* Build your launch file in your `hubiquitus` folder :
+
+launch.js :
+```js
+require("coffee-script");
+require("./lib/hubiquitus").start("samples/sample1.json");
 ```
-$ coffee lib/launcher.coffee
+* Run it using WebStorm (or an other IDE) or using this command line :
+
+```
+$ node launch.js
 ```
 
 Hubiquitus is now running. You can use any of our hAPI to send or receive hMessage
@@ -62,7 +68,7 @@ Hubiquitus provide some specific actor to build your project. But if our actors 
 
 > You can find details about our hubiquitus actor [here](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors)
 
-Every Hubiquitus's actor is write in Coffee-Script.
+Every Hubiquitus's actors are write in Coffee-Script. You have to put all your own actors in an `actors` folder in your Workspace
 
 To build your actor, you just need to extend Actor class of Hubiquitus and override needed function :
 
@@ -91,9 +97,9 @@ Hubiquitus provide some specific adapter to allow communication between actors o
 
 > You can find details about our Hubiquitus adapter [here](https://github.com/hubiquitus/hubiquitus/tree/master/docs/adapters)
 
-Every Hubiquitus's adapter's is write in Coffee-Script.
+Every Hubiquitus's adapters are write in Coffee-Script.
 
-You can build inbound adapter or outbound adapter
+You can build inbound adapter or outbound adapter. You have to put all your own adapters in an `adapters` folder in your Workspace
 
 > If you adapter is both IN and OUT, build an outbound adapter
 
@@ -111,7 +117,7 @@ class myInboundAdapter extends InboundAdapter
   start: ->
     unless @started
       # Add your starting instructions
-      @owner.emit "message", hMessage # To send the hMessage to the actor
+      # To send the hMessage to the actor use : @owner.emit "message", hMessage
       super
 
   stop: ->
@@ -129,7 +135,7 @@ To build your inbound adapter, you just need to extend OutboundAdapter class of 
 ```coffee-script
 {OutboundAdapter} = require("hubiquitus").adapter
 
-class myInboundAdapter extends OutboundAdapter
+class myOutboundAdapter extends OutboundAdapter
 
   constructor: (properties) ->
     super
@@ -164,18 +170,38 @@ You can find a topology sample [here](https://github.com/hubiquitus/hubiquitus/t
 
 We will run a sample project which you can find in [myProject](https://github.com/hubiquitus/hubiquitus/tree/master/samples/myProject)
 
-Before running your project you need to add the require reference. To do it, use there commands line in your project folder :
+Before running your project you need to include `hubiquitus`. You have two ways to do it. In your workspace :
+* If you have a local version of hubiquitus (previously clone with git or download from our repository) :
+```
+$ npm install ./hubiquitus
+```
+> `./hubiquitus` is the path of your local version
 
+* If you don't have a local version of hubiquitus you can use :
 ```
 $ npm install git://github.com/hubiquitus/hubiquitus.git
-$ npm install adapters/myAdapter adapters/myAdapter2 actors/myActor actors/myActor2
 ```
-> In the second command line, you need to install all your actors and adapters. In this example, we install all myProject's actors and adapters
+or
+```
+$ npm install hubiquitus
+```
+> Currently not available (coming soon)
 
-You are now ready to run your project. To do it, use there commands line in your project folder :
+At this step, you should have in your workspace :
+* An `actors` folder containing all your own actors (optional)
+* An `adapters` folder containing all your own adapters (optional)
+* A `node_modules` folder containing hubiquitus
+* A topology file in `json`
+
+You now need to build your launch file :
+
+```js
+require("coffee-script");
+require("hubiquitus").start("./myTopology.json");
+```
+
+You are now ready to run your project. To do it, you can execute your launch file in WebStorm (or an other IDE), or use the following command line in you workspace :
 
 ```
-$ cd node_modules/hubiquitus
-$ coffee lib/launcher.coffee ../../myTopology.json
+$ node launch.js
 ```
-

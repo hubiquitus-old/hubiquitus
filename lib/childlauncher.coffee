@@ -37,7 +37,6 @@ main = ->
 
   # Transmitting any message from parent actor to child actor
   process.on "message" , (msg) ->
-    #console.log("Child process got message",msg)
     actor.emit "message", msg
 
 main()

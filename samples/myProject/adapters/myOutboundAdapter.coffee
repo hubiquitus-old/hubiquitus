@@ -1,6 +1,6 @@
-{InboundAdapter} = require "hubiquitus"
+{OutboundAdapter} = require "hubiquitus"
 
-class myInboundAdapter extends InboundAdapter
+class myOutboundAdapter extends OutboundAdapter
 
   constructor: (properties) ->
     super
@@ -9,7 +9,6 @@ class myInboundAdapter extends InboundAdapter
   start: ->
     unless @started
       # Add your starting instructions
-      @owner.emit "message", hMessage # To send the hMessage to the actor
       super
 
   stop: ->
@@ -17,6 +16,9 @@ class myInboundAdapter extends InboundAdapter
       # Add your stopping instructions
       super
 
-exports.myInboundAdapter = myInboundAdapter
+  send: (message) ->
+    # Add your sending instruction
+
+exports.myOutboundAdapter = myOutboundAdapter
 exports.newAdapter = (properties) ->
-  new myInboundAdapter(properties)
+  new myOutboundAdapter(properties)

@@ -28,14 +28,30 @@ factory = require "../hfactory"
 zmq = require "zmq"
 validator = require "../validator"
 
+#
+# Class that defines a dispatcher actor
+#
 class Dispatcher extends Actor
 
+  # @property {String} URN use by the dispatcher to talk to his workers
+  workersAlias: undefined
+  # @property {Integer} Number of workers create by the dispatcher
+  nbWorkers: undefined
+
+  #
+  # Actor's constructor
+  # @param topology {object} Launch topology of the actor
+  #
   constructor: (topology) ->
     super
     @workersAlias = "#{@actor}#workers"
     @addWorkers(topology.properties.workers)
     @nbWorkers = topology.properties.workers.nb
 
+  #
+  # Method which create the workers
+  # @param workerProps {object} Properties of workers which the dispatcher launch (method, type and nb)
+  #
   addWorkers : (workerProps) ->
     dispatchingUrl = "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+3000}"
     @outboundAdapters.push factory.newAdapter("lb_socket_out", { targetActorAid: @workersAlias, owner: @, url: dispatchingUrl })
@@ -44,6 +60,11 @@ class Dispatcher extends Actor
       @log "debug", "Adding a new worker #{i}"
       @createChild workerProps.type, workerProps.method, actor: "urn:localhost:worker#{i}", adapters: [ { type: "lb_socket_in", url: dispatchingUrl }, { type: "socket_in", url: "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+3000}" }],
 
+  #
+  # @overload onMessage(hMessage)
+  #   Method that processes the incoming message on a hDispatcher.
+  #   @param hMessage {Object} the hMessage receive
+  #
   onMessage: (hMessage) ->
     @log "Dispatcher received a hMessage to send to workers: #{JSON.stringify(hMessage)}"
     loadBalancing = Math.floor(Math.random() * @nbWorkers) + 1
@@ -52,6 +73,12 @@ class Dispatcher extends Actor
     msg.publisher = sender
     @send msg
 
+  #
+  # @overload h_fillAttribut(hMessage, cb)
+  #   Method called to override some hMessage's attributs before sending.
+  #   Overload the hActor method with an empty function to not altering a hMessage publish in a channel
+  #   @private
+  #
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
 

@@ -58,7 +58,6 @@ newActor = (type, properties) ->
   if not type then throw new Error "actor's type undefined"
   if not actors[type] then actors[type] = require "#{__dirname}/actor/#{type}"
   else if typeof actors[type] is "string" then actors[type] = require actors[type]
-  console.log actors[type]
   new actors[type] properties
 
 newAdapter = (type, properties) ->

@@ -114,7 +114,6 @@ class Actor extends EventEmitter
   #
   # Actor's constructor
   # @param topology {object} Launch topology of the actor
-  # @param callback {function}
   #
   constructor: (topology) ->
     # init logger
@@ -276,6 +275,7 @@ class Actor extends EventEmitter
   # This method could be override to specified an actor
   # @param hMessage {object} the hMessage to send
   # @param cb {function} callback to call when a answer is receive
+  # @option cb hResult {object} hMessage with hResult payload
   #
   send: (hMessage, cb) ->
     unless _.isString(hMessage.actor)
@@ -346,6 +346,7 @@ class Actor extends EventEmitter
   # @private
   # @param hMessage {object} the hMessage to send
   # @param cb {function} callback to call when a answer is receive
+  # @option cb hResult {object} hMessage with hResult payload
   # @param outboundAdapter {object} adapter used to send hMessage
   #
   h_sending: (hMessage, cb, outboundAdapter) ->
@@ -389,7 +390,7 @@ class Actor extends EventEmitter
       cb resultMsg
 
   #
-  # Private method called override some hMessage's attributs before sending
+  # Method called to override some hMessage's attributs before sending
   # @private
   # @param hMessage {object} the hMessage update
   # @param cb {function} callback to define which attribut must be override
@@ -409,6 +410,7 @@ class Actor extends EventEmitter
   # @param method {string} the method to use to create the actor
   # @param topology {object} the topology of the child actor to create
   # @param cb {function} a function call when the actor is create. It return the child instance as parameters
+  # @option cb hChild {object} The instance of the child
   #
   createChild: (classname, method, topology, cb) ->
     unless _.isString(classname) then throw new Error "'classname' parameter must be a string"
@@ -657,6 +659,8 @@ class Actor extends EventEmitter
   # This method could be override to specified an actor
   # @param hCondition {object} The filter to set
   # @param cb {function} the callback to call after setting the filter
+  # @option cb status {integer} The status code of the method (0 if no_error)
+  # @option cb result {string} A message which describe the result (empty if no_error)
   #
   setFilter: (hCondition, cb) ->
     if not hCondition or (hCondition not instanceof Object)
@@ -684,6 +688,8 @@ class Actor extends EventEmitter
   # @param hChannel {string} URN of the channel to subscribe
   # @param quickFilter {string} quickFilter to apply on the channel
   # @param cb {function} callback called when the susbscibe is done
+  # @option cb status {integer} The status code of the method (0 if no_error)
+  # @option cb result {string} A message which describe the result (empty if no_error)
   #
   subscribe: (hChannel, quickFilter, cb) ->
     status = undefined
@@ -735,6 +741,8 @@ class Actor extends EventEmitter
   # @param hChannel {string} URN of the channel to unsubscribe
   # @param quickFilter {string} quickFilter to removed from the channel
   # @param cb {function} callback called when the unsusbscibe is done
+  # @option cb status {integer} The status code of the method (0 if no_error)
+  # @option cb result {string} A message which describe the result (empty if no_error)
   #
   unsubscribe: (hChannel, quickFilter, cb) ->
     if typeof quickFilter is "function"

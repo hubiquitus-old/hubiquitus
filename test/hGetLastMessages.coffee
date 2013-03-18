@@ -217,7 +217,7 @@ describe "hGetLastMessages", ->
       it "should return Ok with default messages of channel if not specified and message respect filter", (done) ->
         delete cmd.payload.params.nbLastMsg
         cmd.payload.filter = in:
-          publisher: [hActor.actor]
+          publisher: [existingCHID]
 
         hActor.send = (hMessage) ->
           hMessage.should.have.property "type", "hResult"

@@ -25,8 +25,16 @@
 {InboundAdapter} = require "./hadapter"
 url = require "url"
 
-
+#
+# Class that defines a http Inbound Adapter.
+# It is used to listen http request
+#
 class HttpInboundAdapter extends InboundAdapter
+
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     if properties.url
@@ -40,7 +48,11 @@ class HttpInboundAdapter extends InboundAdapter
     @sys = require 'sys'
     @http = require 'http'
 
-
+  #
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the actor listen for http request
+  #
   start: ->
     @owner.log "debug", "Server path : #{@serverPath} Port : #{@port} is  running ..."
     server = @http.createServer (req, res) =>

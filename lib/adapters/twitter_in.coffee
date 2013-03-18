@@ -25,16 +25,32 @@
 {InboundAdapter} = require "./hadapter"
 twitter = require "ntwitter"
 
-
+#
+# Class that defines a twitter Adapter.
+# It is used to fetch twit from the twitter 1.1 API
+#
 class TwitterInboundAdapter extends InboundAdapter
 
+  # @property {object} stream which fetch twit form twitter
+  stream: undefined
+
+  # @property {object} twitter connexion
+  @twit: undefined
+
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
-    @server = undefined
     @stream = undefined
     @twit = undefined
 
-
+  #
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the actor will receive hTweet
+  #
   start: ->
     unless @started
       @twit = new twitter(
@@ -76,6 +92,11 @@ class TwitterInboundAdapter extends InboundAdapter
             @owner.log "debug", "twitter stream close"
       super
 
+  #
+  # @overload stop()
+  #   Method which stop the adapter.
+  #   When this adapter is stopped, the actor will not receive hTweet anymore and the Twitter stream will be destroy
+  #
   stop: ->
     if @started
       if @stream
@@ -83,6 +104,11 @@ class TwitterInboundAdapter extends InboundAdapter
         @stream = null
       super
 
+  #
+  # @overload update(properties)
+  #   Method which update the adapter properties.
+  #   @param properties {object} new properties to apply on the adapter
+  #
   update: (properties) ->
     @stop()
     for props of properties

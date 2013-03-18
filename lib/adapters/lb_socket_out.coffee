@@ -25,12 +25,19 @@
 {OutboundAdapter} = require "./hadapter"
 zmq = require "zmq"
 
-
+#
+# Class that defines a Socket LoadBalancing Outbound Adapter.
+# It is used when a actor need to dispatch hMessage between few actors with load balancing
+#
 class LBSocketOutboundAdapter extends OutboundAdapter
 
   # @property {object} zeromq socket
   sock: undefined
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     if properties.url
@@ -40,18 +47,33 @@ class LBSocketOutboundAdapter extends OutboundAdapter
     @sock = zmq.socket "push"
     @sock.identity = "LBSocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
+  #
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the actor can transmit hMessage to few actors with load balancing
+  #
   start:->
 
     @sock.bindSync @url
     @owner.log "debug", "#{@sock.identity} bound on #{@url}"
     super
 
+  #
+  # @overload stop()
+  #   Method which stop the adapter.
+  #   When this adapter is stopped, the channel cannot send hMessage from this adapter anymore
+  #
   stop: ->
     if @started
       if @sock._zmq.state is 0
         @sock.close()
       super
 
+  #
+  # @overload send(hMessage)
+  #   Method which send the hMessage in the zmq push load balancing socket.
+  #   @param hMessage {object} The hMessage to send
+  #
   send: (message) ->
     @start() unless @started
     @sock.send JSON.stringify(message)

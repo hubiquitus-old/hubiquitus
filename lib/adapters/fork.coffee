@@ -24,9 +24,16 @@
 #
 {OutboundAdapter} = require "./hadapter"
 
-
+#
+# Class that defines a fork Adapter.
+# It is used between a parent and his child create with fork method
+#
 class ChildprocessOutboundAdapter extends OutboundAdapter
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     if properties.ref
@@ -34,17 +41,24 @@ class ChildprocessOutboundAdapter extends OutboundAdapter
     else
       throw new Error "You must explicitely pass an actor child process as reference to a ChildOutboundAdapter"
 
-  start: ->
-    super
-
+  #
+  # @overload stop()
+  #   Method which stop the adapter.
+  #   When this adapter is stopped, the actor's process is kill
+  #
   stop: ->
     if @started
       @ref.kill()
     super
 
-  send: (message) ->
+  #
+  # @overload send(hMessage)
+  #   Method which send the hMessage between parent and child
+  #   @param hMessage {object} The hMessage to send
+  #
+  send: (hMessage) ->
     @start() unless @started
-    @ref.send message
+    @ref.send hMessage
 
 
 module.exports = ChildprocessOutboundAdapter

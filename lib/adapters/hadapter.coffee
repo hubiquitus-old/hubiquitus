@@ -30,21 +30,24 @@ url = require "url"
 #
 class Adapter
 
-  # @property {string}
+  # @property {string} Direction of the socket
   direction: undefined
 
-  # @property {boolean}
+  # @property {boolean} Adapter's status
   started: undefined
 
-  # @property {object}
+  # @property {object} Adapter's properties
   properties: undefined
 
-  # @property {Actor}
+  # @property {Actor} Adapter's owner
   owner: undefined
+
+  # @property {string} Url use by the adapter
+  url: undefined
 
   #
   # Adapter's constructor
-  # @param {object} properties
+  # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
     @started = false
@@ -55,7 +58,8 @@ class Adapter
       throw new Error "You must pass an actor as reference"
 
   #
-  # @param {string} url_string
+  # Method which set the url variable with correct format
+  # @param url_string {string} Launch properties of the adapter
   #
   formatUrl: (url_string) ->
     if url_string
@@ -69,15 +73,31 @@ class Adapter
     else
       @url = "tcp://127.0.0.1:#{@genListenPort}"
 
+  #
+  # Method wich generate a random listen port (between 3000 and 33000)
+  #
   genListenPort: ->
     Math.floor(Math.random() * 30000) + 3000
 
+  #
+  # Method which start the adapter.
+  # This method could be override to specified an actor
+  #
   start: ->
     @started = true
 
+  #
+  # Method which stop the adapter.
+  # This method could be override to specified an actor
+  #
   stop: ->
     @started = false
 
+  #
+  # Method which update the adapter properties.
+  # This method could be override to specified an actor
+  # @param properties {object} new properties to apply on the adapter
+  #
   update: (properties) ->
     # Function to overide if you need to update adapter's properties
 
@@ -87,6 +107,10 @@ class Adapter
 #
 class InboundAdapter extends Adapter
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     @direction = "in"
     super
@@ -100,6 +124,10 @@ class OutboundAdapter extends Adapter
   # @property {string}
   targetActorAid: undefined
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     @direction = "out"
     if properties.targetActorAid
@@ -108,7 +136,11 @@ class OutboundAdapter extends Adapter
       throw new Error "You must provide the AID of the targeted actor"
     super
 
-  send: (message) ->
+  #
+  # Method which has to be override to specify an outbound adapter
+  # @param hMessage {object}
+  #
+  send: (hMessage) ->
     throw new Error "Send method should be overriden"
 
 

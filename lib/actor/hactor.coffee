@@ -427,8 +427,7 @@ class Actor extends EventEmitter
     unless topology.log then topology.log = @log_properties
 
     # prefixing actor's id automatically
-    unless classname is "hchannel"
-      topology.actor = "#{topology.actor}/#{UUID.generate()}"
+    topology.actor = "#{topology.actor}/#{UUID.generate()}"
 
     switch method
       when "inproc"

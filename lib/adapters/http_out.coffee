@@ -25,8 +25,16 @@
 {OutboundAdapter} = require "./hadapter"
 url = require "url"
 
-
+#
+# Class that defines a http Outbound Adapter.
+# It is used to write http request on a server
+#
 class HttpOutboundAdapter extends OutboundAdapter
+
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
 
@@ -40,7 +48,12 @@ class HttpOutboundAdapter extends OutboundAdapter
 
     @owner.log "debug", "HttpOutboundAdapter used -> [ url: #{@server_url} port : #{@port} path: #{@path} ]"
 
-  send: (message) ->
+  #
+  # @overload send(hMessage)
+  #   Method which write a http POST request with hMessage payload on a server
+  #   @param hMessage {object} The hMessage to send
+  #
+  send: (hMessage) ->
     @start() unless @started
 
     @querystring = require 'querystring'
@@ -54,7 +67,7 @@ class HttpOutboundAdapter extends OutboundAdapter
       method: "POST"
       headers:
         "Content-Type": "application/x-www-form-urlencoded"
-        "Content-Length": JSON.stringify(message.payload).length
+        "Content-Length": JSON.stringify(hMessage.payload).length
 
     post_req = @http.request post_options, (res) =>
 
@@ -62,7 +75,7 @@ class HttpOutboundAdapter extends OutboundAdapter
       @owner.log "warn", "problem with request: " + e.message
 
     # write parameters to post body
-    post_req.write JSON.stringify(message.payload)
+    post_req.write JSON.stringify(hMessage.payload)
     post_req.end()
 
 

@@ -24,9 +24,16 @@
 #
 {OutboundAdapter} = require "./hadapter"
 
-
+#
+# Class that defines an inproc Adapter.
+# It is used between a parent and his child create with inproc method
+#
 class LocalOutboundAdapter extends OutboundAdapter
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     if properties.ref
@@ -34,12 +41,14 @@ class LocalOutboundAdapter extends OutboundAdapter
     else
       throw new Error "You must explicitely pass an actor as reference to a LocalOutboundAdapter"
 
-  start: ->
-    super
-
-  send: (message) ->
+  #
+  # @overload send(hMessage)
+  #   Method which send the hMessage between parent and child
+  #   @param hMessage {object} The hMessage to send
+  #
+  send: (hMessage) ->
     @start() unless @started
-    @ref.emit "message", message
+    @ref.emit "message", hMessage
 
 
 module.exports = LocalOutboundAdapter

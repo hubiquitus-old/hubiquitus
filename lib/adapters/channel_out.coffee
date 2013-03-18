@@ -41,7 +41,6 @@ class ChannelOutboundAdapter extends OutboundAdapter
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
-    properties.targetActorAid = "#{validator.getBareURN(properties.owner.actor)}"
     super
     if properties.url
       url_props = url.parse(properties.url)

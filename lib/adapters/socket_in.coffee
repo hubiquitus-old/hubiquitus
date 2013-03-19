@@ -25,23 +25,38 @@
 {InboundAdapter} = require "./hadapter"
 zmq = require "zmq"
 
-
+#
+# Class that defines a Socket Inbound Adapter.
+# It is the basic listening adapter. Every actor needs one to exchange messages.
+#
 class SocketInboundAdapter extends InboundAdapter
 
   # @property {object} zeromq socket
   sock: undefined
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     @formatUrl properties.url
     @type = "socket_in"
 
+  #
+  # Method which initialize the zmq pull socket
+  #
   initSocket: () ->
     @sock = zmq.socket "pull"
     @sock.identity = "SocketIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
       @owner.emit "message", JSON.parse(data)
 
+  #
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the channel can receive hMessage
+  #
   start: ->
     @initSocket()
     while @started is false
@@ -56,6 +71,11 @@ class SocketInboundAdapter extends InboundAdapter
           @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
           @owner.log "info", 'Change listening port to avoid collision :',err
 
+  #
+  # @overload stop()
+  #   Method which stop the adapter.
+  #   When this adapter is stopped, the actor will not receive hMessage form this adapter anymore
+  #
   stop: ->
     if @started
       if @sock._zmq.state is 0
@@ -65,6 +85,4 @@ class SocketInboundAdapter extends InboundAdapter
       @sock=null
 
 
-exports.SocketInboundAdapter = SocketInboundAdapter
-exports.newAdapter = (properties) ->
-  new SocketInboundAdapter properties
+module.exports = SocketInboundAdapter

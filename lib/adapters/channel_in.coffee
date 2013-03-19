@@ -25,15 +25,28 @@
 {InboundAdapter} = require "./hadapter"
 zmq = require "zmq"
 
-
+#
+# Class that defines a Channel Inbound Adapter.
+# It is used when a actor subscribe to a channel
+#
 class ChannelInboundAdapter extends InboundAdapter
 
- # @property {object} zeromq socket
+  # @property {object} zeromq socket
   sock: undefined
 
-  # @property {array} filters
+  # @property {array} filters apply to the channel (like topics)
   listQuickFilter: undefined
 
+  # @property {string} URN of the channel follow by the adapter
+  channel: undefined
+
+  # @property {string} quickFilter to apply when creating the adapter
+  filter: undefined
+
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     @channel = properties.channel
     super
@@ -56,11 +69,24 @@ class ChannelInboundAdapter extends InboundAdapter
       hMessage.actor = @owner.actor
       @owner.emit "message", hMessage
 
+  #
+  # Mathod called to add a quickFilter in a subscription.
+  # Add a quickFilter is like follow a specific topic in a channel
+  # @param quickFilter {string} QuickFilter to add
+  #
   addFilter: (quickFilter) ->
     @owner.log "debug", "Add quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
     @sock.subscribe quickFilter
     @listQuickFilter.push quickFilter
 
+  #
+  # Mathod called to remove a quickFilter in a subscription.
+  # Remove a quickFilter is like unfollow a specific topic in a channel.
+  # If you remove all the quickFilter of a channel, you will be unsubscribe from it
+  # @param quickFilter {string} QuickFilter to add
+  # @param cb {function} Callback called to inform the actor if there are still a quickFilter in the channel after this remove.
+  # @option cb result {boolean} True if there are not a quickFilter anymore, False if there are still one or more
+  #
   removeFilter: (quickFilter, cb) ->
     @owner.log "debug", "Remove quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
     if @sock._zmq.state is 0
@@ -75,6 +101,11 @@ class ChannelInboundAdapter extends InboundAdapter
     else
       cb false
 
+  #
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the actor will receive hMessage publish on the channel
+  #
   start: ->
     @initSocket()
     unless @started
@@ -83,6 +114,11 @@ class ChannelInboundAdapter extends InboundAdapter
       @owner.log "debug", "#{@owner.actor} subscribe to #{@channel} on #{@url}"
       super
 
+  #
+  # @overload stop()
+  #   Method which stop the adapter.
+  #   When this adapter is stopped, the actor will not receive hMessage publish on the channel anymore
+  #
   stop: ->
     if @started
       if @sock._zmq.state is 0
@@ -92,6 +128,4 @@ class ChannelInboundAdapter extends InboundAdapter
       @sock=null
 
 
-exports.ChannelInboundAdapter = ChannelInboundAdapter
-exports.newAdapter = (properties) ->
-  new ChannelInboundAdapter properties
+module.exports = ChannelInboundAdapter

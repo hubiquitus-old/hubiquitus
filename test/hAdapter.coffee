@@ -30,8 +30,8 @@ describe "hAdapter", ->
   hActor = undefined
   hActor2 = undefined
   hResultStatus = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hactor")
-  actorModuleChannel = require("../lib/actor/hchannel")
+  Actor = require "../lib/actor/hactor"
+  Channel = require "../lib/actor/hchannel"
 
   describe "socket_in collision", ->
     http = require "http"
@@ -43,7 +43,7 @@ describe "hAdapter", ->
         properties: {},
         adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2112" } ]
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Actor topology
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
       topology = {
@@ -52,7 +52,7 @@ describe "hAdapter", ->
         properties: {},
         adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2112" } ]
       }
-      hActor2 = actorModule.newActor(topology)
+      hActor2 = new Actor(topology)
       hActor2.h_onMessageInternal(hActor2.h_buildSignal(hActor2.actor, "start", {}))
 
     after () ->
@@ -86,7 +86,7 @@ describe "hAdapter", ->
           collection: (config.logins[1].urn).replace(/[-.]/g, "")
         }
       }
-      hActor = actorModuleChannel.newActor(topology)
+      hActor = new Channel topology
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
 
       topology = {
@@ -104,7 +104,7 @@ describe "hAdapter", ->
           collection: (config.logins[3].urn).replace(/[-.]/g, "")
         }
       }
-      hActor2 = actorModuleChannel.newActor(topology)
+      hActor2 = new Channel topology
       hActor2.h_onMessageInternal(hActor2.h_buildSignal(hActor2.actor, "start", {}))
 
     after () ->

@@ -25,23 +25,38 @@
 {InboundAdapter} = require "./hadapter"
 zmq = require "zmq"
 
-
+#
+# Class that defines a Socket LoadBalancing Inbound Adapter.
+# It is used when a actor is one of the load balance actor.
+#
 class LBSocketInboundAdapter extends InboundAdapter
 
   # @property {object} zeromq socket
   sock: undefined
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     @formatUrl(properties.url)
     @type = "lb_socket_in"
 
+  #
+  # Method which initialize the zmq pull load balancing socket
+  #
   initSocket: () ->
     @sock = zmq.socket "pull"
     @sock.identity = "LBSocketIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
       @owner.emit "message", JSON.parse(data)
 
+  #
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the actor will receive some hMessage depending the load balancing
+  #
   start: ->
     @initSocket()
     while @started is false
@@ -56,6 +71,11 @@ class LBSocketInboundAdapter extends InboundAdapter
           @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
           @owner.log "info", 'Change listening port to avoid collision :',err
 
+  #
+  # @overload stop()
+  #   Method which stop the adapter.
+  #   When this adapter is stopped, the actor will not receive hMessage from this adapter anymore
+  #
   stop: ->
     if @started
       if @sock._zmq.state is 0
@@ -65,6 +85,4 @@ class LBSocketInboundAdapter extends InboundAdapter
       @sock=null
 
 
-exports.LBSocketInboundAdapter = LBSocketInboundAdapter
-exports.newAdapter = (properties) ->
-  new LBSocketInboundAdapter properties
+module.exports = LBSocketInboundAdapter

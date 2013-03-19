@@ -78,7 +78,7 @@ exports.validateURN = (urn) ->
   /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/.test(urn)
 
 ###
-Returns true or false if it is a valid URN with ressource following hubiquitus standards
+Returns true or false if it is a valid URN with resource following hubiquitus standards
 @param urn - the urn string to validate
 ###
 exports.validateFullURN = (urn) ->

@@ -27,14 +27,20 @@ url = require "url"
 zmq = require "zmq"
 validator = require "./../validator"
 
-
+#
+# Class that defines a Channel Outbound Adapter.
+# It is used when by a channel to publish hMessage
+#
 class ChannelOutboundAdapter extends OutboundAdapter
 
   # @property {object} zeromq socket
   sock: undefined
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
-    properties.targetActorAid = "#{validator.getBareURN(properties.owner.actor)}"
     super
     if properties.url
       url_props = url.parse(properties.url)
@@ -47,10 +53,18 @@ class ChannelOutboundAdapter extends OutboundAdapter
     else
       @url = "tcp://127.0.0.1:#{@genListenPort}"
 
+  #
+  # Method which initialize the zmq pub socket
+  #
   initSocket: () ->
     @sock = zmq.socket "pub"
     @sock.identity = "ChannelOA_of_#{@owner.actor}"
 
+  #
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the channel can transmit hMessage to its subscriber
+  #
   start:->
     @initSocket()
     while @started is false
@@ -65,6 +79,11 @@ class ChannelOutboundAdapter extends OutboundAdapter
           @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
           @owner.log "info", 'Change streaming port to avoid collision :',err
 
+  #
+  # @overload stop()
+  #   Method which stop the adapter.
+  #   When this adapter is stopped, the channel cannot publish hMessage anymore
+  #
   stop: ->
     if @started
       if @sock._zmq.state is 0
@@ -73,6 +92,11 @@ class ChannelOutboundAdapter extends OutboundAdapter
       @sock.on "message",()=>
       @sock=null
 
+  #
+  # @overload send(hMessage)
+  #   Method which send the hMessage in the zmq pub socket.
+  #   @param hMessage {object} The hMessage to send
+  #
   send: (hMessage) ->
     @start() unless @started
     if hMessage.headers and hMessage.headers.h_quickFilter and typeof hMessage.headers.h_quickFilter is "string"
@@ -82,6 +106,4 @@ class ChannelOutboundAdapter extends OutboundAdapter
       @sock.send JSON.stringify(hMessage)
 
 
-exports.ChannelOutboundAdapter = ChannelOutboundAdapter
-exports.newAdapter = (properties) ->
-  new ChannelOutboundAdapter properties
+module.exports = ChannelOutboundAdapter

@@ -28,14 +28,14 @@ describe "hSetFilter", ->
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
   cmd = {}
-  actorModule = require("../lib/actor/hactor")
+  Actor = require "../lib/actor/hactor"
 
   before () ->
     topology = {
     actor: config.logins[0].urn,
     type: "hactor"
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Actor topology
 
   after () ->
     hActor.h_tearDown()

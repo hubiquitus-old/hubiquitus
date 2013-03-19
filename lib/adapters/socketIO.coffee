@@ -24,9 +24,19 @@
 #
 {OutboundAdapter} = require "./hadapter"
 
-
+#
+# Class that defines a socket-IO Adapter.
+# It is used to communicate with the client using a hAPI
+#
 class SocketIOAdapter extends OutboundAdapter
 
+  # @property {object} socket-io websocket
+  sock: undefined
+
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     @type = "socketIO"
@@ -35,17 +45,14 @@ class SocketIOAdapter extends OutboundAdapter
     @sock.on "hMessage", (hMessage) =>
       @owner.emit "message", hMessage
 
-  start: ->
-    super
-
-  stop: ->
-    super
-
+  #
+  # @overload send(hMessage)
+  #   Method which send the hMessage in the socket-io websocket.
+  #   @param hMessage {object} The hMessage to send
+  #
   send: (hMessage) ->
     @start() unless @started
     @sock.emit "hMessage", hMessage
 
 
-exports.SocketIOAdapter = SocketIOAdapter
-exports.newAdapter = (properties) ->
-  new SocketIOAdapter properties
+module.exports = SocketIOAdapter

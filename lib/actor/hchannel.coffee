@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "../validator"
@@ -31,17 +31,28 @@ mongo = require "mongodb"
 codes = require "../codes"
 factory = require "../hfactory"
 
+#
+# Class that defines a channel actor
+#
 class Channel extends Actor
 
+  #
+  # Actor's constructor
+  # @param topology {object} Launch topology of the actor
+  #
   constructor: (topology) ->
     #TODO Stop actor and send error when all mandatory attribut is not in topology
     super
-    @actor = validator.getBareURN(topology.actor)
     @type = "channel"
     @inboundAdapters.push factory.newAdapter("socket_in", {url: topology.properties.listenOn, owner: @})
     @outboundAdapters.push factory.newAdapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
     @properties.subscribers = topology.properties.subscribers or []
 
+  #
+  # @overload onMessage(hMessage)
+  #   Method that processes the incoming message on a hChannel.
+  #   @param hMessage {Object} the hMessage receive
+  #
   onMessage: (hMessage) ->
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
@@ -96,17 +107,24 @@ class Channel extends Actor
         hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, hMessage)
         @send hMessageResult
 
+  #
+  # @overload h_onSignal(hMessage)
+  #   Private method that processes hSignal message.
+  #   The hSignal are service's message
+  #   @private
+  #   @param hMessage {object} the hSignal receive
+  #
   h_onSignal: (hMessage) ->
     @log "debug", "Channel received a hSignal: #{JSON.stringify(hMessage)}"
     if hMessage.payload.name is "hStopAlert"
       hMessage.actor = @actor
       @send hMessage
 
-  ###
-  Loads the hCommand module, sets the listener.
-  @param hMessage - The received hMessage with a hCommand payload
-  @module Module calls to run command
-  ###
+  #
+  # Method that Loads the hCommand module, sets the listener.
+  # @param hMessage {object} The received hMessage with a hCommand payload
+  # @param module {object} Module calls to run command
+  #
   runCommand: (hMessage, module) ->
     self = this
     timerObject = null #setTimeout timer variable
@@ -151,13 +169,30 @@ class Channel extends Actor
       @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
       @send(@buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 
+  #
+  # @overload h_fillAttribut(hMessage, cb)
+  #   Method called to override some hMessage's attributs before sending.
+  #   Overload the hActor method with an empty function to not altering a hMessage publish in a channel
+  #   @private
+  #
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
 
+  # @overload initialize(done)
+  #   Method called after starting the actor's adapters to connect the channel to the database.
+  #   When the connection is opened the actor's status is set to ready
+  #   @param done {function}
+  #
   initialize: (done) ->
     @h_connectToDatabase @properties.db, () =>
       done()
 
+  #
+  # Method called to connect the hChannel to the mongoDB database.
+  # @private
+  # @param dbProperties {object} The properties of the database (port, host and name)
+  # @param done {function} Function called when the actor can be set his status to ready
+  #
   h_connectToDatabase: (dbProperties, done) ->
     host = dbProperties.host or "localhost"
     port = dbProperties.port or 27017
@@ -172,6 +207,5 @@ class Channel extends Actor
       else
         @log "error", "Could not open database"
 
-exports.Channel = Channel
-exports.newActor = (properties) ->
-  new Channel(properties)
+
+module.exports = Channel

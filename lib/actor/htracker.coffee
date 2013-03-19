@@ -23,23 +23,49 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 factory = require "../hfactory"
 _ = require "underscore"
 codes = require("../codes").hResultStatus
 validator = require "../validator"
 
+#
+# Class that defines a tracker actor
+#
 class Tracker extends Actor
 
+  # @property {Array<Object>} List all the peers connect in the hEngine
+  peers: undefined
+  # @property {string} URN of the tracker's channel
+  trackerChannelAid: undefined
+  # @property {object} List all timeout before remove a peer if he doesn't send a peer-info
+  timerPeers: undefined
+  # @property {integer} Delay before removing peer if he doesn't send a peer-info
+  timeoutDelay: undefined
+
+
+  #
+  # Actor's constructor
+  # @param topology {object} Launch topology of the actor
+  #
   constructor: (topology) ->
     #TODO check properties
     @peers = []
     @trackerChannelAid = topology.properties.channel.actor
+    unless topology.children
+      topology.children = []
     topology.children.unshift topology.properties.channel
     @timerPeers = {}
     @timeoutDelay = 180000
     super
 
+  #
+  # @overload h_onSignal(hMessage)
+  #   Private method that processes hSignal message.
+  #   The hSignal are service's message
+  #   @private
+  #   @param hMessage {object} the hSignal receive
+  #
   h_onSignal: (hMessage) ->
     @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
     if hMessage.payload.name is "peer-info"
@@ -96,6 +122,12 @@ class Tracker extends Actor
 
       @send @buildResult(hMessage.publisher, hMessage.msgid, status, result)
 
+  #
+  # @overload initChildren(children)
+  #   Method called by constructor to initializing actor's children
+  #   The tracker add his properties for all his children
+  #   @param children {Array<Object>} Actor's children and their topology
+  #
   initChildren: (children)->
     _.forEach children, (childProps) =>
       childProps.trackers = [{
@@ -107,7 +139,11 @@ class Tracker extends Actor
         childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps
 
-
+  #
+  # Method called to search an adress for a specific peer)
+  # @param actor {string} URN of the search peer
+  # @param tracker {boolean} True if it's the tracker which search the peer. In this case the state of the peer is ignored.
+  #
   findOutbox: (actor, tracker) ->
     outboundadapter = undefined
     _.forEach @peers, (peers) =>
@@ -129,9 +165,12 @@ class Tracker extends Actor
              outboundadapter = {type: "socket_out", targetActorAid: lb_peers.peerFullId, url: inbox.url}
     outboundadapter
 
+  #
+  # Method called when an actor stop to warn the other peer
+  # @param actor {string} actor who stop
+  #
   stopAlert: (actor) ->
     @send @h_buildSignal(@trackerChannelAid, "hStopAlert", actor, {headers:{h_quickFilter: actor}})
 
-exports.Tracker = Tracker
-exports.newActor = (topology) ->
-  new Tracker(topology)
+
+module.exports = Tracker

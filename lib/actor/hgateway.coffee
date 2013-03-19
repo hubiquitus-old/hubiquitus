@@ -23,29 +23,46 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
-socketIO = require "../client_connector/socketio_connector"
+Actor = require "./hactor"
+SocketIO_Connector = require "../client_connector/socketio_connector"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "../validator"
 
+#
+# Class that defines a gateway actor
+#
 class Gateway extends Actor
 
+  #
+  # Actor's constructor
+  # @param topology {object} Launch topology of the actor
+  #
   constructor: (topology) ->
     super
     # Setting outbound adapters
     @type = 'gateway'
     if topology.properties.socketIOPort
-      socketIO.socketIO({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
+      new SocketIO_Connector({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
 
+  #
+  # @overload onMessage(hMessage)
+  #   Method that processes the incoming message on a hGateway.
+  #   @param hMessage {Object} the hMessage receive
+  #
   onMessage: (hMessage) ->
     if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
       @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
       @send hMessage
 
+  #
+  # @overload h_fillAttribut(hMessage, cb)
+  #   Method called to override some hMessage's attributs before sending.
+  #   Overload the hActor method with an empty function to not altering a hMessage publish in a channel
+  #   @private
+  #
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
 
-exports.Gateway = Gateway
-exports.newActor = (topology) ->
-  new Gateway(topology)
+
+module.exports = Gateway

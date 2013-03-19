@@ -29,7 +29,7 @@ _ = require "underscore"
 describe "hGateway", ->
   hActor = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hgateway")
+  Gateway = require "../lib/actor/hgateway"
   socket = undefined
 
   describe "socket IO with ssl", ->
@@ -56,7 +56,7 @@ describe "hGateway", ->
           authTimeout: 3000
           }
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Gateway topology
 
     after () ->
       socket.disconnect()
@@ -94,7 +94,7 @@ describe "hGateway", ->
           authTimeout: 3000
         }
       }
-      hActor = actorModule.newActor(topology)
+      hActor = new Gateway topology
 
     after () ->
       hActor.h_tearDown()

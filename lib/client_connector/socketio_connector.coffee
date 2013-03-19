@@ -28,15 +28,18 @@ clients = {}
 validator = require "../validator"
 codes = require "../codes"
 
+#
+# Class that defines a socket-IO Connector (to connect a hAPI to a hEngine)
+#
 class SocketIO_Connector
-  ###
-  Runs a SocketIO Connector with the given arguments.
-  @param args - {
-  logLevel : DEBUG, INFO, WARN or ERROR
-  port : int
-  commandOptions : {} Command Controller Options
-  }
-  ###
+
+  # @property {boolean} Connector's status
+  started: undefined
+
+  #
+  # Connector's constructor. Create the websocket which be used by the socketIO adapter.
+  # @param properties {object} Properties of the socket-IO connector
+  #
   constructor: (properties) ->
     if properties.owner
     then @owner = properties.owner
@@ -59,7 +62,7 @@ class SocketIO_Connector
 
     io.set "log level", logLevels[@owner.log_properties.logLevel]
 
-    channel = io.on("connection", (socket) =>
+    io.on("connection", (socket) =>
       id = socket.id
       clients[id] =
         id: id
@@ -73,10 +76,11 @@ class SocketIO_Connector
 
     )
 
-  ###
-  @param client - Reference to the client
-  @param data - Expected {urn, password}
-  ###
+  #
+  # Method which connect the websocket
+  # @param client {object} Reference to the client
+  # @param data {object} Connexion data (urn, password)
+  #
   connect: (client, data) ->
     unless client
       @owner.log "warn", "A client sent an invalid ID with data", data
@@ -131,13 +135,13 @@ class SocketIO_Connector
 
       cb authResult.actor, codes.errors.NO_ERROR
 
-  ###
-  Disconnects the current session and socket.
-  @param client - Reference to the client to close
-  ###
+  #
+  # Method which disconnect the websocket
+  # @param client {object} Reference to the client to close
+  #
   disconnect: (client) ->
     if client and client.hClient
-      log.debug "Disconnecting Client " + client.publisher
+      @owner.log "debug", "Disconnecting Client " + client.publisher
       client.socket.disconnect()  if client.socket
       delete clients[client.id]
     else if client
@@ -146,13 +150,17 @@ class SocketIO_Connector
 
     @owner.send @owner.h_buildSignal(client.child, "stop", {}) if client.child
 
-
+  #
+  # Method called when the connector is started
+  #
   start: ->
     @started = true
 
+  #
+  # Method called when the connector is stopping
+  #
   stop: ->
     @started = false
 
 
-exports.socketIO = (properties) ->
-  new SocketIO_Connector(properties)
+module.exports = SocketIO_Connector

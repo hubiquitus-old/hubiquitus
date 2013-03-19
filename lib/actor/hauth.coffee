@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 statuses = require("../codes").statuses
@@ -31,13 +31,24 @@ errors = require("../codes").errors
 validator = require "../validator"
 codes = require "../codes"
 
-
+#
+# Class that defines an authentification actor
+#
 class Auth extends Actor
 
-  constructor: (properties) ->
+  #
+  # Actor's constructor
+  # @param topology {object} Launch topology of the actor
+  #
+  constructor: (topology) ->
     super
     @type = 'auth'
 
+  #
+  # @overload onMessage(hMessage)
+  #   Method that processes the incoming message on a hAuth.
+  #   @param hMessage {Object} the hMessage receive
+  #
   onMessage: (hMessage) ->
     if not hMessage or not hMessage.payload or hMessage.type isnt "hAuth"
       if hMessage
@@ -48,12 +59,16 @@ class Auth extends Actor
       authResponse = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.OK, {actor : actor, errorCode : errorCode, errorMsg: errorMsg}
       @send authResponse
 
+  #
   # Should be overrided to implement own auth system.
-  # context : extra data
-  # cb
-  #   actor : urn of user. null if auth_failed
-  #   errorCode : authentification status. If ok it should be NO_ERROR
-  #   errorMsg : if ok, it should be user urn, else if should be error message
+  # @param login {string}
+  # @param password {string}
+  # @param context {object} extra data
+  # @param cb {function} callback
+  # @option cb actor {string} urn of user. null if auth_failed
+  # @option cb errorCode {integer} authentification status. If ok it should be NO_ERROR
+  # @option cb errorMsg {string} if ok, it should be user urn, else if should be error message
+  #
   auth: (login, password, context, cb) ->
     if(login is password)
       @log "debug", "Login successful for user #{login}"
@@ -63,6 +78,4 @@ class Auth extends Actor
       cb undefined, codes.errors.AUTH_FAILED, "invalid publisher or password"
 
 
-exports.Auth = Auth
-exports.newActor = (properties) ->
-  new Auth(properties)
+module.exports = Auth

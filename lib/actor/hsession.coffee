@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{Actor} = require "./hactor"
+Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 statuses = require("../codes").statuses
@@ -33,9 +33,20 @@ codes = require "../codes"
 hFilter = require "../hFilter"
 factory = require "../hfactory"
 
-
+#
+# Class that defines a session actor
+#
 class Session extends Actor
 
+  # @property {String} Inbound Adapter of the gateway which create the session
+  trackInbox: undefined
+  # @property {Object} Socket-IO client which link the hAPI and the hEngine
+  hClient: undefined
+
+  #
+  # Actor's constructor
+  # @param topology {object} Launch topology of the actor
+  #
   constructor: (topology) ->
     super
     # Setting outbound adapters
@@ -43,23 +54,49 @@ class Session extends Actor
     @trackInbox = topology.trackInbox
     @hClient = undefined
 
-  touchTrackers: ->
+  #
+  # @overload h_touchTrackers()
+  #   Method called every minuts to inform the tracker about the actor state.
+  #   The session give his gateway address until his own
+  #   @private
+  #
+  h_touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
       @log "debug", "touching tracker #{trackerProps.trackerId}"
       if @status is "stopping"
         @trackInbox = []
       @send @h_buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:@trackInbox})
 
+  #
+  # @overload validateFilter(hMessage)
+  #   Method called on incoming message to check if the hMessage respect the actor's filter
+  #   If the message is send by the hAPI he always be accepted.
+  #   @param hMessage {object} hMessage to check with the actor's filter
+  #
+  #
   validateFilter: (hMessage) ->
     unless validator.getBareURN(hMessage.publisher) is validator.getBareURN(@actor)
       return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
     return {result: true, error: ""}
 
+  #
+  # @overload h_onMessageInternal(hMessage)
+  #   Method called when the actor receive a hMessage.
+  #   If the actor attribute is "session", it will be modify with the actor URN
+  #   Check hMessage format, catch hSignal, Apply filter then call onMessage.
+  #   @private
+  #   @param hMessage {object} the hMessage receive
+  #
   h_onMessageInternal: (hMessage) ->
     if hMessage.actor is "session"
       hMessage.actor = @actor
     super
 
+  #
+  # @overload onMessage(hMessage)
+  #   Method that processes the incoming message on a hSession.
+  #   @param hMessage {Object} the hMessage receive
+  #
   onMessage: (hMessage) ->
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor) and hMessage.publisher is @actor
@@ -108,11 +145,11 @@ class Session extends Actor
         else
           @send hMessage
 
-  ###
-  Loads the hCommand module, sets the listener calls cb with the hResult.
-  @param hMessage - The received hMessage with a hCommand payload
-  @param cb - Callback receiving a hResult (optional)
-  ###
+  #
+  # Method that Loads the hCommand module, sets the listener.
+  # @param hMessage {object} The received hMessage with a hCommand payload
+  # @param module {object} Module calls to run command
+  #
   runCommand: (hMessage, module) ->
     self = this
     timerObject = null #setTimeout timer variable
@@ -157,7 +194,11 @@ class Session extends Actor
       @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
       @send(self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 
-  initListener: (client) =>
+  #
+  # Method called to link the client who use an hAPI and the hSession
+  # @param client {object} The socket-IO client
+  #
+  initListener: (client) ->
     delete client["hClient"]
     socketIOAdapter = factory.newAdapter("socketIO", {targetActorAid: @actor, owner: @, socket: client.socket})
     @hClient = client.socket
@@ -184,12 +225,17 @@ class Session extends Actor
     @emit "hStatus", {status:statuses.CONNECTED, errorCode:errors.NO_ERROR}
     @emit "connect"
 
+  # @overload h_fillAttribut(hMessage, cb)
+  #   Method called to override some hMessage's attributs before sending in any cases.
+  #   @private
+  #   @param hMessage {object} the hMessage update
+  #   @param cb {function}
+  #
   h_fillAttribut: (hMessage, cb) ->
     #Complete hMessage
     hMessage.publisher = @actor
     hMessage.msgid = hMessage.msgid or @h_makeMsgId()
     hMessage.sent = new Date().getTime()
 
-exports.Session = Session
-exports.newActor = (topology) ->
-  new Session(topology)
+
+module.exports = Session

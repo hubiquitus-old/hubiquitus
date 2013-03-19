@@ -29,14 +29,14 @@ describe "hEcho", ->
   echoCmd = undefined
   hActor = undefined
   status = require("../lib/codes").hResultStatus
-  actorModule = require("../lib/actor/hsession")
+  Session = require "../lib/actor/hsession"
 
   before () ->
     topology = {
       actor: config.logins[0].urn,
       type: "hsession"
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Session topology
 
   after () ->
     hActor.h_tearDown()

@@ -25,12 +25,19 @@
 {OutboundAdapter} = require "./hadapter"
 zmq = require "zmq"
 
-
+#
+# Class that defines a Socket Outbound Adapter.
+# It is the basic writing adapter. Actor automatically add one to communicate.
+#
 class SocketOutboundAdapter extends OutboundAdapter
 
   # @property {object} zeromq socket
   sock: undefined
 
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     if properties.url
@@ -42,13 +49,22 @@ class SocketOutboundAdapter extends OutboundAdapter
     @sock = zmq.socket "push"
     @sock.identity = "SocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
+  #
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the channel can transmit hMessage
+  #
   start:->
     @initSocket()
     super
     @sock.connect @url
     @owner.log "debug", "#{@sock.identity} writing on #{@url}"
 
-
+  #
+  # @overload stop()
+  #   Method which stop the adapter.
+  #   When this adapter is stopped, the actor will not transmit hMessage form this adapter anymore
+  #
   stop: ->
     if @started
       if @sock._zmq.state is 0
@@ -57,11 +73,14 @@ class SocketOutboundAdapter extends OutboundAdapter
       @sock.on "message",()=>
       @sock=null
 
+  #
+  # @overload send(hMessage)
+  #   Method which send the hMessage in the zmq push socket.
+  #   @param hMessage {object} The hMessage to send
+  #
   send: (message) ->
     @start() unless @started
     @sock.send JSON.stringify(message)
 
 
-exports.SocketOutboundAdapter = SocketOutboundAdapter
-exports.newAdapter = (properties) ->
-  new SocketOutboundAdapter properties
+module.exports = SocketOutboundAdapter

@@ -30,7 +30,7 @@ describe "socketio_connector", ->
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
   SocketIO_Connector = require("../lib/client_connector/socketio_connector")
-  actorModule = require("../lib/actor/hactor")
+  Actor = require "../lib/actor/hactor"
   codes = require "../lib/codes"
 
   hActor = undefined
@@ -44,14 +44,14 @@ describe "socketio_connector", ->
       actor: actorUrn,
       properties: {authActor: authUrn}
     }
-    hActor = actorModule.newActor(topology)
+    hActor = new Actor topology
 
     properties = {
       owner: hActor,
       port: 9999
     }
 
-    sock_conn = SocketIO_Connector.socketIO(properties)
+    sock_conn = new SocketIO_Connector(properties)
 
   after () ->
     hActor.h_tearDown()

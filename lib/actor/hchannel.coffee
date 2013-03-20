@@ -198,7 +198,7 @@ class Channel extends Actor
     port = dbProperties.port or 27017
 
     #Create the Server and the DB to access mongo
-    new mongo.Db(dbProperties.name, new mongo.Server(host, port)).open (err, dbOpen) =>
+    new mongo.Db(dbProperties.name, new mongo.Server(host, port), {safe:false}).open (err, dbOpen) =>
       unless err
         @log "debug", "Correctly connect to mongo"
         @dbInstance = dbOpen

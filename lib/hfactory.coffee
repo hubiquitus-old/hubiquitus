@@ -56,13 +56,13 @@ withAdapter = (type, adapter) ->
 
 newActor = (type, properties) ->
   if not type then throw new Error "actor's type undefined"
-  if not actors[type] then actors[type] = require "#{__dirname}/actor/#{type}"
+  if not actors[type] then actors[type] = require type
   else if typeof actors[type] is "string" then actors[type] = require actors[type]
   new actors[type] properties
 
 newAdapter = (type, properties) ->
   if not type then throw new Error "adapter's type undefined"
-  if not adapters[type] then adapters[type] = require "#{__dirname}/adapters/#{type}"
+  if not adapters[type] then adapters[type] = require type
   else if typeof adapters[type] is "string" then adapters[type] = require adapters[type]
   new adapters[type] properties
 
@@ -84,6 +84,28 @@ scan = (path, callback) ->
 
 scan "#{process.cwd()}/actors", withActor
 scan "#{process.cwd()}/adapters", withAdapter
+
+actors['hactor'] = require "./actor/hactor"
+actors['hauth'] = require "./actor/hauth"
+actors['hchannel'] = require "./actor/hchannel"
+actors['hdispatcher'] = require "./actor/hdispatcher"
+actors['hgateway'] = require "./actor/hgateway"
+actors['hsession'] = require "./actor/hsession"
+actors['htracker'] = require "./actor/htracker"
+
+adapters['channel_in'] = require "./adapters/channel_in"
+adapters['channel_out'] = require "./adapters/channel_out"
+adapters['fork'] = require "./adapters/fork"
+adapters['http_in'] = require "./adapters/http_in"
+adapters['http_out'] = require "./adapters/http_out"
+adapters['inproc'] = require "./adapters/inproc"
+adapters['lb_socket_in'] = require "./adapters/lb_socket_in"
+adapters['lb_socket_out'] = require "./adapters/lb_socket_out"
+adapters['socket_in'] = require "./adapters/socket_in"
+adapters['socket_out'] = require "./adapters/socket_out"
+adapters['socketIO'] = require "./adapters/socketIO"
+adapters['timerAdapter'] = require "./adapters/timerAdapter"
+adapters['twitter_in'] = require "./adapters/twitter_in"
 
 
 exports.withActor = withActor

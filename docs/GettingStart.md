@@ -11,7 +11,7 @@ process increasing scalability!
 ## How to Install
 ### Dependencies
 
-To use **Hubiquitus**, you need Node.JS, mongoDb, ZeroMQ and CoffeeScript :
+To use **Hubiquitus**, you need [Node.JS](http://nodejs.org), [mongoDb](http://www.mongodb.org), [ZeroMQ](http://www.zeromq.org) :
 
 * To install correctly Node.JS you can use this [link](https://github.com/joyent/node/wiki/Installation)
 
@@ -41,18 +41,42 @@ If you want join us and work on Hubiquitus, you can do :
 ```
 $ git clone git://github.com/hubiquitus/hubiquitus.git
 ```
-## Run an example
+## Running an example
 
-To launch your first hubiquitus example :
-* Download hubiquitus using the previous command line
-* Build your launch file in your `hubiquitus` folder :
+Before running your example you need to include `hubiquitus`. You have two ways to do it. In your workspace :
+* If you have a local version of hubiquitus (previously clone with git or download from our repository) :
+```
+$ npm install ./hubiquitus
+```
+> `./hubiquitus` is the path of your local version
 
-launch.js :
+* If you don't have a local version of hubiquitus you can use :
+```
+$ npm install git://github.com/hubiquitus/hubiquitus.git
+```
+or
+```
+$ npm install hubiquitus
+```
+> Currently not available (coming soon)
+
+Then include `coffee-script` using :
+
+```
+$ npm install coffee-script
+```
+
+At this step, you should have in your workspace :
+* A `node_modules` folder containing hubiquitus and coffee-script
+
+You now need to build your launch file :
+
 ```js
 require("coffee-script");
-require("./lib/hubiquitus").start("samples/sample1.json");
+require("./node_modules/hubiquitus/lib/hubiquitus").start("./node_modules/hubiquitus/samples/sample1.json");
 ```
-* Run it using WebStorm (or an other IDE) or using this command line :
+
+You are now ready to run your example. To do it, you can execute your launch file in WebStorm (or an other IDE), or use the following command line in you workspace :
 
 ```
 $ node launch.js
@@ -187,10 +211,16 @@ $ npm install hubiquitus
 ```
 > Currently not available (coming soon)
 
+Then include `coffee-script` using :
+
+```
+$ npm install coffee-script
+```
+
 At this step, you should have in your workspace :
 * An `actors` folder containing all your own actors (optional)
 * An `adapters` folder containing all your own adapters (optional)
-* A `node_modules` folder containing hubiquitus
+* A `node_modules` folder containing hubiquitus and coffee-script
 * A topology file in `json`
 
 You now need to build your launch file :

@@ -27,7 +27,7 @@ cronJob = require("cron").CronJob
 
 #
 # Class that defines a timer Adapter.
-# It is used generate hMessage and send it to the actor every period (depending properties)
+# It is used to generate hMessage and send it to the actor every period (depending properties)
 #
 class TimerAdapter extends InboundAdapter
 

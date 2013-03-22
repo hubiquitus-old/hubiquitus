@@ -5,7 +5,7 @@ An actor have one outbound Adapter by joinable target.
 
 ## Topology
 
-The socket_out adapter is never add in a topology. He is automatically build when you try to send hMessage to an actor.
+The socket_out adapter is never added into a topology. He is automatically built when you try to send hMessage to an actor.
 
 ## API documentation
 

@@ -1,10 +1,10 @@
 ## About the channel_in Adapter
 
-The channel_in adapter is used when a actor subscribe to a channel
+The channel_in adapter is used when a actor subscribes to a channel
 
 ## Topology
 
-There are two way to create a channel_in adapter to your actor :
+There are two ways to create a channel_in adapter to your actor :
 * By completing the specifics attributes in your actor topology
 * By calling the subscribe method
 

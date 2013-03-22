@@ -1,10 +1,10 @@
 ## About the fork Adapter
 
-The fork adapter is used between a parent and his child create with fork method.
+The fork adapter is used between a parent and his child created with fork method.
 
 ## Topology
 
-The fork adapter is never add in a topology. He is automatically build during child creation which use fork method.
+The fork adapter is never added in a topology. He is automatically built during child creation which uses fork method.
 
 ## API documentation
 

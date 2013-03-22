@@ -5,8 +5,8 @@ It is used when a actor is part of a group a load balancing actor
 
 ## Topology
 
-The lb_socket_in adapter is used by all hDispatcher workers.
-If you want more details about our dispatcher see [here](https://github.com/hubiquitus/hubiquitus/blob/master/docs/actors/hDispatcher.md)
+The lb_socket_in adapter is used by all hDispatcher's workers.
+If you want more details about our hDispatcher see [here](https://github.com/hubiquitus/hubiquitus/blob/master/docs/actors/hDispatcher.md)
 
 
 ## API documentation

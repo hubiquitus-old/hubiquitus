@@ -1,11 +1,11 @@
 ## About the hTracker actor
 
 The hTracker actor is our router actor.
-His purpose is to know all the actor in the system and inform them about the other peer and their state.
+His purpose is to know all the actors in the system and inform them about the other peer and their state.
 
 ## Topology
 
-The hTracker actor, like all actor, extend our hActor class so he has the same topology's attributes.
+The hTracker actor, like all actors, extends our hActor class so he has the same topology's attributes.
 But he always has specifics properties :
 <table>
     <thead>
@@ -54,7 +54,7 @@ Examples :
     }
 }
 ```
-> A tracker always need a socket_in adapter
+> A tracker always needs a socket_in adapter
 
 * Complete topology :
 

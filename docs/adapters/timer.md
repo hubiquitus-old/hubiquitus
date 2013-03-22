@@ -1,7 +1,7 @@
 ## About the timer Adapter
 
-The timer adapter is used to generate hMessage and send it to the actor every period (depending properties)
-It can be use with two mode :
+The timer adapter is used to generate hMessage and to send it to the actor every period (depending properties)
+It can be use with two modes :
 
 * millisecond : a hMessage will be generate every X milliseconds
 * crontab : a hMessage will be generate by a [cron](https://npmjs.org/package/cron)
@@ -33,7 +33,7 @@ In this example the adapters attributes are :
         <tr>
             <td>type</td>
             <td>String</td>
-            <td><em>Value : channel_in</em></td>
+            <td><em>Value : timerAdapter</em></td>
             <td>Yes</td>
         </tr>
         <tr>

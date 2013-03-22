@@ -1,10 +1,10 @@
 ## About the inproc Adapter
 
-The inproc adapter is used between a parent and his child create with inproc method.
+The inproc adapter is used between a parent and his child created with inproc method.
 
 ## Topology
 
-The inproc adapter is never add in a topology. He is automatically build during child creation which use inproc method.
+The inproc adapter is never added into a topology. He is automatically built during child creation which uses inproc method.
 
 ## API documentation
 

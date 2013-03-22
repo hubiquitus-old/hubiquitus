@@ -12,6 +12,8 @@ For a short short intro of what Hubiquitus is and why we build it, maybe you sho
 
 If you have some time and motivation, you should then [go deep into Hubiquitus](https://github.com/hubiquitus/hubiquitus/blob/master/docs/Reference.md).
 
+For a technical documentation, you can see our [API documentation](http://coffeedoc.info/github/hubiquitus/hubiquitus/master/)
+
 ## Code
 
 The source code of the Hubiquitus NodeJS engine itself is in the `lib` subdirectory of this repo.

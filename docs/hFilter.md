@@ -1,5 +1,5 @@
-A filter is a JSON structure use to decide if a hMessage must be deliver or ignore.
-This structure is an hCondition which describe when a hMessage is correct or not.
+A filter is a JSON structure used to decide if a hMessage must be delivered or ignored.
+This structure is a hCondition which describe when a hMessage is correct or not.
 
 ## How set a filter
 There are few ways to put a filter :
@@ -14,17 +14,17 @@ There are few ways to put a filter :
 }
 ```
 
-> For more informations about actor topology see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Actor/hActor)
+> For more information about actor topology see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Actor/hActor)
 
-* You can call the setFilter function of hActor if it is already start
+* You can call the setFilter function of hActor if it is already started
 
 ```js
 hActor.setFilter(hCondition, callback)
 ```
 
-> For more informations about hActor function see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Actor/hActor)
+> For more information about hActor functions see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Actor/hActor)
 
-* If you are connecting to Hubiquitus with a hAPI, you can send a hCommand hSetFilter
+* If you are connected to Hubiquitus with a hAPI, you can send a hCommand hSetFilter
 
 ##### Expected payload of type hCommand to use hSetFilter for putting a filter
 
@@ -35,21 +35,21 @@ hActor.setFilter(hCondition, callback)
 }
 ```
 
-> For more informations see the documentation of the hAPI you use
+> For more information see the documentation of the hAPI you are using
 
-## When a filter occur
+## When a filter occurs
 
-* When any actor receive an incoming hMessage, before doing any treatment, he check if the hMessage passe his filter. If it passes, the hMessage will be treat; if it not, the hMessage will be ignore.
+* When any actors receive an incoming hMessage, before doing any treatment, he checks if the hMessage passes his filter. If it passes, the hMessage will be treated; if it is not, the hMessage will be ignored.
 
 
 ## hCondition
 
 A [hCondition](https://github.com/hubiquitus/hubiquitus/tree/master/docs/DataStructure) is an object starting with an operand among `eq, ne, gt, gte, lt, lte, in, nin, and, or, nor, relevant, geo, boolean, domain`.
-Then the structure depend of the operand
+Then the structure depends of the operand
 
 ### Operand "eq" - "ne" - "gt" - "gte" - "lt" - "lte"
 
-There operand attribute is an hValue which describe the name of an attribute and his value :
+Each operand attribute is an hValue which describes the name of an attribute and his value :
 
 ```js
 {
@@ -73,7 +73,7 @@ There operand attribute is an hValue which describe the name of an attribute and
 
 ### Operand "in" - "nin"
 
-There operand attribute is an hArrayOfValue which describe the name of an attribute and an array of there value :
+Each operand attribute is an hArrayOfValue which describes the name of an attribute and an array of their value :
 
 ```js
 {
@@ -97,7 +97,7 @@ There operand attribute is an hArrayOfValue which describe the name of an attrib
 
 ### Operand "and" - "or" - "nor"
 
-There operand attribute is an Array which contain at least 2 hCondition :
+Each operand attribute is an Array which contains at least 2 hCondition :
 
 ```js
 {
@@ -124,7 +124,7 @@ There operand attribute is an Array which contain at least 2 hCondition :
 
 ### Operand "not"
 
-There operand attribute is a hCondition :
+Each operand attribute is a hCondition :
 
 ```js
 {
@@ -141,7 +141,7 @@ There operand attribute is a hCondition :
 
 ### Operand "relevant" - "boolean"
 
-There operand attribute is a boolean :
+Each operand attribute is a boolean :
 
 ```js
 {
@@ -154,16 +154,16 @@ There operand attribute is a boolean :
 
 {
     boolean: false
-} // Any hMessage will be reject
+} // Any hMessage will be rejected
 
 {
     boolean: true
-} // Any hMessage will be accept (like an empty filter : {})
+} // Any hMessage will be accepted (like an empty filter : {})
 ```
 
 ### Operand "geo"
 
-There operand attribute is a hPos :
+Each operand attribute is a hPos :
 
 ```js
 {
@@ -177,14 +177,14 @@ There operand attribute is a hPos :
 
 ### Operand "domain"
 
-There operand attribute is a string :
+Each operand attribute is a string :
 
 ```js
 {
     domain: 'myproject.domain.com'
-} // The domain of the publisher of the hMessage must be 'myproject.domain.com'
+} // The domain of the hMessage's publisher must be 'myproject.domain.com'
 
 {
     domain: '$mydomain'
-} // The domain of the publisher of the hMessage must be the same as mine
+} // The domain of the hMessage's publisher must be the same as mine
 ```

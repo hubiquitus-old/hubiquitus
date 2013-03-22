@@ -1,7 +1,7 @@
 ## About the lb_socket_out Adapter
 
 The lb_socket_out adapter is a load balancing socket outbound adapter.
-It is used when a actor need to dispatch hMessage between few actors with load balancing
+It is used when a actor needs to dispatch hMessage between few actors with load balancing
 
 ## Topology
 

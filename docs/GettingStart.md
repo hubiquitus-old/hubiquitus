@@ -34,9 +34,9 @@ sudo make install
 
 ###Installation
 
-If you just want to use Hubiquitus without modify it, you are ready. You can build your Hubiquitus project.
+If you just want to use Hubiquitus without modifying it, you are ready. You can build your Hubiquitus project.
 
-If you want join us and work on Hubiquitus, you can do :
+If you want to join us and work on Hubiquitus, you can do :
 
 ```
 $ git clone git://github.com/hubiquitus/hubiquitus.git
@@ -76,7 +76,7 @@ require("coffee-script");
 require("./node_modules/hubiquitus/lib/hubiquitus").start("./node_modules/hubiquitus/samples/sample1.json");
 ```
 
-You are now ready to run your example. To do it, you can execute your launch file in WebStorm (or an other IDE), or use the following command line in you workspace :
+You are now ready to run your example. To do it, you can execute your launch file in WebStorm (or an other IDE), or use the following command line in your workspace :
 
 ```
 $ node launch.js
@@ -88,7 +88,7 @@ Hubiquitus is now running. You can use any of our hAPI to send or receive hMessa
 
 ### Building your own actor
 
-Hubiquitus provide some specific actor to build your project. But if our actors are not enough for your needs, you can build and use your own actor
+Hubiquitus provides some specific actor to build your project. But if our actors are not enough for your needs, you can build and use your own actor
 
 > You can find details about our hubiquitus actor [here](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors)
 

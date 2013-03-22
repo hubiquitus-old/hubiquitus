@@ -1,13 +1,13 @@
 ## About the hGateway actor
 
 The hGateway actor is our connector actor.
-His purpose is to be an connexion way for all client using an hAPI (so connecting to the hEngine with socket-IO)
+His purpose is to be a connexion way for all clients using an hAPI (so connected to the hEngine with socket-IO)
 
 > Note that an hGateway actor must have an hAuth actor as child
 
 ## Topology
 
-The hGateway actor, like all actor, extend our hActor class so he has the same topology's attributes.
+The hGateway actor, like all actors, extends our hActor class so he has the same topology's attributes.
 But he always has specifics properties :
 <table>
     <thead>
@@ -22,19 +22,19 @@ But he always has specifics properties :
         <tr>
             <td>socketIOPort</td>
             <td>Integer</td>
-            <td>The port listen by the actor to communicate with socket-IO</td>
+            <td>The port listened by the actor to communicate with socket-IO</td>
             <td>Yes</td>
         </tr>
         <tr>
             <td>authActor</td>
             <td>String</td>
-            <td>URN of the actor which have to manage the authentication</td>
+            <td>URN of the actor which has to manage the authentication</td>
             <td>Yes</td>
         </tr>
         <tr>
             <td>authTimeout</td>
             <td>Integer</td>
-            <td>Delay before considering the authentication failed</td>
+            <td>Delay before considering the authentication failure</td>
             <td>Yes</td>
         </tr>
     </tbody>
@@ -62,7 +62,7 @@ Examples :
     }
 }
 ```
-> A gateway always need a socket_in adapter
+> A gateway always needs a socket_in adapter
 
 * Complete topology :
 

@@ -6,7 +6,7 @@ His purpose is to distribute the load on few identical actor called worker.
 
 ## Topology
 
-The hDispatcher actor, like all actor, extend our hActor class so he has the same topology's attributes.
+The hDispatcher actor, like all actors, extends our hActor class so he has the same topology's attributes.
 But he always has specifics properties :
 <table>
     <thead>
@@ -41,11 +41,11 @@ Workers properties :
         <tr>
             <td>method</td>
             <td>String</td>
-            <td>The method use to create the workers.<br/>
+            <td>The method used to create the workers.<br/>
                 Possible values :
                 <ul>
-                    <li>"inproc" : The actor will be create in the same process</li>
-                    <li>"fork" : The actor will be create in a new process</li>
+                    <li>"inproc" : The actor will be created in the same process</li>
+                    <li>"fork" : The actor will be created in a new process</li>
                 </ul>
             </td>
             <td>Yes</td>
@@ -53,13 +53,13 @@ Workers properties :
         <tr>
             <td>type</td>
             <td>String</td>
-            <td>The type of the actor which will be create as worker</td>
+            <td>The type of the actor which will be created as worker</td>
             <td>Yes</td>
         </tr>
         <tr>
             <td>nb</td>
             <td>Integer</td>
-            <td>Number of worker which will be create</td>
+            <td>Number of workers which will be created</td>
             <td>Yes</td>
         </tr>
     </tbody>

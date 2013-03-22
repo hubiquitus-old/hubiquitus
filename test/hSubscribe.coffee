@@ -114,7 +114,7 @@ describe "hSubscribe", ->
         actor: config.logins[2].urn,
         type: "hactor"
         adapters:[
-          { type: "channel_in", url: "tcp://127.0.0.1:2992", channel:existingCHID }
+          { type: "channel_in", channel:existingCHID }
         ]
       }
       hActor2 = new Actor topology

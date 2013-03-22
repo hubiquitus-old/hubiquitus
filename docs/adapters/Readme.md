@@ -1,0 +1,13 @@
+> For better understanding of what is a adapter, please read the [Reference](https://github.com/hubiquitus/hubiquitus/blob/master/docs/Reference.md)
+
+* [hAdapter](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/hAdapter.md)
+* [fork](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/fork.md)
+* [inproc](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/inproc.md)
+* [socket_in](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/socket_in.md)
+* [socket_out](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/socket_out.md)
+* [lb_socket_in](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/lb_socket_in.md)
+* [lb_socket_out](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/lb_socket_out.md)
+* [channel_in](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/channel_in.md)
+* [channel_out](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/channel_out.md)
+* [timer](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/timer.md)
+* [twitter](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/twitter_in.md)

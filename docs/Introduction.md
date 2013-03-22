@@ -31,7 +31,7 @@ Hubiquitus aims to provide a simple way to develop apps that fulfill with these 
 
 Hubiquitus gets its fabulous power from of mix of well-known magical (and also free and open source) ingredients...
 
-* [NodeJS](nodejs.org): the Hubiquitus actors engine runs on top of the great NodeJS evented programming platform.
+* [NodeJS](http://nodejs.org): the Hubiquitus actors engine runs on top of the great NodeJS evented programming platform.
 * MongoDB: Hubiquitus uses Mongo as its underlying store for persisting context data
-* [0MQ](zeromq.org): the socket-based messaging library is the core transport layer of Hubiquitus
+* [0MQ](http://www.zeromq.org): the socket-based messaging library is the core transport layer of Hubiquitus
 * SocketIO: websockets are not always available so SIO helps in providing transparently fallback transports.

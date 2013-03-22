@@ -109,6 +109,8 @@ class Tracker extends Actor
         if outbox
           @outboundAdapters.push factory.newAdapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
 
+      @send @buildMessage @trackerChannelAid, "peer-info", hMessage.payload.params
+
     else if hMessage.payload.name is "peer-search"
       # TODO reflexion sur le lookup et implementation
       outboundadapter = @findOutbox(hMessage.payload.params.actor, false)

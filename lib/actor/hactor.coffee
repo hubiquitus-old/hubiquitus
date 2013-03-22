@@ -30,6 +30,7 @@ forker = require "child_process"
 zmq = require "zmq"
 winston = require "winston"
 _ = require "underscore"
+os = require "os"
 # Hactor modules
 validator = require "../validator"
 codes = require "../codes"
@@ -471,7 +472,7 @@ class Actor extends EventEmitter
     @logger.exitOnError = false
 
     # Set log display
-    @logger.add(winston.transports.Console, {handleExceptions: true, level: logLevel})
+    @logger.add(winston.transports.Console, {handleExceptions: true, level: logLevel, colorize: true})
     if logFile
       try
         @logger.add(winston.transports.File, {handleExceptions: true, filename: logFile, level: logLevel})
@@ -521,7 +522,17 @@ class Actor extends EventEmitter
         if @status isnt STATUS_STOPPED
           for inbound in @inboundAdapters
             inboundAdapters.push {type: inbound.type, url: inbound.url}
-        @send @h_buildSignal(trackerProps.trackerId, "peer-info", {peerType: @type, peerId: validator.getBareURN(@actor), peerStatus: @status, peerInbox: inboundAdapters})
+
+        @send @h_buildSignal(trackerProps.trackerId, "peer-info",
+          peerType: @type
+          peerId: validator.getBareURN(@actor)
+          peerStatus: @status
+          peerInbox: inboundAdapters
+          peerPID: process.pid
+          peerMemory: process.memoryUsage()
+          peerUptime: process.uptime()
+          peerLoadAvg: os.loadavg()
+        )
 
   #
   # Method called when the actor status change

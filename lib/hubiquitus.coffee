@@ -23,6 +23,12 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
+winston = require "winston"
+logger = new winston.Logger
+  transports: [
+    new winston.transports.Console(colorize: true)
+  ]
+
 validator = require "./validator"
 filter = require "./hFilter"
 codes = require "./codes"
@@ -69,8 +75,10 @@ exports.start = (topology) ->
   if not topology then topology = "topology"
   if typeof topology is "string" then topology = require "#{process.cwd()}/#{topology}"
   engine = factory.newActor topology.type, topology
-  engine.on "started", ->
-    process.on "SIGINT", ->
-      engine.h_tearDown()
-      process.exit()
+  engine.on "hStatus", (status) ->
+    if status is "started"
+      logger.info "Hubiquitus started"
+      process.on "SIGINT", ->
+        engine.h_tearDown()
+        process.exit()
   engine.h_start()

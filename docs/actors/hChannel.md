@@ -1,12 +1,12 @@
 ## About the hChannel actor
 
 The hChannel actor is our publish/subscribe actor
-His purpose is to be allow multi-cast message transfer.
+His purpose is to allow multi-cast message transfers.
 
 
 ## Topology
 
-The hChannel actor, like all actor, extend our hActor class so he has the same topology's attributes.
+The hChannel actor, like all actors, extends our hActor class so he has the same topology's attributes.
 But he always has specifics properties :
 <table>
     <thead>

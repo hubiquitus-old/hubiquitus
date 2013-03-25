@@ -226,7 +226,6 @@ describe "hSubscribe", ->
         hActor.subscriptions.should.include hChannel.actor
         hChannel.h_tearDown()
         setTimeout(=>
-          done()
           hActor.subscriptions.length.should.equal 0
           hChannel.h_start()
           setTimeout(=>

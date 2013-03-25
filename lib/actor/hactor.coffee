@@ -632,13 +632,14 @@ class Actor extends EventEmitter
     _.forEach @children, (childAid) =>
       @send @h_buildSignal(childAid, "stop", {})
 
-    # Stop adapters second
+    # Copy adapters arrays to keep loop safe, as stop method may remove adapters from these arrays
     outboundsTabCopy = []
     inboundsTabCopy = []
     _.forEach @outboundAdapters, (outbound) =>
       outboundsTabCopy.push (outbound)
     _.forEach @inboundAdapters, (inbound) =>
       inboundsTabCopy.push (inbound)
+    # Stop adapters
     _.invoke inboundsTabCopy, "stop"
     _.invoke outboundsTabCopy, "stop"
     done()
@@ -1022,10 +1023,10 @@ class Actor extends EventEmitter
   h_watchPeer: (actor, refAdapter, cb) ->
     if @watchingsTab.length is 0 and @trackers[0]
       @subscribe @trackers[0].trackerChannel, actor, () ->
-    watching = new Object()
-    watching.actor = actor
-    watching.adapter = refAdapter
-    watching.cb = cb
+    watching =
+      actor: actor,
+      adapter: refAdapter,
+      cb: cb
     @watchingsTab.push(watching)
 
   #

@@ -135,7 +135,6 @@ class OutboundAdapter extends Adapter
     else
       throw new Error "You must provide the AID of the targeted actor"
     super
-    @type = "outbound"
 
   #
   # Method which has to be override to specify an outbound adapter
@@ -143,12 +142,6 @@ class OutboundAdapter extends Adapter
   #
   send: (hMessage) ->
     throw new Error "Send method should be overriden"
-
-  start: ->
-    unless @started
-      super
-
-
 
 exports.Adapter = Adapter
 exports.InboundAdapter = InboundAdapter

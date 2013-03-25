@@ -28,6 +28,7 @@ describe "hActor", ->
   hActor2 = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
+  factory = require "../lib/hfactory"
   Actor = require("../lib/actor/hactor")
 
   describe "#FilterMessage()", ->

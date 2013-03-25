@@ -36,33 +36,33 @@ adapters = {}
 
 
 withActor = (type, actor) ->
-  if not type then throw new Error "actor's type undefined"
-  if not actor then throw new Error "actor undefined"
+  if not type then throw new Error "Actor's type undefined"
+  if not actor then throw new Error "Actor undefined"
   if actors[type]
-    logger.warn "actor '#{type}' already defined"
+    logger.warn "Actor '#{type}' already defined"
   else
-    logger.info "actor '#{type}' added"
+    logger.info "Actor '#{type}' added"
     actors[type] = actor
 
 withAdapter = (type, adapter) ->
-  if not type then throw new Error "adapter's type undefined"
-  if not adapter then throw new Error "adapter undefined"
+  if not type then throw new Error "Adapter's type undefined"
+  if not adapter then throw new Error "Adapter undefined"
   if adapters[type]
-    logger.warn "adapter '#{type}' already defined"
+    logger.warn "Adapter '#{type}' already defined"
   else
-    logger.info "adapter '#{type}' added"
+    logger.info "Adapter '#{type}' added"
     adapters[type] = adapter
 
 
 newActor = (type, properties) ->
-  if not type then throw new Error "actor's type undefined"
-  if not actors[type] then actors[type] = require "#{__dirname}/actor/#{type}"
+  if not type then throw new Error "Actor's type undefined"
+  if not actors[type] then actors[type] = require type
   else if typeof actors[type] is "string" then actors[type] = require actors[type]
   new actors[type] properties
 
 newAdapter = (type, properties) ->
-  if not type then throw new Error "adapter's type undefined"
-  if not adapters[type] then adapters[type] = require "#{__dirname}/adapters/#{type}"
+  if not type then throw new Error "Adapter's type undefined"
+  if not adapters[type] then adapters[type] = require type
   else if typeof adapters[type] is "string" then adapters[type] = require adapters[type]
   new adapters[type] properties
 
@@ -71,7 +71,7 @@ scan = (path, callback) ->
   if fs.existsSync path
     stats =  fs.statSync path
     if stats.isDirectory()
-      logger.info "scanning #{path}..."
+      logger.info "Scanning #{path}..."
       files = fs.readdirSync path
       files.forEach (file) ->
         pos = file.indexOf ".coffee"
@@ -84,6 +84,28 @@ scan = (path, callback) ->
 
 scan "#{process.cwd()}/actors", withActor
 scan "#{process.cwd()}/adapters", withAdapter
+
+actors['hactor'] = require "./actor/hactor"
+actors['hauth'] = require "./actor/hauth"
+actors['hchannel'] = require "./actor/hchannel"
+actors['hdispatcher'] = require "./actor/hdispatcher"
+actors['hgateway'] = require "./actor/hgateway"
+actors['hsession'] = require "./actor/hsession"
+actors['htracker'] = require "./actor/htracker"
+
+adapters['channel_in'] = require "./adapters/channel_in"
+adapters['channel_out'] = require "./adapters/channel_out"
+adapters['fork'] = require "./adapters/fork"
+adapters['http_in'] = require "./adapters/http_in"
+adapters['http_out'] = require "./adapters/http_out"
+adapters['inproc'] = require "./adapters/inproc"
+adapters['lb_socket_in'] = require "./adapters/lb_socket_in"
+adapters['lb_socket_out'] = require "./adapters/lb_socket_out"
+adapters['socket_in'] = require "./adapters/socket_in"
+adapters['socket_out'] = require "./adapters/socket_out"
+adapters['socketIO'] = require "./adapters/socketIO"
+adapters['timerAdapter'] = require "./adapters/timerAdapter"
+adapters['twitter_in'] = require "./adapters/twitter_in"
 
 
 exports.withActor = withActor

@@ -29,7 +29,7 @@ validator = require "./../validator"
 
 #
 # Class that defines a Channel Outbound Adapter.
-# It is used when by a channel to publish hMessage
+# It is used by a channel to publish hMessage
 #
 class ChannelOutboundAdapter extends OutboundAdapter
 

@@ -1,15 +1,15 @@
 ## About the hAuth actor
 
 The hAuth actor is our basic authentication actor.
-His purpose is to be check the authorization of an client using an hAPI to connect to the hEngine.
-In basic authentication, a client is authorize when login egal password.
-If you want a more advance authentication, you need to extend this class and overload the auth method
+His purpose is to check the authorization of an client using an hAPI to connect to the hEngine.
+In basic authentication, a client is authorized when login equals password.
+If you want a more advanced authentication, you need to extend this class and overload the auth method
 
-> Note that an hAuth actor must be a child of an hGateway actor
+> Note that a hAuth actor must be a child of a hGateway actor
 
 ## Topology
 
-The hAuth actor, like all actor, extend our hActor class so he has the same topology's attributes.
+The hAuth actor, like all actors, extends our hActor class so he has the same topology's attributes.
 
 Examples :
 

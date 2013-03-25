@@ -95,7 +95,7 @@ hGetThreads::linear = (hMessage, context, cb) ->
   status = hCommand.params.status
   actor = hMessage.actor
 
-  stream = context.dbInstance.collection(context.properties.collection).find(type: /hConvState/i).streamRecords()
+  stream = context.dbInstance.collection(context.properties.collection).find(type: /hConvState/i).stream()
   foundElements = {}
   stream.on "data", (hMessage) =>
     if foundElements[hMessage.convid]

@@ -1,12 +1,12 @@
 ## About the hActor
 
 The hActor is the basic actor of a Hubiquitus project.
-His purpose is not to be use directly in a system but to be extend.
-It provide all the basics variables and methods an Hubiquitus actor need to send/receive/treat a message
+His purpose is not to be used directly in a system but to be extended.
+It provides all the basics variables and methods an Hubiquitus actor need to send/receive/treat a message
 
 ## Topology
 
-Every actor need a topology to run. This topology describe every attributes of the actor :
+Every actor need a topology to run. This topology describes every actor's attribute :
 <table>
     <thead>
         <tr>
@@ -20,7 +20,7 @@ Every actor need a topology to run. This topology describe every attributes of t
         <tr>
             <td>actor</td>
             <td>String</td>
-            <td>The URN of the actor. Use to identify the actor in the system</td>
+            <td>The URN of the actor. Used to identify the actor in the system</td>
             <td>Yes</td>
         </tr>
         <tr>
@@ -43,11 +43,11 @@ Every actor need a topology to run. This topology describe every attributes of t
         <tr>
             <td>method</td>
             <td>String</td>
-            <td>The method use to create the actor.<br/>
+            <td>The method used to create the actor.<br/>
                 Possible values :
                 <ul>
-                    <li>"inproc" : The actor will be create in the same process</li>
-                    <li>"fork" : The actor will be create in a new process</li>
+                    <li>"inproc" : The actor will be created in the same process</li>
+                    <li>"fork" : The actor will be created in a new process</li>
                 </ul>
                 <em>Default value : inproc</em>
             </td>
@@ -57,8 +57,8 @@ Every actor need a topology to run. This topology describe every attributes of t
             <td>trackers</td>
             <td>Array of Object</td>
             <td>List the properties of all the hTracker of the system.<br/>
-                Their are inherit from the parent of the actor.
-                <em>Note that every system need at least one tracker
+                They are inherited from the parent of the actor.
+                <em>Note that every system needs at least one tracker
             </td>
             <td>Yes</td>
         </tr>
@@ -73,7 +73,7 @@ Every actor need a topology to run. This topology describe every attributes of t
         <tr>
             <td>adapters</td>
             <td>Array of Object</td>
-            <td>List of adapters use by the actor to communicate. <br/>
+            <td>List of adapters used by the actor to communicate. <br/>
                 <em>For more details see <a href="https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/hAdapters.md">hAdapter</a></em>
             </td>
             <td>No</td>
@@ -82,7 +82,7 @@ Every actor need a topology to run. This topology describe every attributes of t
             <td>sharedProperties</td>
             <td>Object</td>
             <td>The properties of the actor which are commons with all his children<br/>
-                If the child have a same properties, the child one override the shared one
+                If the child has the same properties, the child one override the shared one
             </td>
             <td>No</td>
         </tr>
@@ -152,7 +152,7 @@ Logger's attributes :
         <tr>
             <td>logLevel</td>
             <td>String</td>
-            <td>The log level use by the actor. Possibles values :
+            <td>The log level used by the actor. Possibles values :
                 <ul>
                     <li>"error" : display only error logs</li>
                     <li>"warn" : display error and warn logs</li>

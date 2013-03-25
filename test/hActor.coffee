@@ -1517,13 +1517,13 @@ describe "hActor", ->
         actor: config.logins[0].urn,
         type: "hactor",
         sharedProperties: {
-          "v1": "s1",
-          "v2": "s2",
-          "v4": "s4"
+          v1: "s1",
+          v2: "s2",
+          v4: "s4"
         },
         properties: {
-          "v2": "p2",
-          "v3": "p3"
+          v2: "p2",
+          v3: "p3"
         }
 
       }
@@ -1532,10 +1532,10 @@ describe "hActor", ->
         actor: config.logins[2].urn,
         type: "hactor",
         properties: {
-          "v2": "c2",
-          "v3": "c3"
+          v2: "c2",
+          v3: "c3"
         },
-        sharedProperties: {"v4": "t4"}
+        sharedProperties: {v4: "t4"}
       }
       hActor.createChild "hactor", "inproc", childProp, (child) =>
         actorChild = child
@@ -1559,88 +1559,3 @@ describe "hActor", ->
     it "child should have v4 value specified in his own sharedProperties rather than the one specified in his parent's sharedProperties", (done) ->
       actorChild.properties.should.have.property "v4", "t4"
       done()
-  describe "Channel Stop & Restart", ->
-    hc1 = undefined
-    ha1 = undefined
-    before () ->
-      topology = {
-        "actor":"urn:localhost:tracker",
-        "type":"htracker",
-        "children":[],
-        "properties":{
-          "channel":{
-            "actor":"urn:localhost:trackChannel",
-            "type":"hchannel",
-            "properties":{
-              "listenOn":"tcp://127.0.0.1",
-              "broadcastOn":"tcp://127.0.0.1",
-              "subscribers":[],
-              "db":{
-                "host":"localhost",
-                "port":27017,
-                "name":"admin"
-              },
-              "collection":"trackChannel",
-              "log":{
-              "logLevel":"debug"
-              }
-            }
-          }
-        },
-        "adapters":[
-          {
-            "type":"socket_in",
-            "url":"tcp://127.0.0.1:2997"
-          }
-        ]
-      }
-      hActor = actorModule.newActor(topology)
-      hActor.h_start()
-
-      ha1Props = {
-        actor: config.logins[1].urn,
-        type: "hactor",
-        adapters: [
-          {type: "socket_in", url: "tcp://127.0.0.1:2992" },
-        #  {type: "channel_in", channel: config.logins[2].urn}
-        ]
-      }
-      hc1Props = {
-        actor:config.logins[2].urn,
-        type:"hchannel",
-        properties: {
-          listenOn:"tcp://127.0.0.1",
-          broadcastOn:"tcp://127.0.0.1",
-          subscribers:[],
-          db:{
-            host:"localhost",
-            port:27017,
-            name:"admin"
-            },
-          collection:"channel"
-        }
-      }
-
-      hActor.createChild "hchannel", "inproc", hc1Props, (child) =>
-        hc1 = child
-
-      hActor.createChild "hactor", "inproc", ha1Props, (child) =>
-        ha1 = child
-
-    after () ->
-      hActor.h_tearDown()
-      hActor = null
-
-    it "Channel should be restarted correctly", (done) ->
-      hc1.h_tearDown()
-      hc1.h_start()
-      hActor.should.have.property "status", "ready"
-      ha1.should.have.property "status", "ready"
-      oldSetStatus = hc1.h_setStatus
-      nbCalls = 0;
-      hc1.h_setStatus = (newStatus) ->
-        oldSetStatus.call(hc1, newStatus)
-        if newStatus is "ready"
-          nbCalls++
-          if nbCalls is 1
-            done()

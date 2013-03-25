@@ -42,6 +42,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
   #
   constructor: (properties) ->
     super
+    @type = "channel_out"
     if properties.url
       url_props = url.parse(properties.url)
       if url_props.port

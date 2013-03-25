@@ -110,6 +110,14 @@ class Actor extends EventEmitter
   subscriptions: undefined
   # @property {Array} List all subscribe command the actor have to launch after start
   channelToSubscribe: undefined
+  # @property {Array} Describes which adapters watch which peer
+  watchingsTab: undefined
+  # @property {object} Topology the actor is launched with
+  topology: undefined
+  # @property {boolean} Wether listeners are already inited
+  listenersInited: undefined
+
+
 
   #
   # Actor's constructor
@@ -160,6 +168,9 @@ class Actor extends EventEmitter
     @outboundAdapters = []
     @subscriptions = []
     @channelToSubscribe = []
+    @watchingsTab = []
+    @topology = topology
+    @listenersInited = false
 
     # Registering trackers
     if _.isArray(topology.trackers) and topology.trackers.length > 0
@@ -170,24 +181,7 @@ class Actor extends EventEmitter
     else
       @log "debug", "no tracker was provided"
 
-    # registering callbacks on events
-    @on "message", (hMessage) =>
-      #complete msgid
-      if hMessage.msgid
-        hMessage.msgid = hMessage.msgid + "#" + @h_makeMsgId()
-      else
-        hMessage.msgid = @h_makeMsgId()
-      ref = undefined
-      if hMessage and hMessage.ref and typeof hMessage.ref is "string"
-        ref = hMessage.ref.split("#")[0]
-      if ref
-        cb = @msgToBeAnswered[ref]
-      if cb
-        delete @msgToBeAnswered[ref]
-        cb hMessage
-      else
-        @h_onMessageInternal hMessage, (hMessageResult) =>
-          @send hMessageResult
+    @h_initListeners()
 
     # Setting adapters
     _.forEach topology.adapters, (adapterProps) =>
@@ -201,10 +195,35 @@ class Actor extends EventEmitter
         else if adapter.direction is "out"
           @outboundAdapters.push adapter
 
-    # Adding children once started
-    @on "hStatus", (status) ->
-      if status is "started"
-        @initChildren(topology.children)
+  #
+  # Init Listeners for node.js events
+  # @private
+  #
+  h_initListeners : () ->
+    unless @listenersInited
+      @listenersInited = true
+      @on "message", (hMessage) =>
+        #complete msgid
+        if hMessage.msgid
+          hMessage.msgid = hMessage.msgid + "#" + @h_makeMsgId()
+        else
+          hMessage.msgid = @h_makeMsgId()
+        ref = undefined
+        if hMessage and hMessage.ref and typeof hMessage.ref is "string"
+          ref = hMessage.ref.split("#")[0]
+        if ref
+          cb = @msgToBeAnswered[ref]
+        if cb
+          delete @msgToBeAnswered[ref]
+          cb hMessage
+        else
+          @h_onMessageInternal hMessage, (hMessageResult) =>
+            @send hMessageResult
+
+      # Adding children once started
+      @on "hStatus", (status) ->
+        if status is "started"
+          @initChildren(@topology.children)
 
   #
   # Private method called when the actor receive a hMessage.
@@ -267,7 +286,13 @@ class Actor extends EventEmitter
   h_onSignal: (hMessage) ->
     @log "debug", "Actor received a hSignal: #{JSON.stringify(hMessage)}"
     if hMessage.payload.name is "hStopAlert"
-      @removePeer(hMessage.payload.params)
+      @removePeer hMessage.payload.params
+      index = -1
+      inboundAdapterToRemove = _.find @inboundAdapters, (inbound) =>
+        index++
+        inbound.channel is validator.getBareURN hMessage.payload.params
+      if inboundAdapterToRemove isnt undefined
+        inboundAdapterToRemove.stop()
 
   #
   # Method called for sending hMessage
@@ -289,16 +314,14 @@ class Actor extends EventEmitter
     outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
     unless outboundAdapter
       _.forEach @outboundAdapters, (outbound) =>
-        if validator.getBareURN(outbound.targetActorAid) is hMessage.actor
+        if validator.getBareURN(outbound.targetActorAid) is validator.getBareURN(hMessage.actor)
           hMessage.actor = outbound.targetActorAid
           outboundAdapter = outbound
     if outboundAdapter
       if @timerOutAdapter[outboundAdapter.targetActorAid]
         clearTimeout(@timerOutAdapter[outboundAdapter.targetActorAid])
         @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
-          delete @timerOutAdapter[outboundAdapter.targetActorAid]
-          @unsubscribe @trackers[0].trackerChannel, outboundAdapter.targetActorAid, () ->
-          @removePeer(outboundAdapter.targetActorAid)
+          outboundAdapter.stop()
         , 90000)
       @h_sending(hMessage, cb, outboundAdapter)
       # if don't have cached adapter, send lookup demand to the tracker
@@ -317,15 +340,9 @@ class Actor extends EventEmitter
             unless found
               outboundAdapter = factory.newAdapter(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
               @outboundAdapters.push outboundAdapter
-              if @actor isnt @trackers[0].trackerChannel and hResult.payload.result.targetActorAid isnt @trackers[0].trackerChannel
-                @subscribe @trackers[0].trackerChannel, hResult.payload.result.targetActorAid, () ->
-
             @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
-              delete @timerOutAdapter[outboundAdapter.targetActorAid]
-              @unsubscribe @trackers[0].trackerChannel, outboundAdapter.targetActorAid, () ->
-              @removePeer(outboundAdapter.targetActorAid)
+              outboundAdapter.stop()
             , 90000)
-
             hMessage.actor = hResult.payload.result.targetActorAid
             @h_sending hMessage, cb, outboundAdapter
           else
@@ -552,6 +569,8 @@ class Actor extends EventEmitter
   #
   h_start: ()->
     @h_setStatus STATUS_STARTING
+    @h_initListeners()
+
     _.invoke @inboundAdapters, "start"
     _.invoke @outboundAdapters, "start"
     @h_setStatus STATUS_STARTED
@@ -601,9 +620,16 @@ class Actor extends EventEmitter
     # Stop children first
     _.forEach @children, (childAid) =>
       @send @h_buildSignal(childAid, "stop", {})
+
     # Stop adapters second
-    _.invoke @inboundAdapters, "stop"
-    _.invoke @outboundAdapters, "stop"
+    outboundsTabCopy = []
+    inboundsTabCopy = []
+    _.forEach @outboundAdapters, (outbound) =>
+      outboundsTabCopy.push (outbound)
+    _.forEach @inboundAdapters, (inbound) =>
+      inboundsTabCopy.push (inbound)
+    _.invoke inboundsTabCopy, "stop"
+    _.invoke outboundsTabCopy, "stop"
     done()
 
   #
@@ -612,6 +638,7 @@ class Actor extends EventEmitter
   #
   postStop: (done) ->
     @removeAllListeners()
+    @listenersInited = false
     done()
 
   #
@@ -700,7 +727,7 @@ class Actor extends EventEmitter
       quickFilter = ""
 
     for channel in @subscriptions
-      if channel is hChannel
+      if validator.getBareURN(channel) is hChannel
         _.forEach @inboundAdapters, (inbound) =>
           if inbound.channel is hChannel
             findfilter = false
@@ -727,7 +754,7 @@ class Actor extends EventEmitter
         channelInbound = factory.newAdapter("channel_in", {url: hResult.payload.result, owner: @, channel: hChannel, filter: quickFilter})
         @inboundAdapters.push channelInbound
         channelInbound.start()
-        @subscriptions.push hChannel
+        @subscriptions.push hResult.publisher
         if cb
           cb codes.hResultStatus.OK
       else
@@ -754,7 +781,7 @@ class Actor extends EventEmitter
     index = 0
     subs = false
     for channel in @subscriptions
-      if channel is hChannel
+      if validator.getBareURN(channel) is hChannel
         subs = true
         if quickFilter is undefined
           @subscriptions.splice(index, 1)
@@ -765,17 +792,23 @@ class Actor extends EventEmitter
     else
       index = 0
       _.forEach @inboundAdapters, (inbound) =>
-        if inbound.channel is hChannel
-          if quickFilter
-            inbound.removeFilter quickFilter, (result) =>
-              if result
-                @unsubscribe hChannel, cb
-              else
-                return cb codes.hResultStatus.OK, "QuickFilter removed"
-          else
-            inbound.stop()
-            @inboundAdapters.splice(index, 1)
-            return cb codes.hResultStatus.OK, "Unsubscribe from channel"
+        if inbound.channel is validator.getBareURN(hChannel)
+          if inbound.started
+            if quickFilter
+              inbound.removeFilter quickFilter, (result) =>
+                if result
+                  @unsubscribe hChannel, cb
+                else
+                  return cb codes.hResultStatus.OK, "QuickFilter removed"
+            else
+              inbound.stop()
+              @inboundAdapters.splice(index, 1)
+              index2 = 0
+              for channel in @subscriptions
+                if channel is hChannel
+                  @subscriptions.splice(index2, 1)
+                index2++
+              return cb codes.hResultStatus.OK, "Unsubscribe from channel"
         index++
 
   #
@@ -967,6 +1000,69 @@ class Actor extends EventEmitter
   h_makeMsgId: () ->
     msgId = UUID.generate()
     msgId
+
+  #
+  # Called by an adapter that wants to register as a "watcher" for a peer
+  # @private
+  # @param actor {string} URN of the peer watched
+  # @param refAdapter {object} Adapter that wants to watch a peer
+  # @param cb {function} Function to call when unwatching
+  #
+  h_watchPeer: (actor, refAdapter, cb) ->
+    if @watchingsTab.length is 0 and @trackers[0]
+      @subscribe @trackers[0].trackerChannel, actor, () ->
+    watching = new Object()
+    watching.actor = actor
+    watching.adapter = refAdapter
+    watching.cb = cb
+    @watchingsTab.push(watching)
+
+  #
+  # Called by an adapter that wants to unregister as a "watcher" for a peer
+  # @private
+  # @param actor {string} URN of the peer watched
+  # @param refAdapter {object} Adapter that wants to unwatch a peer
+  #
+  h_unwatchPeer: (actor, refAdapter) ->
+    nbWatchActor = 0
+    index = 0
+    for watching in @watchingsTab
+      if validator.getBareURN(watching.actor) is validator.getBareURN(actor)
+        if watching.adapter is refAdapter
+          cb = watching.cb
+          cb.call(watching.adapter)
+          indexToRemove = index
+        else
+          nbWatchActor++
+      index++
+
+    @watchingsTab.splice(indexToRemove, 1)
+    if nbWatchActor is 0
+      @removePeer(actor)
+
+  #
+  # Called by an adapter that wants to be removed from actor's adapters lists
+  # @private
+  # @param refAdapter {object} Adapter to be removed
+  #
+  h_removeAdapter: (refadapter) ->
+    unless refadapter is undefined
+      index = -1
+      outboundAdapterToRemove = _.find @outboundAdapters, (outbound) =>
+        index++
+        outbound is refadapter
+      if outboundAdapterToRemove isnt undefined
+        outboundAdapterToRemove.stop()
+        @outboundAdapters.splice(index, 1)
+      index = -1
+      inboundAdapterToRemove = _.find @inboundAdapters, (inbound) =>
+        index++
+        inbound is refadapter
+      if inboundAdapterToRemove isnt undefined
+        inboundAdapterToRemove.stop()
+        @inboundAdapters.splice(index, 1)
+
+
 
 
 UUID = ->

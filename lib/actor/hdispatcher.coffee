@@ -44,6 +44,7 @@ class Dispatcher extends Actor
   #
   constructor: (topology) ->
     super
+    @type = 'dispatcher'
     @workersAlias = "#{@actor}#workers"
     @addWorkers(topology.properties.workers)
     @nbWorkers = topology.properties.workers.nb

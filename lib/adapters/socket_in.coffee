@@ -24,6 +24,7 @@
 #
 {InboundAdapter} = require "./hadapter"
 zmq = require "zmq"
+validator = require "../validator"
 
 #
 # Class that defines a Socket Inbound Adapter.

@@ -58,6 +58,7 @@ class Tracker extends Actor
     @timerPeers = {}
     @timeoutDelay = 180000
     super
+    @type = "tracker"
 
   #
   # @overload h_onSignal(hMessage)

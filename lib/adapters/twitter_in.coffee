@@ -62,9 +62,10 @@ class TwitterInboundAdapter extends InboundAdapter
       )
       @twit.stream "statuses/filter", track: @properties.tags, (stream) =>
         @stream = stream
-        stream.on "error", (type, code) =>
+        @stream.on "error", (type, code) =>
           @owner.log "error", "Twitter stream error : #{type} #{code}"
-        stream.on "data", (data) =>
+
+        @stream.on "data", (data) =>
           unless data.disconnect
             if @properties.langFilter is undefined or data.user.lang is @properties.langFilter
               hTweet = {}
@@ -89,7 +90,10 @@ class TwitterInboundAdapter extends InboundAdapter
               hTweet.author = hTweetAuthor
               @owner.emit "message", @owner.buildMessage(@owner.actor, "hTweet", hTweet, {author: data.user.screen_name + "@twitter.com"})
           else
-            @owner.log "debug", "twitter stream close"
+            @owner.log "debug", "Disconnecting data"
+
+        @stream.on "destroy", (data) =>
+          @owner.log "debug", "twitter stream close"
       super
 
   #
@@ -100,8 +104,10 @@ class TwitterInboundAdapter extends InboundAdapter
   stop: ->
     if @started
       if @stream
-        @stream.destroy
+        @stream.destroy()
+        @stream.removeAllListeners()
         @stream = null
+        @twit = null
       super
 
   #

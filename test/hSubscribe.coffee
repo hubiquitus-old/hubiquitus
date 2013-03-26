@@ -219,7 +219,7 @@ describe "hSubscribe", ->
       hTracker.h_tearDown()
 
     it "Channel should be restarted correctly", (done) ->
-      @timeout 10500
+      @timeout 3500
       setTimeout(=>
         hActor.subscriptions.should.include hChannel.actor
         hChannel.h_tearDown()

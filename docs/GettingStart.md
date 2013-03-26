@@ -58,7 +58,6 @@ or
 ```
 $ npm install hubiquitus
 ```
-> Currently not available (coming soon)
 
 Then include `coffee-script` using :
 
@@ -209,7 +208,6 @@ or
 ```
 $ npm install hubiquitus
 ```
-> Currently not available (coming soon)
 
 Then include `coffee-script` using :
 

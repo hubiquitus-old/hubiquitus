@@ -1519,13 +1519,13 @@ describe "hActor", ->
         actor: config.logins[0].urn,
         type: "hactor",
         sharedProperties: {
-          "v1": "s1",
-          "v2": "s2",
-          "v4": "s4"
+          v1: "s1",
+          v2: "s2",
+          v4: "s4"
         },
         properties: {
-          "v2": "p2",
-          "v3": "p3"
+          v2: "p2",
+          v3: "p3"
         }
 
       }
@@ -1534,10 +1534,10 @@ describe "hActor", ->
         actor: config.logins[2].urn,
         type: "hactor",
         properties: {
-          "v2": "c2",
-          "v3": "c3"
+          v2: "c2",
+          v3: "c3"
         },
-        sharedProperties: {"v4": "t4"}
+        sharedProperties: {v4: "t4"}
       }
       hActor.createChild "hactor", "inproc", childProp, (child) =>
         actorChild = child

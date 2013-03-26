@@ -143,8 +143,6 @@ class OutboundAdapter extends Adapter
   send: (hMessage) ->
     throw new Error "Send method should be overriden"
 
-
-
 exports.Adapter = Adapter
 exports.InboundAdapter = InboundAdapter
 exports.OutboundAdapter = OutboundAdapter

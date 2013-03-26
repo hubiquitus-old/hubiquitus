@@ -24,6 +24,8 @@
 #
 {InboundAdapter} = require "./hadapter"
 zmq = require "zmq"
+validator = require "../validator"
+codes = require "../codes"
 
 #
 # Class that defines a Channel Inbound Adapter.
@@ -48,8 +50,8 @@ class ChannelInboundAdapter extends InboundAdapter
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
-    @channel = properties.channel
     super
+    @channel = properties.channel
     if properties.url
       @url = properties.url
     else
@@ -57,6 +59,12 @@ class ChannelInboundAdapter extends InboundAdapter
     @type = "channel_in"
     @listQuickFilter = []
     @filter = properties.filter or ""
+
+
+  #
+  # Initialize socket when starting
+  #
+  h_initSocket: () ->
     @sock = zmq.socket "sub"
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
@@ -106,10 +114,33 @@ class ChannelInboundAdapter extends InboundAdapter
   #
   start: ->
     unless @started
+      @h_initSocket()
       @sock.connect @url
       @addFilter(@filter)
       @owner.log "debug", "#{@owner.actor} subscribe to #{@channel} on #{@url}"
       super
+      dontWatch = not @owner.trackers[0] or
+      @owner.type is "tracker" or # actor is tracker
+      validator.getBareURN(@owner.actor) is @owner.trackers[0].trackerChannel or # actor is trackChannel
+      validator.getBareURN(@channel) is @owner.trackers[0].trackerChannel # links to trackChannel
+      unless dontWatch
+        cb = () ->
+          index = 0
+          for subscription in @owner.subscriptions
+            if validator.getBareURN(subscription) is @channel
+              @owner.subscriptions.splice(index, 1)
+            index++
+          adapterProps = new Object()
+          adapterProps.channel = @channel
+          @owner.subscribe adapterProps.channel, (status, result) =>
+            unless status is codes.hResultStatus.OK
+              @owner.log "debug", "Resubscription to #{adapterProps.channel} failed cause #{result}"
+              ## TODO Call UUID.generate
+              errorID = @owner.h_makeMsgId()
+              @owner.raiseError(errorID, "Resubscription to #{adapterProps.channel} failed")
+              @owner.h_autoSubscribe(adapterProps, 500, errorID)
+          @destroy()
+        @h_watchPeer(@channel, cb)
 
   #
   # @overload stop()
@@ -121,6 +152,49 @@ class ChannelInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",() =>
+      @sock = null
+      doUnwatch = @owner.trackers[0] and
+      @owner.type isnt "tracker" and
+      validator.getBareURN(@owner.actor) isnt @owner.trackers[0].trackerChannel and
+      validator.getBareURN(@channel) isnt @owner.trackers[0].trackerChannel # is not trackChannel
+      if doUnwatch
+        @h_unwatchPeer @channel
+      index = 0
+      for subscription in @owner.subscriptions
+        if validator.getBareURN(subscription) is @channel
+          break
+        index++
+      @owner.subscriptions.splice(index, 1)
+      if @owner.trackers[0] and validator.getBareURN(@channel) is @owner.trackers[0].trackerChannel
+        index = 0
+        for inbound in @owner.inboundAdapters
+          if inbound is @
+            @owner.inboundAdapters.splice(index, 1)
+          index++
 
+
+  #
+  # Register adapter as a "watcher" for a peer
+  # @private
+  # @param actor {string} URN of the peer watched
+  # @param cb {function} Function to call when unwatching
+  #
+  h_watchPeer: (actor, cb) ->
+    @owner.h_watchPeer(actor, @, cb)
+
+  #
+  # Unregister adapter as a "watcher" for a peer
+  # @private
+  # @param actor {string} URN of the peer watched
+  #
+  h_unwatchPeer: (actor) ->
+    @owner.h_unwatchPeer(actor, @)
+
+  #
+  # Remove adapter from his owner's adapters lists
+  #
+  destroy : () ->
+    @owner.h_removeAdapter(@)
 
 module.exports = ChannelInboundAdapter

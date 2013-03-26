@@ -24,6 +24,7 @@
 #
 {OutboundAdapter} = require "./hadapter"
 zmq = require "zmq"
+validator = require "../validator"
 
 #
 # Class that defines a Socket Outbound Adapter.
@@ -40,10 +41,16 @@ class SocketOutboundAdapter extends OutboundAdapter
   #
   constructor: (properties) ->
     super
+    @type = "socket_out"
     if properties.url
       @url = properties.url
     else
       throw new Error "You must explicitely pass a valid url to a SocketOutboundAdapter"
+
+  #
+  # Initialize socket when starting
+  #
+  h_initSocket: () ->
     @sock = zmq.socket "push"
     @sock.identity = "SocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
@@ -53,9 +60,20 @@ class SocketOutboundAdapter extends OutboundAdapter
   #   When this adapter is started, the channel can transmit hMessage
   #
   start:->
+    @h_initSocket()
     super
     @sock.connect @url
     @owner.log "debug", "#{@sock.identity} writing on #{@url}"
+    dontWatch = not @owner.trackers[0] or
+    @owner.type is "tracker" or # is tracker
+    validator.getBareURN(@owner.actor) is @owner.trackers[0].trackerChannel or # is trackChannel
+    @targetActorAid is @owner.trackers[0].trackerId or # target is tracker
+    validator.getBareURN(@targetActorAid)is @owner.trackers[0].trackerChannel # target is trackChannel
+    unless dontWatch
+      cb = () ->
+        delete @owner.timerOutAdapter[@targetActorAid]
+        @destroy()
+      @h_watchPeer(@targetActorAid, cb)
 
   #
   # @overload stop()
@@ -67,6 +85,21 @@ class SocketOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
+      doUnwatch = @owner.trackers[0] and
+      @owner.type isnt "tracker" and
+      @owner.actor isnt @owner.trackers[0].trackerChannel and
+      @targetActorAid isnt @owner.trackers[0].trackerId and
+      validator.getBareURN(@targetActorAid) isnt @owner.trackers[0].trackerChannel
+      if doUnwatch
+        @h_unwatchPeer(@targetActorAid)
+      if @owner.trackers[0] and validator.getBareURN(@targetActorAid) is @owner.trackers[0].trackerChannel
+        index = 0
+        for outbound in @owner.outboundAdapters
+          if outbound is @
+            @owner.outboundAdapters.splice(index, 1)
+          index++
 
   #
   # @overload send(hMessage)
@@ -76,6 +109,29 @@ class SocketOutboundAdapter extends OutboundAdapter
   send: (message) ->
     @start() unless @started
     @sock.send JSON.stringify(message)
+
+  #
+  # Register adapter as a "watcher" for a peer
+  # @private
+  # @param actor {string} URN of the peer watched
+  # @param cb {function} Function to call when unwatching
+  #
+  h_watchPeer : (actor, cb) ->
+    @owner.h_watchPeer(actor, @, cb)
+
+  #
+  # Unregister adapter as a "watcher" for a peer
+  # @private
+  # @param actor {string} URN of the peer watched
+  #
+  h_unwatchPeer : (actor) ->
+    @owner.h_unwatchPeer(actor, @)
+
+  #
+  # Remove adapter from his owner's adapters lists
+  #
+  destroy : () ->
+    @owner.h_removeAdapter(@)
 
 
 module.exports = SocketOutboundAdapter

@@ -42,7 +42,6 @@ class LBSocketInboundAdapter extends InboundAdapter
     super
     @formatUrl(properties.url)
     @type = "lb_socket_in"
-    @initSocket()
 
   #
   # Method which initialize the zmq pull load balancing socket
@@ -59,6 +58,7 @@ class LBSocketInboundAdapter extends InboundAdapter
   #   When this adapter is started, the actor will receive some hMessage depending the load balancing
   #
   start: ->
+    @initSocket()
     while @started is false
       try
         @sock.connect @url
@@ -81,6 +81,8 @@ class LBSocketInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
 
 module.exports = LBSocketInboundAdapter

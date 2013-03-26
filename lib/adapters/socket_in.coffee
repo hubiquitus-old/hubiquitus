@@ -28,7 +28,7 @@ zmq = require "zmq"
 #
 # Class that defines a Socket Inbound Adapter.
 # It is the basic listening adapter. Every actor needs one to exchange messages.
-#
+#l
 class SocketInboundAdapter extends InboundAdapter
 
   # @property {object} zeromq socket
@@ -42,7 +42,6 @@ class SocketInboundAdapter extends InboundAdapter
     super
     @formatUrl properties.url
     @type = "socket_in"
-    @initSocket()
 
   #
   # Method which initialize the zmq pull socket
@@ -59,6 +58,7 @@ class SocketInboundAdapter extends InboundAdapter
   #   When this adapter is started, the channel can receive hMessage
   #
   start: ->
+    @initSocket()
     while @started is false
       try
         @sock.bindSync @url
@@ -81,6 +81,8 @@ class SocketInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
 
 module.exports = SocketInboundAdapter

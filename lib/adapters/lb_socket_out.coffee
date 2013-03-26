@@ -44,6 +44,8 @@ class LBSocketOutboundAdapter extends OutboundAdapter
       @url = properties.url
     else
       throw new Error "You must explicitely pass a valid url to a LBSocketOutboundAdapter"
+
+  initsocket: ->
     @sock = zmq.socket "push"
     @sock.identity = "LBSocketOA_of_#{@owner.actor}_to_#{@targetActorAid}"
 
@@ -53,7 +55,7 @@ class LBSocketOutboundAdapter extends OutboundAdapter
   #   When this adapter is started, the actor can transmit hMessage to few actors with load balancing
   #
   start:->
-
+    @initsocket()
     @sock.bindSync @url
     @owner.log "debug", "#{@sock.identity} bound on #{@url}"
     super
@@ -68,6 +70,8 @@ class LBSocketOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
   #
   # @overload send(hMessage)

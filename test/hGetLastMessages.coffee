@@ -24,6 +24,8 @@
 #
 should = require("should")
 config = require("./_config")
+factory = require "../lib/hfactory"
+
 describe "hGetLastMessages", ->
   cmd = undefined
   hActor = undefined
@@ -96,13 +98,14 @@ describe "hGetLastMessages", ->
       count = 0
       date = new Date(100000 + i * 100000).getTime()
       DateTab.push date
-      before ->
+      before (done)->
         publishMsg = config.makeHMessage existingCHID, hActor.actor, "string", {}
         publishMsg.timeout = 0
         publishMsg.persistent = true
         publishMsg.published = DateTab[count]
         hActor.h_onMessageInternal publishMsg
         count++
+        done()
       i++
 
     it "should return hResult error NOT_AVAILABLE with actor not a channel", (done) ->

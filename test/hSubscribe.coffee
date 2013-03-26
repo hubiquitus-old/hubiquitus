@@ -35,6 +35,7 @@ describe "hSubscribe", ->
   hChannel2 = undefined
   status = require("../lib/codes").hResultStatus
   Actor = require "../lib/actor/hactor"
+  Tracker = require ("../lib/actor/htracker")
   existingCHID = "urn:localhost:#{config.getUUID()}"
 
   before () ->
@@ -142,3 +143,95 @@ describe "hSubscribe", ->
         hActor2.inboundAdapters.length.should.be.equal(1)
         done()
       , 600)
+
+  describe "Channel Stop & Restart", ->
+    hActor = undefined
+    hChannel = undefined
+    hTracker = undefined
+
+    before () ->
+      htrackerProps = {
+        actor: "urn:localhost:tracker",
+        type: "htracker",
+        properties:{
+          channel: {
+            actor: "urn:localhost:trackChannel",
+            type: "hchannel",
+            properties: {
+              listenOn: "tcp://127.0.0.1",
+              broadcastOn: "tcp://127.0.0.1",
+              subscribers: [],
+              db:{
+                host: "localhost",
+                port: 27017,
+                name: "admin"
+              },
+              collection: "trackChannel"
+            }
+          }
+        },
+        adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2997" } ]
+      }
+
+      hactorProps = {
+        actor: config.logins[0].urn,
+        type: "hactor",
+        adapters: [
+          {type: "socket_in", url: "tcp://127.0.0.1:2992" },
+          {type: "channel_in", channel: config.logins[2].urn}
+        ],
+        trackers: [{
+          trackerId: "urn:localhost:tracker",
+          trackerUrl: "tcp://127.0.1:2997",
+          trackerChannel: "urn:localhost:trackChannel"
+          }]
+      }
+
+      hchannelProps = {
+        actor:config.logins[2].urn,
+        type:"hchannel",
+        properties: {
+          listenOn:"tcp://127.0.0.1",
+          broadcastOn:"tcp://127.0.0.1",
+          subscribers: [],
+          db:{
+            host:"localhost",
+            port:27017,
+            name:"admin"
+            },
+          collection:"channel"
+        },
+      trackers: [{
+        trackerId: "urn:localhost:tracker",
+        trackerUrl: "tcp://127.0.1:2997",
+        trackerChannel: "urn:localhost:trackChannel"
+        }]
+      }
+
+      hTracker = new Tracker htrackerProps
+      hTracker.h_start()
+      hTracker.createChild "hchannel", "inproc", hchannelProps, (child) =>
+        hChannel = child
+      hTracker.createChild "hactor", "inproc", hactorProps, (child) =>
+        hActor = child
+
+    after () ->
+      hTracker.h_tearDown()
+
+    it "Channel should be restarted correctly", (done) ->
+      @timeout 3500
+      oldSetStatus = hActor.h_setStatus
+      nbReady = 0;
+      nbStop = 0;
+      setTimeout(=>
+        hActor.subscriptions.should.include hChannel.actor
+        hChannel.h_tearDown()
+        setTimeout(=>
+          hActor.subscriptions.length.should.equal 0
+          hChannel.h_start()
+          setTimeout(=>
+            hActor.subscriptions.should.include hChannel.actor
+            done()
+          ,1000)
+        ,1000)
+      ,1000)

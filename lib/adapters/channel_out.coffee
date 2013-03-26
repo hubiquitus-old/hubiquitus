@@ -42,6 +42,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
   #
   constructor: (properties) ->
     super
+    @type = "channel_out"
     if properties.url
       url_props = url.parse(properties.url)
       if url_props.port
@@ -52,7 +53,6 @@ class ChannelOutboundAdapter extends OutboundAdapter
         @url = url.format(url_props)
     else
       @url = "tcp://127.0.0.1:#{@genListenPort}"
-    @initSocket()
 
   #
   # Method which initialize the zmq pub socket
@@ -67,6 +67,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
   #   When this adapter is started, the channel can transmit hMessage to its subscriber
   #
   start:->
+    @initSocket()
     while @started is false
       try
         @sock.bindSync @url
@@ -89,6 +90,8 @@ class ChannelOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
+      @sock.on "message",()=>
+      @sock=null
 
   #
   # @overload send(hMessage)

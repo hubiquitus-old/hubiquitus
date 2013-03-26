@@ -220,9 +220,6 @@ describe "hSubscribe", ->
 
     it "Channel should be restarted correctly", (done) ->
       @timeout 3500
-      oldSetStatus = hActor.h_setStatus
-      nbReady = 0;
-      nbStop = 0;
       setTimeout(=>
         hActor.subscriptions.should.include hChannel.actor
         hChannel.h_tearDown()

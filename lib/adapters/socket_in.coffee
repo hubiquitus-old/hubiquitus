@@ -28,7 +28,7 @@ zmq = require "zmq"
 #
 # Class that defines a Socket Inbound Adapter.
 # It is the basic listening adapter. Every actor needs one to exchange messages.
-#l
+#
 class SocketInboundAdapter extends InboundAdapter
 
   # @property {object} zeromq socket

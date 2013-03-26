@@ -24,6 +24,7 @@
 #
 should = require("should")
 config = require("./_config")
+factory = require "../lib/hfactory"
 
 #
 # NEEDS BEFORE hSubscribe

@@ -25,6 +25,7 @@
 should = require("should")
 config = require("./_config")
 url = require "url"
+factory = require "../lib/hfactory"
 
 describe "hAdapter", ->
   hActor = undefined

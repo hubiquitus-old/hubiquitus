@@ -24,6 +24,7 @@
 #
 should = require("should")
 config = require("./_config")
+factory = require "../lib/hfactory"
 
 describe "hRelevantMessages", ->
   status = require("../lib/codes").hResultStatus

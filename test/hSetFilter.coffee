@@ -23,6 +23,8 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 should = require("should")
+factory = require "../lib/hfactory"
+
 describe "hSetFilter", ->
   hActor = undefined
   config = require("./_config")

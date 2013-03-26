@@ -24,6 +24,8 @@
 #
 should = require("should")
 config = require("./_config")
+factory = require "../lib/hfactory"
+
 describe "hGetThreads", ->
   cmd = undefined
   hActor = undefined

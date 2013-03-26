@@ -23,6 +23,8 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 should = require("should")
+factory = require "../lib/hfactory"
+
 describe "hAuth", ->
   hAuth = undefined
   config = require("./_config")

@@ -23,12 +23,13 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 should = require("should")
+factory = require "../lib/hfactory"
+
 describe "hActor", ->
   hActor = undefined
   hActor2 = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  factory = require "../lib/hfactory"
   Actor = require("../lib/actor/hactor")
 
   describe "#FilterMessage()", ->

@@ -2,7 +2,7 @@
   "name": "hubiquitus",
   "author": "Alexis Lesage",
   "description": "Actor model for Hubiquitus",
-  "version": "0.6.0-alpha",
+  "version": "0.6.0",
   "homepage": "www.hubiquitus.com",
   "repository": {
     "type": "git",

@@ -149,7 +149,7 @@ class Channel extends Actor
       return  unless timerObject?
       clearTimeout timerObject
       hMessageResult = self.buildResult(hMessage.publisher, hMessage.msgid, status, result)
-      @log "debug", "hCommand sent hMessage with hResult", hMessageResult
+      @log "debug", "hCommand sent hMessage with hResult #{JSON.stringify(hMessageResult)}"
       @send hMessageResult
 
     #Add a timeout for the execution

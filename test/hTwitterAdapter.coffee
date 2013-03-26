@@ -23,6 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 should = require("should")
+factory = require "../lib/hfactory"
 
 describe "hTwitterAdapter", ->
   hActor = undefined
@@ -58,16 +59,22 @@ describe "hTwitterAdapter", ->
       hActor = null
 
     it "should receive hTweet with apple tags", (done) ->
+      count = 0
       hActor.onMessage = (hMessage) =>
+        count++
         hMessage.type.should.be.equal("hTweet")
         hMessage.payload.text.should.match(/apple || Apple/)
-        done()
+        if count is 1
+          done()
 
     it "should update adapter properties and receive hTweet with google tags", (done) ->
+      count = 0
       newProperties.tags = "google"
       hActor.updateAdapter("twitter", newProperties)
 
       hActor.onMessage = (hMessage) =>
+        count++
         hMessage.type.should.be.equal("hTweet")
         hMessage.payload.text.should.match(/google || Google/)
-        done()
+        if count is 1
+          done()

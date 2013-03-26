@@ -586,7 +586,7 @@ class Actor extends EventEmitter
     _.invoke @outboundAdapters, "start"
     @h_setStatus STATUS_STARTED
 
-    for adapterProps in @channelToSubscribe
+    _.forEach @channelToSubscribe, (adapterProps) =>
       @subscribe adapterProps.channel, adapterProps.quickFilter, (status, result) =>
         unless status is codes.hResultStatus.OK
           @log "debug", "Subscription to #{adapterProps.channel} failed cause #{result}"

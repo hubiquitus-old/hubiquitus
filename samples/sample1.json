@@ -14,7 +14,7 @@
                     "type": "hauth"
                 }
             ],
-            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:3993" } ],
+            "adapters": [ { "type": "socket_in"} ],
             "properties": {
                 "socketIOPort": 8080,
                 "authActor": "urn:localhost:auth",
@@ -27,14 +27,12 @@
             "properties": {
                 "workers": { "method": "fork", "type": "hactor", "nb": 2 }
             },
-            "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:2992" } ]
+            "adapters": [ { "type": "socket_in"} ]
         },
         {
             "actor": "urn:localhost:channel",
             "type": "hchannel",
             "properties": {
-                "listenOn": "tcp://127.0.0.1",
-                "broadcastOn": "tcp://127.0.0.1",
                 "subscribers": [],
                 "db":{
                     "host": "localhost",
@@ -50,8 +48,6 @@
             "actor": "urn:localhost:trackChannel",
             "type": "hchannel",
             "properties": {
-                "listenOn": "tcp://127.0.0.1",
-                "broadcastOn": "tcp://127.0.0.1",
                 "subscribers": [],
                 "db":{
                     "host": "localhost",
@@ -62,5 +58,5 @@
             }
         }
     },
-    "adapters": [ { "type": "socket_in", "url": "tcp://127.0.0.1:2997" } ]
+    "adapters": [ { "type": "socket_in"} ]
 }

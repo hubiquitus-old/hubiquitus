@@ -44,8 +44,8 @@ class Channel extends Actor
     #TODO Stop actor and send error when all mandatory attribut is not in topology
     super
     @type = "channel"
-    @inboundAdapters.push factory.newAdapter("socket_in", {url: topology.properties.listenOn, owner: @})
-    @outboundAdapters.push factory.newAdapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
+    @inboundAdapters.push factory.newAdapter("socket_in", {url: @properties.listenOn, owner: @})
+    @outboundAdapters.push factory.newAdapter("channel_out", {url: @properties.broadcastOn, owner: @, targetActorAid: @actor})
     @properties.subscribers = topology.properties.subscribers or []
 
   #

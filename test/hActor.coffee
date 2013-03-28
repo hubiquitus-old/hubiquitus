@@ -24,6 +24,7 @@
 #
 should = require("should")
 factory = require "../lib/hfactory"
+_ = require "underscore"
 
 describe "hActor", ->
   hActor = undefined
@@ -1560,4 +1561,48 @@ describe "hActor", ->
       done()
     it "child should have v4 value specified in his own sharedProperties rather than the one specified in his parent's sharedProperties", (done) ->
       actorChild.properties.should.have.property "v4", "t4"
+      done()
+
+
+  describe "#IP()", ->
+    child1 = undefined
+    child2 = undefined
+    before () ->
+      topology =
+        actor: config.logins[0].urn
+        type: "hactor"
+        adapters: [
+          {
+            type: "socket_in"
+          },
+          {
+            type: "channel_out", targetActorAid: config.logins[0].urn
+          }
+        ]
+      hActor = new Actor(topology)
+
+      hActor.createChild "hactor", "inproc", { actor: "urn:localhost:child1", type: "hactor", ip:"127.0.0.1" }, (child) =>
+        child1 = child
+
+      child1.createChild "hactor", "inproc", { actor: "urn:localhost:child2", type: "hactor" }, (child) =>
+        child2 = child
+
+    after () ->
+      hActor.h_tearDown()
+      hActor = null
+
+    it "should have class variable 'ip' with correct value", (done) ->
+      hActor.ip.should.match /^[1-2]?[0-9]{1,2}\.[1-2]?[0-9]{1,2}\.[1-2]?[0-9]{1,2}\.[1-2]?[0-9]{1,2}/
+      child1.ip.should.be.equal("127.0.0.1")
+      child2.ip.should.be.equal(child1.ip)
+      done()
+
+    it "should use is ip class for his adapters", (done) ->
+      adapterIP = (hActor.inboundAdapters[0].url.match /^tcp:\/\/(.*):[0-9]+/)[1]
+      adapterIP.should.be.equal hActor.ip
+
+      adapter = _.find hActor.outboundAdapters, (outbound) =>
+        outbound.type is "channel_out"
+      adapterIP2 = (adapter.url.match /^tcp:\/\/(.*):[0-9]+/)[1]
+      adapterIP2.should.be.equal hActor.ip
       done()

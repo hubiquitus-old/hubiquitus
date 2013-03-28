@@ -183,7 +183,7 @@ class Actor extends EventEmitter
     if topology.ip
       @ip = topology.ip
     else
-      @h_setHost()
+      @h_setIP()
 
     # Registering trackers
     if _.isArray(topology.trackers) and topology.trackers.length > 0
@@ -1105,28 +1105,33 @@ class Actor extends EventEmitter
   #
   # Method called by the constructor to find the actor's IP adress
   #
-  h_setHost: () ->
+  h_setIP: () ->
     interfaces = os.networkInterfaces()
-    sortIntName = Object.getOwnPropertyNames(interfaces).sort (int1, int2) =>
-      regxType = /^([^0-9]+)([0-9]+)$/
-      type1 = (int1.match regxType)[1]
-      num1 = (int1.match regxType)[2]
-      type2 = (int2.match regxType)[1]
-      num2 = (int2.match regxType)[2]
-      if type1 is type2
-        if num1 > num2 then return 1
-        else return -1
-      else
-        list = ["eth", "en", "wlan", "vmnet", "ppp", "lo"]
-        if list.indexOf(type1) > list.indexOf(type2) then return 1
-        else return -1
+    if interfaces
+      sortIntName = Object.getOwnPropertyNames(interfaces).sort (int1, int2) =>
+        regxType = /^([^0-9]+)([0-9]+)$/
+        regx1 = int1.match regxType
+        regx2 = int2.match regxType
+        type1 = regx1[1]
+        num1 = regx1[2]
+        type2 = regx2[1]
+        num2 = regx2[2]
+        if type1 is type2
+          if num1 > num2 then return 1
+          else return -1
+        else
+          list = ["eth", "en", "wlan", "vmnet", "ppp", "lo"]
+          if list.indexOf(type1) > list.indexOf(type2) then return 1
+          else return -1
 
-    for intName in sortIntName
-      if interfaces[intName]
-        for net in interfaces[intName]
-          if net.family is "IPv4"
-            @ip = net.address
-            return
+      for intName in sortIntName
+        if interfaces[intName]
+          for net in interfaces[intName]
+            if net.family is "IPv4"
+              @ip = net.address
+              return
+    else
+      @ip = "127.0.0.1"
 
 
 

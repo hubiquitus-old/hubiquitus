@@ -120,7 +120,12 @@ class Actor extends EventEmitter
   # @property {boolean} Wether listeners are already inited
   listenersInited: undefined
 
-
+  winston.loggers.add 'default', {
+    console:
+      level: "debug"
+      handleExceptions: true
+      colorize: true
+  }
 
   #
   # Actor's constructor
@@ -130,11 +135,11 @@ class Actor extends EventEmitter
     # init logger
     if topology.log
       @log_properties = topology.log
-      @h_initLogger(topology.log.logLevel or "info", topology.log.logFile)
+      @h_initLogger(topology.log.logFile)
     else
       @log_properties =
         logLevel: "info"
-      @h_initLogger("info")
+      @h_initLogger()
 
     # setting up instance attributes
     if(validator.validateFullURN(topology.actor))
@@ -486,22 +491,32 @@ class Actor extends EventEmitter
   # @param logLevel {string} the log level use by the actor
   # @param logFile {string} the file where the log will be write
   #
-  h_initLogger: (logLevel, logFile) ->
-    logLevels =
-      debug: 0,
-      info: 1,
-      warn: 2,
-      error: 3
-    @logger = new winston.Logger({levels: logLevels})
-    # Don't crash on uncaught exception
-    @logger.exitOnError = false
-
-    # Set log display
-    @logger.add(winston.transports.Console, {handleExceptions: true, level: logLevel, colorize: true})
+  h_initLogger: (logFile) ->
     if logFile
       try
-        @logger.add(winston.transports.File, {handleExceptions: true, filename: logFile, level: logLevel})
+        winston.loggers.add logFile, {
+          console:
+            level: "debug"
+            handleExceptions: true
+            colorize: true
+          file:
+            filename: logFile
+            level: "debug"
+            handleExceptions: true
+        }
       catch err
+      @logger = winston.loggers.get(logFile)
+    else
+      @logger = winston.loggers.get('default')
+
+    @logger.setLevels({
+      debug: 0
+      info: 1
+      warn: 2
+      error: 3
+    })
+    # Don't crash on uncaught exception
+    @logger.exitOnError = false
 
   #
   # Method that enrich a message with actor details and logs it to the console
@@ -509,18 +524,23 @@ class Actor extends EventEmitter
   # @param message {object} the log message (with the actor which raise it)
   #
   log: (type, message) ->
+    logPriority = ["debug", "info", "warn", "error"]
     switch type
       when "debug"
-        @logger.debug "#{validator.getBareURN(@actor)} | #{message}"
+        if logPriority.indexOf(@log_properties.logLevel) is 0
+          @logger.debug "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "info"
-        @logger.info "#{validator.getBareURN(@actor)} | #{message}"
+        if logPriority.indexOf(@log_properties.logLevel) <= 1
+          @logger.info "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "warn"
-        @logger.warn "#{validator.getBareURN(@actor)} | #{message}"
+        if logPriority.indexOf(@log_properties.logLevel) <= 2
+          @logger.warn "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "error"
-        @logger.error "#{validator.getBareURN(@actor)} | #{message}"
+        if logPriority.indexOf(@log_properties.logLevel) <= 3
+          @logger.error "#{validator.getBareURN(@actor)} | #{message}"
         break
 
   #

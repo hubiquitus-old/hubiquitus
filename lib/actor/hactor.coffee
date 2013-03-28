@@ -77,6 +77,8 @@ class Actor extends EventEmitter
   actor: undefined
   # @property {string} Resource of the actor's URN
   resource: undefined
+  # @property {string} IP address of the actor
+  ip: undefined
   # @property {string} Type of the hActor
   type: undefined
   # @property {object} The filter to use on incoming message
@@ -172,6 +174,11 @@ class Actor extends EventEmitter
     @watchingsTab = []
     @topology = topology
     @listenersInited = false
+
+    if topology.ip
+      @ip = topology.ip
+    else
+      @h_setHost()
 
     # Registering trackers
     if _.isArray(topology.trackers) and topology.trackers.length > 0
@@ -443,6 +450,7 @@ class Actor extends EventEmitter
 
     unless topology.trackers then topology.trackers = @trackers
     unless topology.log then topology.log = @log_properties
+    unless topology.ip then topology.ip = @ip
 
     # prefixing actor's id automatically
     topology.actor = "#{topology.actor}/#{UUID.generate()}"
@@ -1073,6 +1081,34 @@ class Actor extends EventEmitter
       if inboundAdapterToRemove isnt undefined
         inboundAdapterToRemove.stop()
         @inboundAdapters.splice(index, 1)
+
+  #
+  # Method called by the constructor to find the actor's IP adress
+  #
+  h_setHost: () ->
+    interfaces = os.networkInterfaces()
+    sortIntName = Object.getOwnPropertyNames(interfaces).sort (int1, int2) =>
+      regxType = /^([^0-9]+)([0-9]+)$/
+      type1 = (int1.match regxType)[1]
+      num1 = (int1.match regxType)[2]
+      type2 = (int2.match regxType)[1]
+      num2 = (int2.match regxType)[2]
+      if type1 is type2
+        if num1 > num2 then return 1
+        else return -1
+      else
+        list = ["eth", "en", "wlan", "vmnet", "ppp", "lo"]
+        if list.indexOf(type1) > list.indexOf(type2) then return 1
+        else return -1
+
+    for intName in sortIntName
+      if interfaces[intName]
+        for net in interfaces[intName]
+          if net.family is "IPv4"
+            @ip = net.address
+            return
+
+
 
 
 

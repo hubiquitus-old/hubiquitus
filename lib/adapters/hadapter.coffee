@@ -71,7 +71,8 @@ class Adapter
         delete url_props.host
         @url = url.format(url_props)
     else
-      @url = "tcp://127.0.0.1:#{@genListenPort}"
+      port = @genListenPort()
+      @url = "tcp://#{@owner.ip}:#{port}"
 
   #
   # Method wich generate a random listen port (between 3000 and 33000)

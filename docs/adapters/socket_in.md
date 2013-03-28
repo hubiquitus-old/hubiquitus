@@ -37,9 +37,9 @@ In this example the adapters attributes are :
             <td>String</td>
             <td>
                 The url listening by the adapter
-                <em>If you don't add a port, it will be automatically set</em>
+                <em>If you don't add a url, it will be automatically set</em>
             </td>
-            <td>Yes</td>
+            <td>No</td>
         </tr>
     </tbody>
 </table>

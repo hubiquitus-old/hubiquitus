@@ -21,14 +21,20 @@ But he always has specifics properties :
         <tr>
             <td>listenOn</td>
             <td>String</td>
-            <td>URL of the publish inbound adapter</td>
-            <td>Yes</td>
+            <td>
+                URL of the publish inbound adapter <br/>
+                <em>If you don't add a url, it will be automatically set</em>
+            </td>
+            <td>No (auto-fill)</td>
         </tr>
         <tr>
             <td>broadcastOn</td>
             <td>String</td>
-            <td>URL of the multi-cast outbound adapter</td>
-            <td>Yes</td>
+            <td>
+                URL of the multi-cast outbound adapter <br/>
+                <em>If you don't add a url, it will be automatically set</em>
+            </td>
+            <td>No</td>
         </tr>
         <tr>
             <td>subscibers</td>

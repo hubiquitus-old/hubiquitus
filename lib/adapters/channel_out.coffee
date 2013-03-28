@@ -43,16 +43,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
   constructor: (properties) ->
     super
     @type = "channel_out"
-    if properties.url
-      url_props = url.parse(properties.url)
-      if url_props.port
-        @url = properties.url
-      else
-        url_props.port = @genListenPort()
-        delete url_props.host
-        @url = url.format(url_props)
-    else
-      @url = "tcp://127.0.0.1:#{@genListenPort}"
+    @formatUrl(properties.url)
 
   #
   # Method which initialize the zmq pub socket

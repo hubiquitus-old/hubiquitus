@@ -1112,10 +1112,19 @@ class Actor extends EventEmitter
         regxType = /^([^0-9]+)([0-9]+)$/
         regx1 = int1.match regxType
         regx2 = int2.match regxType
-        type1 = regx1[1]
-        num1 = regx1[2]
-        type2 = regx2[1]
-        num2 = regx2[2]
+        if regx1
+          type1 = regx1[1]
+          num1 = regx1[2]
+        else
+          type1 = int1
+          num1 = 0
+        if regx2
+          type2 = regx2[1]
+          num2 = regx2[2]
+        else
+          type2 = int2
+          num2 = 0
+
         if type1 is type2
           if num1 > num2 then return 1
           else return -1

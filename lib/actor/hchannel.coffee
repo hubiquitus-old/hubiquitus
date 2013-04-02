@@ -36,6 +36,8 @@ factory = require "../hfactory"
 #
 class Channel extends Actor
 
+  # @property {object} MongoDB instance
+  @dbInstance : undefined
   #
   # Actor's constructor
   # @param topology {object} Launch topology of the actor

@@ -327,7 +327,7 @@ class Actor extends EventEmitter
     outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
     unless outboundAdapter
       _.forEach @outboundAdapters, (outbound) =>
-        if validator.getBareURN(outbound.targetActorAid) is validator.getBareURN(hMessage.actor)
+        if validator.getBareURN(outbound.targetActorAid) is hMessage.actor
           hMessage.actor = outbound.targetActorAid
           outboundAdapter = outbound
     if outboundAdapter
@@ -340,7 +340,7 @@ class Actor extends EventEmitter
       # if don't have cached adapter, send lookup demand to the tracker
     else
       if @trackers[0]
-        msg = @h_buildSignal(@trackers[0].trackerId, "peer-search", {actor: hMessage.actor}, {timeout: 5000})
+        msg = @h_buildSignal(@trackers[0].trackerId, "peer-search", {actor: hMessage.actor, pid: process.pid, ip: @ip}, {timeout: 5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
             # Subscribe to trackChannel to be alerting when actor disconnect
@@ -573,6 +573,7 @@ class Actor extends EventEmitter
           peerId: validator.getBareURN(@actor)
           peerStatus: @status
           peerInbox: inboundAdapters
+          peerIP: @ip
           peerPID: process.pid
           peerMemory: process.memoryUsage()
           peerUptime: process.uptime()

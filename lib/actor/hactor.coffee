@@ -326,10 +326,13 @@ class Actor extends EventEmitter
     # first looking up for a cached adapter
     outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
     unless outboundAdapter
-      _.forEach @outboundAdapters, (outbound) =>
-        if validator.getBareURN(outbound.targetActorAid) is hMessage.actor
-          hMessage.actor = outbound.targetActorAid
-          outboundAdapter = outbound
+      outboundAdapter = _.find @outboundAdapters, (outbound) =>
+        validator.getBareURN(outbound.targetActorAid) is hMessage.actor and outbound.type is "socket_out"
+      unless outboundAdapter
+        outboundAdapter = _.find @outboundAdapters, (outbound) =>
+          validator.getBareURN(outbound.targetActorAid) is hMessage.actor
+      if outboundAdapter
+        hMessage.actor = outboundAdapter.targetActorAid
     if outboundAdapter
       if @timerOutAdapter[outboundAdapter.targetActorAid]
         clearTimeout(@timerOutAdapter[outboundAdapter.targetActorAid])

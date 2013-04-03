@@ -178,7 +178,7 @@ describe "hSubscribe", ->
         type: "hactor",
         adapters: [
           {type: "socket_in", url: "tcp://127.0.0.1:2992" },
-          {type: "channel_in", channel: config.logins[2].urn}
+          {type: "channel_in", channel: "urn:localhost:channel"}
         ],
         trackers: [{
           trackerId: "urn:localhost:tracker",
@@ -188,18 +188,16 @@ describe "hSubscribe", ->
       }
 
       hchannelProps = {
-        actor:config.logins[2].urn,
-        type:"hchannel",
+        actor: "urn:localhost:channel",
+        type: "hchannel",
         properties: {
-          listenOn:"tcp://127.0.0.1",
-          broadcastOn:"tcp://127.0.0.1",
           subscribers: [],
           db:{
-            host:"localhost",
-            port:27017,
-            name:"admin"
+            host: "localhost",
+            port: 27017,
+            name: "admin"
             },
-          collection:"channel"
+          collection: "channel"
         },
       trackers: [{
         trackerId: "urn:localhost:tracker",

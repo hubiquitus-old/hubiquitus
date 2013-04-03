@@ -5,9 +5,6 @@
         {
             "actor": "urn:localhost:gateway",
             "type": "hgateway",
-            "log":{
-                "logLevel":"debug"
-            },
             "children": [
             	{
                     "actor": "urn:localhost:auth",

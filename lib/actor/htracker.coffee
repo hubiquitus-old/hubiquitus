@@ -114,7 +114,8 @@ class Tracker extends Actor
 
     else if hMessage.payload.name is "peer-search"
       # TODO reflexion sur le lookup et implementation
-      outboundadapter = @findOutbox(hMessage.payload.params.actor, false)
+      params = hMessage.payload.params
+      outboundadapter = @findOutbox(params.actor, false, params.ip, params.pid)
 
       if outboundadapter
         status = codes.OK
@@ -147,7 +148,8 @@ class Tracker extends Actor
   # @param actor {string} URN of the search peer
   # @param tracker {boolean} True if it's the tracker which search the peer. In this case the state of the peer is ignored.
   #
-  findOutbox: (actor, tracker) ->
+  findOutbox: (actor, tracker, ip, pid) ->
+    # Search with FullURN
     outboundadapter = undefined
     _.forEach @peers, (peers) =>
       if peers.peerFullId is actor
@@ -156,11 +158,22 @@ class Tracker extends Actor
             _.forEach peers.peerInbox, (inbox) =>
               if inbox.type is "socket_in"
                 outboundadapter = {type: "socket_out", targetActorAid: actor, url: inbox.url}
+    # If not find FullURN, search BareURN
     unless outboundadapter
+      samePID = []
+      sameHost = []
       outTab = []
       _.forEach @peers, (peers) =>
-        if peers.peerId is validator.getBareURN(actor) and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+        if peers.peerId is validator.getBareURN(actor) and peers.peerPID is pid and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+          samePID.push(peers)
+        else if peers.peerId is validator.getBareURN(actor) and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+          sameHost.push(peers)
+        else if peers.peerId is validator.getBareURN(actor) and peers.peerStatus is "ready" and peers.peerInbox.length > 0
           outTab.push(peers)
+      if samePID.length > 0
+        outTab = samePID
+      else if sameHost.length > 0
+        outTab = sameHost
       if outTab.length > 0
         lb_peers = outTab[Math.floor(Math.random() * outTab.length)]
         _.forEach lb_peers.peerInbox, (inbox) =>

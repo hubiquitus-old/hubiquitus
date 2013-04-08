@@ -57,22 +57,6 @@ class Channel extends Actor
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
       switch hMessage.payload.cmd
-        when "hGetLastMessages"
-          command = require("./../hcommands/hGetLastMessages").Command
-          module = new command()
-          @runCommand(hMessage, module)
-        when "hRelevantMessages"
-          command = require("./../hcommands/hRelevantMessages").Command
-          module = new command()
-          @runCommand(hMessage, module)
-        when "hGetThread"
-          command = require("./../hcommands/hGetThread").Command
-          module = new command()
-          @runCommand(hMessage, module)
-        when "hGetThreads"
-          command = require("./../hcommands/hGetThreads").Command
-          module = new command()
-          @runCommand(hMessage, module)
         when "hSubscribe"
           command = require("./../hcommands/hSubscribe").Command
           module = new command()

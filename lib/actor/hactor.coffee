@@ -785,9 +785,12 @@ class Actor extends EventEmitter
               result = "QuickFilter added"
               return
         if status isnt undefined
-          return cb status, result
+          if typeof cb is "function"
+            cb status, result
+            return
         else
-          return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
+          if typeof cb is "function"
+            return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout: 3000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
@@ -795,10 +798,11 @@ class Actor extends EventEmitter
         @inboundAdapters.push channelInbound
         channelInbound.start()
         @subscriptions.push hResult.publisher
-        if cb
+        if typeof cb is "function"
           cb codes.hResultStatus.OK
       else
-        cb hResult.payload.status, hResult.payload.result
+        if typeof cb is "function"
+          cb hResult.payload.status, hResult.payload.result
 
   #
   # Method called to unsubscribe to a channel.
@@ -828,7 +832,8 @@ class Actor extends EventEmitter
       index++
 
     if subs is false
-      return cb codes.hResultStatus.NOT_AVAILABLE, "user not subscribed to " + hChannel
+      if typeof cb is "function"
+        return cb codes.hResultStatus.NOT_AVAILABLE, "user not subscribed to " + hChannel
     else
       index = 0
       _.forEach @inboundAdapters, (inbound) =>
@@ -839,7 +844,8 @@ class Actor extends EventEmitter
                 if result
                   @unsubscribe hChannel, cb
                 else
-                  return cb codes.hResultStatus.OK, "QuickFilter removed"
+                  if typeof cb is "function"
+                    return cb codes.hResultStatus.OK, "QuickFilter removed"
             else
               inbound.stop()
               @inboundAdapters.splice(index, 1)

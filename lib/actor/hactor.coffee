@@ -787,10 +787,12 @@ class Actor extends EventEmitter
         if status isnt undefined
           if typeof cb is "function"
             cb status, result
-            return
+          return
         else
           if typeof cb is "function"
             return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
+          else
+            return
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout: 3000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
@@ -846,6 +848,8 @@ class Actor extends EventEmitter
                 else
                   if typeof cb is "function"
                     return cb codes.hResultStatus.OK, "QuickFilter removed"
+                  else
+                    return
             else
               inbound.stop()
               @inboundAdapters.splice(index, 1)

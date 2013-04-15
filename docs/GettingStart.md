@@ -21,6 +21,8 @@ To use **Hubiquitus**, you need [Node.JS](http://nodejs.org), [mongoDb](http://w
 
 * To install correctly MongoDB database you can use `sudo apt-get install mongodb`
 
+> Be sure that you start mongodb with `sudo /etc/init.d/mongodb start`
+
 * To install correctly ZeroMQ follow the next steps :
 
 ```
@@ -81,7 +83,16 @@ You are now ready to run your example. To do it, you can execute your launch fil
 $ node launch.js
 ```
 
-Hubiquitus is now running. You can use any of our hAPI to send or receive hMessage
+Hubiquitus is now running. You can see in your console the log about the start of actors.
+You can now use any of our hAPI (like [hubiquitus4js](https://github.com/hubiquitus/hubiquitus4js)) to send or receive hMessage.
+
+You are ready to use hubiquitus. For examples, you can :
+
+* subscribe to urn:localhost:channel
+* send a message to urn:localhost:dispatcher which will transmit it to urn:localhost:worker1 or urn:localhost:worker2
+* publish hMessage to urn:localhost:channel
+
+Every hMessage exchange will be log in your console.
 
 ## Building your own hubiquitus projet
 
@@ -107,9 +118,7 @@ class myActor extends Actor
   onMessage: (hMessage) ->
     console.log "myActor receive a hMessage", hMessage
 
-exports.myActor = myActor
-exports.newActor = (topology) ->
-  new myActor(topology)
+module.exports = myActor
 ```
 
 > You can override some over functions depending your needs, for more details about these functions see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors/hActor.md)
@@ -148,9 +157,7 @@ class myInboundAdapter extends InboundAdapter
       # Add your stopping instructions
       super
 
-exports.myInboundAdapter = myInboundAdapter
-exports.newAdapter = (properties) ->
-  new myInboundAdapter(properties)
+module.exports = myInboundAdapter
 ```
 
 To build your inbound adapter, you just need to extend OutboundAdapter class of Hubiquitus and override needed function :
@@ -177,9 +184,7 @@ class myOutboundAdapter extends OutboundAdapter
   send: (message) ->
     # Add your sending instruction
 
-exports.myOutboundAdapter = myOutboundAdapter
-exports.newAdapter = (properties) ->
-  new myOutboundAdapter(properties)
+module.exports = myOutboundAdapter
 ```
 > You can override some over functions depending your needs, for more details about these functions see [Adapters](https://github.com/hubiquitus/hubiquitus/tree/master/docs/adapters/hAdapters.md)
 

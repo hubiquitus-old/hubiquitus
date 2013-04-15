@@ -107,9 +107,7 @@ class myActor extends Actor
   onMessage: (hMessage) ->
     console.log "myActor receive a hMessage", hMessage
 
-exports.myActor = myActor
-exports.newActor = (topology) ->
-  new myActor(topology)
+module.exports = myActor
 ```
 
 > You can override some over functions depending your needs, for more details about these functions see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors/hActor.md)
@@ -148,9 +146,7 @@ class myInboundAdapter extends InboundAdapter
       # Add your stopping instructions
       super
 
-exports.myInboundAdapter = myInboundAdapter
-exports.newAdapter = (properties) ->
-  new myInboundAdapter(properties)
+module.exports = myInboundAdapter
 ```
 
 To build your inbound adapter, you just need to extend OutboundAdapter class of Hubiquitus and override needed function :
@@ -177,9 +173,7 @@ class myOutboundAdapter extends OutboundAdapter
   send: (message) ->
     # Add your sending instruction
 
-exports.myOutboundAdapter = myOutboundAdapter
-exports.newAdapter = (properties) ->
-  new myOutboundAdapter(properties)
+module.exports = myOutboundAdapter
 ```
 > You can override some over functions depending your needs, for more details about these functions see [Adapters](https://github.com/hubiquitus/hubiquitus/tree/master/docs/adapters/hAdapters.md)
 

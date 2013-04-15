@@ -22,6 +22,4 @@ class myInboundAdapter extends InboundAdapter
       # Add your stopping instructions
       super
 
-exports.myInboundAdapter = myInboundAdapter
-exports.newAdapter = (properties) ->
-  new myInboundAdapter(properties)
+module.exports = myInboundAdapter

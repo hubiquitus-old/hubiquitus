@@ -21,6 +21,8 @@ To use **Hubiquitus**, you need [Node.JS](http://nodejs.org), [mongoDb](http://w
 
 * To install correctly MongoDB database you can use `sudo apt-get install mongodb`
 
+> Be sure that you start mongodb with `sudo /etc/init.d/mongodb start`
+
 * To install correctly ZeroMQ follow the next steps :
 
 ```

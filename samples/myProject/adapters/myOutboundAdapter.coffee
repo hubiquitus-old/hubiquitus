@@ -19,6 +19,4 @@ class myOutboundAdapter extends OutboundAdapter
   send: (message) ->
     # Add your sending instruction
 
-exports.myOutboundAdapter = myOutboundAdapter
-exports.newAdapter = (properties) ->
-  new myOutboundAdapter(properties)
+module.exports = myOutboundAdapter

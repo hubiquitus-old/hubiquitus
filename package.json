@@ -17,7 +17,7 @@
   },
   "dependencies": {
       "underscore": ">=1.4.4",
-      "zmq": ">=2.3.0",
+      "zmq": "git://github.com:hubiquitus/zeromq.node.git",
       "cron": "=1.0.1",
       "time": "=0.9.0",
       "ntwitter": "git://github.com/hubiquitus/ntwitter.git",

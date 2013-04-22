@@ -35,7 +35,7 @@ codes = require "./codes"
 factory = require "./hfactory"
 
 # Set ZMQ_MAX_SOCKETS to the highest possible value because hubiquitus uses a lot of sockets.
-if process.env.ZMQ_MAX_SOCKETS <= 0
+if not process.env.ZMQ_MAX_SOCKETS or process.env.ZMQ_MAX_SOCKETS <= 0
   process.env.ZMQ_MAX_SOCKETS = 1000000
 
 exports.Actor = require "./actor/hactor"

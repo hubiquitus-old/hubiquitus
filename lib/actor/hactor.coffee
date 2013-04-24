@@ -398,14 +398,15 @@ class Actor extends EventEmitter
       #Add it to the open message to call cb later
       if cb
         if hMessage.timeout > 0
-          @msgToBeAnswered[hMessage.msgid] = cb
+          msgid = hMessage.msgid.split("#")[0]
+          @msgToBeAnswered[msgid] = cb
           timeout = hMessage.timeout
           self = this
 
           #if no response in time we call a timeout
           setTimeout (->
-            if self.msgToBeAnswered[hMessage.msgid]
-              delete self.msgToBeAnswered[hMessage.msgid]
+            if self.msgToBeAnswered[msgid]
+              delete self.msgToBeAnswered[msgid]
               errCode = codes.hResultStatus.EXEC_TIMEOUT
               errMsg = "No response was received within the " + timeout + " timeout"
               resultMsg = self.buildResult(hMessage.publisher, hMessage.msgid, errCode, errMsg)

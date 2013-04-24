@@ -89,6 +89,7 @@ describe "hChannel", ->
       hChildFilter = null
 
     it "should publish message without quickFilter ", (done) ->
+      @timeout(4000)
       msg = hActor.buildMessage("urn:localhost:channel", "string", "Hello #TΘ$Δ", {timeout:0})
 
       hChild.onMessage = (hMessage) ->

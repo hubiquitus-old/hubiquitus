@@ -77,6 +77,8 @@ class Actor extends EventEmitter
   actor: undefined
   # @property {string} Resource of the actor's URN
   resource: undefined
+  # @property {string} IP address of the actor
+  ip: undefined
   # @property {string} Type of the hActor
   type: undefined
   # @property {object} The filter to use on incoming message
@@ -118,7 +120,12 @@ class Actor extends EventEmitter
   # @property {boolean} Wether listeners are already inited
   listenersInited: undefined
 
-
+  winston.loggers.add 'default', {
+    console:
+      level: "debug"
+      handleExceptions: true
+      colorize: true
+  }
 
   #
   # Actor's constructor
@@ -128,11 +135,11 @@ class Actor extends EventEmitter
     # init logger
     if topology.log
       @log_properties = topology.log
-      @h_initLogger(topology.log.logLevel or "info", topology.log.logFile)
+      @h_initLogger(topology.log.logFile)
     else
       @log_properties =
         logLevel: "info"
-      @h_initLogger("info")
+      @h_initLogger()
 
     # setting up instance attributes
     if(validator.validateFullURN(topology.actor))
@@ -172,6 +179,11 @@ class Actor extends EventEmitter
     @watchingsTab = []
     @topology = topology
     @listenersInited = false
+
+    if topology.ip
+      @ip = topology.ip
+    else
+      @h_setIP()
 
     # Registering trackers
     if _.isArray(topology.trackers) and topology.trackers.length > 0
@@ -314,10 +326,13 @@ class Actor extends EventEmitter
     # first looking up for a cached adapter
     outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
     unless outboundAdapter
-      _.forEach @outboundAdapters, (outbound) =>
-        if validator.getBareURN(outbound.targetActorAid) is validator.getBareURN(hMessage.actor)
-          hMessage.actor = outbound.targetActorAid
-          outboundAdapter = outbound
+      outboundAdapter = _.find @outboundAdapters, (outbound) =>
+        validator.getBareURN(outbound.targetActorAid) is hMessage.actor and outbound.type is "socket_out"
+      unless outboundAdapter
+        outboundAdapter = _.find @outboundAdapters, (outbound) =>
+          validator.getBareURN(outbound.targetActorAid) is hMessage.actor
+      if outboundAdapter
+        hMessage.actor = outboundAdapter.targetActorAid
     if outboundAdapter
       if @timerOutAdapter[outboundAdapter.targetActorAid]
         clearTimeout(@timerOutAdapter[outboundAdapter.targetActorAid])
@@ -328,7 +343,7 @@ class Actor extends EventEmitter
       # if don't have cached adapter, send lookup demand to the tracker
     else
       if @trackers[0]
-        msg = @h_buildSignal(@trackers[0].trackerId, "peer-search", {actor: hMessage.actor}, {timeout: 5000})
+        msg = @h_buildSignal(@trackers[0].trackerId, "peer-search", {actor: hMessage.actor, pid: process.pid, ip: @ip}, {timeout: 5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
             # Subscribe to trackChannel to be alerting when actor disconnect
@@ -383,14 +398,15 @@ class Actor extends EventEmitter
       #Add it to the open message to call cb later
       if cb
         if hMessage.timeout > 0
-          @msgToBeAnswered[hMessage.msgid] = cb
+          msgid = hMessage.msgid.split("#")[0]
+          @msgToBeAnswered[msgid] = cb
           timeout = hMessage.timeout
           self = this
 
           #if no response in time we call a timeout
           setTimeout (->
-            if self.msgToBeAnswered[hMessage.msgid]
-              delete self.msgToBeAnswered[hMessage.msgid]
+            if self.msgToBeAnswered[msgid]
+              delete self.msgToBeAnswered[msgid]
               errCode = codes.hResultStatus.EXEC_TIMEOUT
               errMsg = "No response was received within the " + timeout + " timeout"
               resultMsg = self.buildResult(hMessage.publisher, hMessage.msgid, errCode, errMsg)
@@ -443,6 +459,7 @@ class Actor extends EventEmitter
 
     unless topology.trackers then topology.trackers = @trackers
     unless topology.log then topology.log = @log_properties
+    unless topology.ip then topology.ip = @ip
 
     # prefixing actor's id automatically
     topology.actor = "#{topology.actor}/#{UUID.generate()}"
@@ -478,22 +495,32 @@ class Actor extends EventEmitter
   # @param logLevel {string} the log level use by the actor
   # @param logFile {string} the file where the log will be write
   #
-  h_initLogger: (logLevel, logFile) ->
-    logLevels =
-      debug: 0,
-      info: 1,
-      warn: 2,
-      error: 3
-    @logger = new winston.Logger({levels: logLevels})
-    # Don't crash on uncaught exception
-    @logger.exitOnError = false
-
-    # Set log display
-    @logger.add(winston.transports.Console, {handleExceptions: true, level: logLevel, colorize: true})
+  h_initLogger: (logFile) ->
     if logFile
       try
-        @logger.add(winston.transports.File, {handleExceptions: true, filename: logFile, level: logLevel})
+        winston.loggers.add logFile, {
+          console:
+            level: "debug"
+            handleExceptions: true
+            colorize: true
+          file:
+            filename: logFile
+            level: "debug"
+            handleExceptions: true
+        }
       catch err
+      @logger = winston.loggers.get(logFile)
+    else
+      @logger = winston.loggers.get('default')
+
+    @logger.setLevels({
+      debug: 0
+      info: 1
+      warn: 2
+      error: 3
+    })
+    # Don't crash on uncaught exception
+    @logger.exitOnError = false
 
   #
   # Method that enrich a message with actor details and logs it to the console
@@ -501,18 +528,23 @@ class Actor extends EventEmitter
   # @param message {object} the log message (with the actor which raise it)
   #
   log: (type, message) ->
+    logPriority = ["debug", "info", "warn", "error"]
     switch type
       when "debug"
-        @logger.debug "#{validator.getBareURN(@actor)} | #{message}"
+        if logPriority.indexOf(@log_properties.logLevel) is 0
+          @logger.debug "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "info"
-        @logger.info "#{validator.getBareURN(@actor)} | #{message}"
+        if logPriority.indexOf(@log_properties.logLevel) <= 1
+          @logger.info "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "warn"
-        @logger.warn "#{validator.getBareURN(@actor)} | #{message}"
+        if logPriority.indexOf(@log_properties.logLevel) <= 2
+          @logger.warn "#{validator.getBareURN(@actor)} | #{message}"
         break
       when "error"
-        @logger.error "#{validator.getBareURN(@actor)} | #{message}"
+        if logPriority.indexOf(@log_properties.logLevel) <= 3
+          @logger.error "#{validator.getBareURN(@actor)} | #{message}"
         break
 
   #
@@ -545,6 +577,7 @@ class Actor extends EventEmitter
           peerId: validator.getBareURN(@actor)
           peerStatus: @status
           peerInbox: inboundAdapters
+          peerIP: @ip
           peerPID: process.pid
           peerMemory: process.memoryUsage()
           peerUptime: process.uptime()
@@ -757,9 +790,14 @@ class Actor extends EventEmitter
               result = "QuickFilter added"
               return
         if status isnt undefined
-          return cb status, result
+          if typeof cb is "function"
+            cb status, result
+          return
         else
-          return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
+          if typeof cb is "function"
+            return cb codes.hResultStatus.NOT_AUTHORIZED, "already subscribed to channel " + hChannel
+          else
+            return
 
     @send @buildCommand(hChannel, "hSubscribe", {}, {timeout: 3000}), (hResult) =>
       if hResult.payload.status is codes.hResultStatus.OK and hResult.payload.result
@@ -767,10 +805,11 @@ class Actor extends EventEmitter
         @inboundAdapters.push channelInbound
         channelInbound.start()
         @subscriptions.push hResult.publisher
-        if cb
+        if typeof cb is "function"
           cb codes.hResultStatus.OK
       else
-        cb hResult.payload.status, hResult.payload.result
+        if typeof cb is "function"
+          cb hResult.payload.status, hResult.payload.result
 
   #
   # Method called to unsubscribe to a channel.
@@ -800,7 +839,8 @@ class Actor extends EventEmitter
       index++
 
     if subs is false
-      return cb codes.hResultStatus.NOT_AVAILABLE, "user not subscribed to " + hChannel
+      if typeof cb is "function"
+        return cb codes.hResultStatus.NOT_AVAILABLE, "user not subscribed to " + hChannel
     else
       index = 0
       _.forEach @inboundAdapters, (inbound) =>
@@ -811,7 +851,10 @@ class Actor extends EventEmitter
                 if result
                   @unsubscribe hChannel, cb
                 else
-                  return cb codes.hResultStatus.OK, "QuickFilter removed"
+                  if typeof cb is "function"
+                    return cb codes.hResultStatus.OK, "QuickFilter removed"
+                  else
+                    return
             else
               inbound.stop()
               @inboundAdapters.splice(index, 1)
@@ -1073,6 +1116,48 @@ class Actor extends EventEmitter
       if inboundAdapterToRemove isnt undefined
         inboundAdapterToRemove.stop()
         @inboundAdapters.splice(index, 1)
+
+  #
+  # Method called by the constructor to find the actor's IP adress
+  #
+  h_setIP: () ->
+    interfaces = os.networkInterfaces()
+    if interfaces
+      sortIntName = Object.getOwnPropertyNames(interfaces).sort (int1, int2) =>
+        regxType = /^([^0-9]+)([0-9]+)$/
+        regx1 = int1.match regxType
+        regx2 = int2.match regxType
+        if regx1
+          type1 = regx1[1]
+          num1 = regx1[2]
+        else
+          type1 = int1
+          num1 = 0
+        if regx2
+          type2 = regx2[1]
+          num2 = regx2[2]
+        else
+          type2 = int2
+          num2 = 0
+
+        if type1 is type2
+          if num1 > num2 then return 1
+          else return -1
+        else
+          list = ["eth", "en", "wlan", "vmnet", "ppp", "lo"]
+          if list.indexOf(type1) > list.indexOf(type2) then return 1
+          else return -1
+
+      for intName in sortIntName
+        if interfaces[intName]
+          for net in interfaces[intName]
+            if net.family is "IPv4"
+              @ip = net.address
+              return
+    else
+      @ip = "127.0.0.1"
+
+
 
 
 

@@ -26,6 +26,7 @@
 Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
+os = require "os"
 statuses = require("../codes").statuses
 errors = require("../codes").errors
 validator = require "../validator"
@@ -65,8 +66,18 @@ class Session extends Actor
       @log "debug", "touching tracker #{trackerProps.trackerId}"
       if @status is "stopping"
         @trackInbox = []
-      @send @h_buildSignal(trackerProps.trackerId, "peer-info", {peerType:@type, peerId:validator.getBareURN(@actor), peerStatus:@status, peerInbox:@trackInbox})
 
+      @send @h_buildSignal(trackerProps.trackerId, "peer-info",
+        peerType: @type
+        peerId: validator.getBareURN(@actor)
+        peerStatus: @status
+        peerInbox: @trackInbox
+        peerIP: @ip
+        peerPID: process.pid
+        peerMemory: process.memoryUsage()
+        peerUptime: process.uptime()
+        peerLoadAvg: os.loadavg()
+      )
   #
   # @overload validateFilter(hMessage)
   #   Method called on incoming message to check if the hMessage respect the actor's filter

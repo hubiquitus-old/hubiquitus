@@ -36,6 +36,8 @@ factory = require "../hfactory"
 #
 class Channel extends Actor
 
+  # @property {object} MongoDB instance
+  @dbInstance : undefined
   #
   # Actor's constructor
   # @param topology {object} Launch topology of the actor
@@ -44,8 +46,8 @@ class Channel extends Actor
     #TODO Stop actor and send error when all mandatory attribut is not in topology
     super
     @type = "channel"
-    @inboundAdapters.push factory.newAdapter("socket_in", {url: topology.properties.listenOn, owner: @})
-    @outboundAdapters.push factory.newAdapter("channel_out", {url: topology.properties.broadcastOn, owner: @, targetActorAid: @actor})
+    @inboundAdapters.push factory.newAdapter("socket_in", {url: @properties.listenOn, owner: @})
+    @outboundAdapters.push factory.newAdapter("channel_out", {url: @properties.broadcastOn, owner: @, targetActorAid: @actor})
     @properties.subscribers = topology.properties.subscribers or []
 
   #
@@ -57,22 +59,6 @@ class Channel extends Actor
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
       switch hMessage.payload.cmd
-        when "hGetLastMessages"
-          command = require("./../hcommands/hGetLastMessages").Command
-          module = new command()
-          @runCommand(hMessage, module)
-        when "hRelevantMessages"
-          command = require("./../hcommands/hRelevantMessages").Command
-          module = new command()
-          @runCommand(hMessage, module)
-        when "hGetThread"
-          command = require("./../hcommands/hGetThread").Command
-          module = new command()
-          @runCommand(hMessage, module)
-        when "hGetThreads"
-          command = require("./../hcommands/hGetThreads").Command
-          module = new command()
-          @runCommand(hMessage, module)
         when "hSubscribe"
           command = require("./../hcommands/hSubscribe").Command
           module = new command()

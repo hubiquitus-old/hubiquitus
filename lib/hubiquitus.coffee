@@ -34,6 +34,10 @@ filter = require "./hFilter"
 codes = require "./codes"
 factory = require "./hfactory"
 
+# Set ZMQ_MAX_SOCKETS to the highest possible value because hubiquitus uses a lot of sockets.
+if not process.env.ZMQ_MAX_SOCKETS or process.env.ZMQ_MAX_SOCKETS <= 0
+  process.env.ZMQ_MAX_SOCKETS = 1000000
+
 exports.Actor = require "./actor/hactor"
 exports.Auth = require "./actor/hauth"
 exports.Channel = require "./actor/hchannel"

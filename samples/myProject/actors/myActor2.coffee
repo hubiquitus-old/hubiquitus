@@ -9,6 +9,4 @@ class myActor2 extends Actor
   onMessage: (hMessage) ->
     console.log "myActor2 receive a hMessage", hMessage
 
-exports.myActor2 = myActor2
-exports.newActor = (topology) ->
-  new myActor2(topology)
+module.exports = myActor2

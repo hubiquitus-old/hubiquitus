@@ -1,6 +1,9 @@
 {
     "actor": "urn:localhost:tracker",
     "type": "htracker",
+    "log": {
+        "logLevel": "debug"
+    },
     "children": [
         {
             "actor": "urn:localhost:gateway",

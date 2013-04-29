@@ -79,8 +79,6 @@ scan = (path, callback) ->
           stats = fs.statSync "#{path}/#{file}"
           if stats.isFile()
             callback file.substr(0, pos), "#{path}/#{file}"
-  else
-    logger.info "#{path} not found"
 
 scan "#{process.cwd()}/actors", withActor
 scan "#{process.cwd()}/adapters", withAdapter

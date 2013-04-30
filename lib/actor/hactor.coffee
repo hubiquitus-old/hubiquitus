@@ -856,7 +856,7 @@ class Actor extends EventEmitter
                   else
                     return
             else
-              inbound.stop()
+              inbound.stop(true)
               @inboundAdapters.splice(index, 1)
               index2 = 0
               for channel in @subscriptions

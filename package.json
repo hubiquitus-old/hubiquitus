@@ -23,7 +23,8 @@
       "ntwitter": "git://github.com/hubiquitus/ntwitter.git",
       "winston" : ">=0.6.2",
       "socket.io" : "=0.9.10",
-      "mongodb" : "=1.2.14"
+      "mongodb" : "=1.2.14",
+      "request": "=2.21.1"
   },
   "devDependencies": {
       "should" : "=1.2.2",

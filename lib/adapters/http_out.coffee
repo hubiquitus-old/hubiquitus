@@ -24,7 +24,7 @@
 #
 {OutboundAdapter} = require "./hadapter"
 url = require "url"
-
+validator = require "../validator.coffee"
 #
 # Class that defines a http Outbound Adapter.
 # It is used to write http request on a server
@@ -37,14 +37,15 @@ class HttpOutboundAdapter extends OutboundAdapter
   #
   constructor: (properties) ->
     super
-
     if properties.url
       url_props = url.parse(properties.url)
-      if url_props.port then @port = url_props.port else @port = 8888
       if url_props.hostname then @server_url = url_props.hostname else @server_url = "127.0.0.1"
-      if properties.path then @path = properties.path else @path = "/"
     else
       throw new Error "You must provide a writing url"
+
+    if properties.port then @port = properties.port else @port = 8888
+
+    if properties.path then @path = properties.path else @path = "/"
 
     @owner.log "debug", "HttpOutboundAdapter used -> [ url: #{@server_url} port : #{@port} path: #{@path} ]"
 
@@ -58,25 +59,24 @@ class HttpOutboundAdapter extends OutboundAdapter
 
     @querystring = require 'querystring'
     @http = require 'http'
+    @reqst = require 'request'
 
-    # Setting the configuration
-    post_options =
-      host: @server_url
-      port: @port
-      path: @path
-      method: "POST"
-      headers:
-        "Content-Type": "application/x-www-form-urlencoded"
-        "Content-Length": JSON.stringify(hMessage.payload).length
+    validator.validateHMessage hMessage, (err, result) =>
+      if not err
+        # Setting the configuration
+        post_options =
+          url: url.format {protocol: 'http:', hostname: @server_url, port: @port, pathname: @path}
+          method: 'POST'
+          encoding: "UTF-8"
+          json: hMessage.payload
 
-    post_req = @http.request post_options, (res) =>
+        @reqst post_options, (err, res) =>
+          if err
+            @owner.log "warn", "problem with request: " + err
+      else
+        console.log 'hm', hMessage
+        @owner.log "error", "hMessage not conform : " + JSON.stringify(result)
 
-    post_req.on "error", (e) ->
-      @owner.log "warn", "problem with request: " + e.message
-
-    # write parameters to post body
-    post_req.write JSON.stringify(hMessage.payload)
-    post_req.end()
 
 
 module.exports = HttpOutboundAdapter

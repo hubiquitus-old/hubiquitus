@@ -68,7 +68,7 @@ class HttpOutboundAdapter extends OutboundAdapter
           url: url.format {protocol: 'http:', hostname: @server_url, port: @port, pathname: @path}
           method: 'POST'
           encoding: "UTF-8"
-          json: hMessage.payload
+          json: hMessage
 
         @reqst post_options, (err, res) =>
           if err

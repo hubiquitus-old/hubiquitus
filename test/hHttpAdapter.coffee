@@ -24,6 +24,7 @@
 #
 should = require("should")
 factory = require "../lib/hfactory"
+validator = require "../lib/validator.coffee"
 
 describe "hHttpAdapter", ->
   hActor = undefined
@@ -112,8 +113,12 @@ describe "hHttpAdapter", ->
         req.on "data", (data) ->
           body = data
         req.on "end", =>
-          console.log "recept", JSON.stringify(body.toString('utf8'));
-          done()
+          validator.validateHMessage JSON.parse( body.toString('utf8') ), (err, result) =>
+            if not err
+              done()
+            else
+              @owner.log "hMessage not conform : " + JSON.stringify(result)
+
 
       server.listen 8989, "127.0.0.1"
       hActor.send hActor.buildMessage("urn:localhost:httpOutMochaTest", "hHttpMessage", {hello:"world"})

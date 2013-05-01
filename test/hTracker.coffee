@@ -36,8 +36,8 @@ describe "hTracker", ->
       actor: config.logins[0].urn,
       type: "hTracker"
       children: []
-      properties:
-        channel:
+      properties:[]
+        ###channel:
           actor: "urn:localhost:trackChannel",
           type: "hchannel",
           method: "inproc",
@@ -49,7 +49,7 @@ describe "hTracker", ->
               host: "localhost",
               port: 27017,
               name: "test"
-            collection: "trackChannel"
+            collection: "trackChannel"###
 
     hActor = new Tracket topology
 
@@ -58,6 +58,11 @@ describe "hTracker", ->
   after () ->
     hActor.h_tearDown()
     hActor = null
+
+  describe "Peer-info", ->
+    it "should automatically add the trackchannel if not set", (done) ->
+      if hActor.topology.children[0].type == "hchannel"
+        done()
 
   describe "Peer-info", ->
     it "should add peer when receive peer-info", (done) ->
@@ -217,8 +222,6 @@ describe "hTracker", ->
       search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 4242, ip: "127.12.12.12"}})
       search.timeout = 1000
       hActor.h_onMessageInternal search
-
-
 
 
 

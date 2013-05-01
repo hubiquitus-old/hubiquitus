@@ -50,11 +50,29 @@ class Tracker extends Actor
   #
   constructor: (topology) ->
     #TODO check properties
+    if topology.properties.channel
+      chan = topology.properties.channel
+    else
+      if topology.actor.split(":")[1]
+        namespace_id = topology.actor.split(":")[1]
+      else
+        namespace_id = 'localhost'
+      chan =
+        actor: "urn:"+namespace_id+":trackChannel"
+        type: "hchannel",
+        properties:
+          subscribers: [],
+          db:
+            host: 'localhost',
+            port: 27017,
+            name: "admin"
+          collection: "trackChannel"
+
     @peers = []
-    @trackerChannelAid = topology.properties.channel.actor
+    @trackerChannelAid = chan.actor
     unless topology.children
       topology.children = []
-    topology.children.unshift topology.properties.channel
+    topology.children.unshift chan
     @timerPeers = {}
     @timeoutDelay = 180000
     super

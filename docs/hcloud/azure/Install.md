@@ -24,7 +24,7 @@ If installation fails, try to uninstall Visual C++ librairies 2010 x64 & x86 Red
  - For Windows 64-bits install [Compiler Update for the Windows SDK 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=4422)
 
  Many issues have been encountered on the way to make "node-gyp" work properly. If it is impossible to re-compile, use the already compiled versions of *time* and *zmq* from the already compiled Hubiquitus for Windows [here]()
-
+A detailed procedure is found [here](https://github.com/TooTallNate/node-gyp) for installing node-gyp. [This link](http://stackoverflow.com/questions/14029262/how-to-install-zeromq-for-node-js) can also be useful
 6. Start a command-line shell in Admin mode (use Powershell rather than Windows default command-line shell !) and go in your hubiquitus folder where package.json appears (use **dir** or **ls** to list files).
 
 7. Run **npm install**. If no errors appear, you have just compiled Hubiquitus on Windows successfully !
@@ -96,6 +96,12 @@ Then import your downloaded file :
 ```
 Import-AzurePublishSettingsFile [path to file]
 ```
+### Enable Remote Desktop
+You may want to enable Remote Desktop in order to debug your deployed application (avoid this for a production deployment)
+```
+ Enable-AzureServiceProjectRemoteDesktop
+```
+You will be asked to enter a username and a password. Remember them, they will be needed for connection later
 ### Publishing the Application
 ```
 Publish-AzureServiceProject –ServiceName NodeHelloWorld –Location "East US” -Launch
@@ -113,13 +119,17 @@ To delete the service :
 ```
 Remove-AzureService
 ```
-
 If you want to redeploy an existing service, first remove it to avoid problems. Note that it won't delete the storage account created
 
 
-**Find more informations about Node.js project on Azure [here](http://www.windowsazure.com/en-us/develop/nodejs/tutorials/getting-started/)**
+### Connect to your deployed application with RDP (Remote Desktop Protocol)
+If you enabled Remote Desktop before deploying your application, you will be able to connect to it through Windows Management board [here](manage.windowsazure.com). Look for your application in the "Cloud Services" part. Click on its name, go to the *Instances* tab and click on "Connect" in the footbar. This will download a rdp file, that allows you to connect to your deployed instance. Select your username and enter the password previously specified when enabling Remote Desktop.
+Your application is located in **E:/approot** folder. You can run a Powershell and execute many useful things to deploy your application successfully.
+Find screenshots [here](http://www.windowsazure.com/en-us/develop/nodejs/common-tasks/enable-remote-desktop/)
 
-## Create a start-up task to install Node.js 0.8.9
+**Find more informations about Node.js project on Azure [here](http://www.windowsazure.com/en-us/develop/nodejs/tutorials/getting-started/) and on Azure Remote Desktop [here](http://www.windowsazure.com/en-us/develop/nodejs/common-tasks/enable-remote-desktop/)**
+
+## Create a start-up task to install Node.js 0.8.22
 Windows Azure gives the choice between three versions of Node.js : 0.6.17, 0.6.20 and 0.8.4, the first one being the default version. Unfortunately none work with Hubiquitus. On Azure you will need to install your own version by creating a start-up task that will run at deployment on an Azure cloud service. The version tested with Hubiquitus for Windows is **0.8.22**. Current last version of Node.js v0.10.5 doesn't run with our zmq compilation for windows.
 
 Edit file *ServiceDefinition.csdef* and add a new `<Task>` element before the other in the `<Startup>` element :

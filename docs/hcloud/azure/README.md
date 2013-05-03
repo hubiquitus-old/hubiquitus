@@ -33,7 +33,7 @@ For Windows 32-bits, try "git://github.com/matthiasg/zeromq-node-windows.git" **
 # Use Hubiquitus in a Windows Azure Project
 
 ## Install Windows Azure SDK Development Kit for Node.js
-Download Microsoft **Web Platform Installer**. This tool will be used to download installation packages.
+Download Microsoft [Web Platform Installer](http://www.microsoft.com/web/downloads/platform.aspx). This tool will be used to download installation packages.
 
 Open Web Platform Installer (WPI) and find **"Windows Azure SDK for Node.js Software Development Kit"** (in French "Kit de développement logiciel Windows Azure SDK pour Node.js")
 Currently this package is released on 24/04/2013 and contains in particular Windows Azure Powershell, Windows Azure Emulator and Windows Azure SDK for Node.js.
@@ -42,7 +42,7 @@ Installing the package will only install the dependencies you don't already have
 
 ## Create a new Node.js project with Powershell
 
-Windows Azure allows to deploy Node.js project, but these can't be managed with Visual Studio. No problem, as command-line tools are enough to de everything you want.
+Windows Azure allows to deploy Node.js project, but these can't be managed with Visual Studio. No problem, as command-line tools are enough to do everything you want.
 
 - Open Windows Azure Powershell as Administrator
 

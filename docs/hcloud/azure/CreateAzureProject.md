@@ -1,5 +1,6 @@
 # Use Hubiquitus in a Windows Azure Project
 
+This documentation explains how to deploy a Hubiquitus application on Windows Azure. First we will see how to create a node.js project for Windows Azure. Then we'll see how to adapt it to include Hubiquitus.
 ## Install Windows Azure SDK Development Kit for Node.js
 Download Microsoft [Web Platform Installer](http://www.microsoft.com/web/downloads/platform.aspx). This tool will be used to download installation packages.
 
@@ -86,7 +87,7 @@ If you want to redeploy an existing service, first remove it to avoid problems. 
 
 Find more informations about Node.js project on Azure [here](http://www.windowsazure.com/en-us/develop/nodejs/tutorials/getting-started/)
 
-## Create a start-up task to install Node.js 0.8.9
+## Create a start-up task to install Node.js 0.8.22 for Hubiquitus
 ### Create the start-up task
 Windows Azure gives the choice between three versions of Node.js : 0.6.17, 0.6.20 and 0.8.4, the first one being the default version. Unfortunately none work with Hubiquitus. On Azure you will need to install your own version by creating a start-up task that will run at deployment on an Azure cloud service. The version tested with Hubiquitus for Windows is **0.8.22**. Current last version of Node.js v0.10.5 doesn't run with our zmq compilation for windows.
 

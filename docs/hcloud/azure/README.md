@@ -206,7 +206,7 @@ fs.readFile(__dirname +'/topology_front0.json', 'utf8', function (err,data) {
 This code gets IP and add it to the topology.
 
 ## Create a start-up task to disable IIS timeout
-IIS automatically shut your deployed service down after a while after a timeout which is about 15mn by default. Your service is automatically restarted if you access to your service URL (i.e http://xxxx.cloudapp.net/). However if you have opened other ports (for example 9999) in *ServiceDefinition.csdef*, accessing http://test.cloudapp.net:9999 will **NOT** restart your service.
+IIS automatically shut your deployed service down after a while after a timeout which is about 15mn by default. Your service is automatically restarted if you access to your service URL (i.e http://xxxx.cloudapp.net/). However if you have opened other ports (for example 9999) in *ServiceDefinition.csdef*, accessing http://xxxx.cloudapp.net:9999 will **NOT** restart your service.
 
 Thus, for some reasons you may want to disable this timeout, and this can be done once again with a start-up task. Add the following to your *ServiceDefinition.csdef* file :
 ```xml

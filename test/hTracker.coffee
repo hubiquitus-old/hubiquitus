@@ -25,203 +25,225 @@
 should = require("should")
 config = require("./_config")
 factory = require "../lib/hfactory"
+_ = require "underscore"
 
-describe "hTracker", ->
-  hActor = undefined
-  hResultStatus = require("../lib/codes").hResultStatus
-  Tracket = require "../lib/actor/htracker"
+topologies = []
 
-  before () ->
-    topology =
-      actor: config.logins[0].urn,
-      type: "hTracker"
-      children: []
-      properties:[]
-        ###channel:
-          actor: "urn:localhost:trackChannel",
-          type: "hchannel",
-          method: "inproc",
-          properties:
-            listenOn: "tcp://127.0.0.1:1221",
-            broadcastOn: "tcp://127.0.0.1:2998",
-            subscribers: [],
-            db:
-              host: "localhost",
-              port: 27017,
-              name: "test"
-            collection: "trackChannel"###
+topology1 =
+  actor: config.logins[0].urn,
+  type: "hTracker"
+  children: []
+  properties:[]
 
-    hActor = new Tracket topology
+topology2 =
+  actor: config.logins[0].urn,
+  type: "hTracker"
+  children: []
+  properties:
+    db:
+      host: "mylocalhost",
+      port: 27017,
+      name: "test"
+    collection: "trackChannel"
 
-    hActor.send = (hMessage) ->
+topology3 =
+  actor: config.logins[0].urn,
+  type: "hTracker"
+  children: []
+  properties:
+    channel:
+      actor: "urn:localhost:trackChannel",
+      type: "hchannel",
+      method: "inproc",
+      properties:
+        db:
+          host: "localhost",
+          port: 27017,
+          name: "test"
+        collection: "trackChannel"
 
-  after () ->
-    hActor.h_tearDown()
-    hActor = null
+topologies.push topology1, topology2, topology3
 
-  describe "Peer-info", ->
-    it "should automatically add the trackchannel if not set", (done) ->
-      if hActor.topology.children[0].type == "hchannel"
-        done()
+_.forEach topologies, (topology, index) =>
+  describe "hTracker - topology"+index, ->
+    hActor = undefined
+    hResultStatus = require("../lib/codes").hResultStatus
+    Tracket = require "../lib/actor/htracker"
 
-  describe "Peer-info", ->
-    it "should add peer when receive peer-info", (done) ->
-      info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"started", peerInbox:[]}})
-      hActor.h_onMessageInternal info
-      hActor.peers.length.should.be.equal(1)
-      done()
-
-    it "should remove peer when receive peer-info stopping", (done) ->
-      hActor.stopAlert = (actor)->
-      info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"stopped", peerInbox:[]}})
-      hActor.h_onMessageInternal info
-      hActor.peers.length.should.be.equal(0)
-      done()
-
-    it "should remove peer after 3 unreceived peer-info", (done) ->
-      hActor.touchDelay = 100
-      hActor.timeoutDelay = 300
-      hActor.stopAlert = (actor)->
-      info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"started", peerInbox:[]}})
-      hActor.h_onMessageInternal info
-      hActor.peers.length.should.be.equal(1)
-      setTimeout(=>
-        hActor.peers.length.should.be.equal(0)
-        done()
-      , 500)
-
-  describe "Peer-search", ->
     before () ->
-      hActor.peers = [
-        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"started", peerInbox:[]},
-        {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"stopped", peerInbox:[{type:"socket_in", url:"url"}]}
-      ]
 
-    it "should send outboundAdapter when the acteur is started and have socket_in adapter", (done) ->
+      hActor = new Tracket topology
+
       hActor.send = (hMessage) ->
-        hMessage.payload.should.have.property "status", hResultStatus.OK
-        hMessage.payload.result.should.be.an.instanceof(Object, null)
-        done()
 
-      search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[1].urn, pid: 1212, ip: "127.0.0.1"}})
-      search.timeout = 1000
-      hActor.h_onMessageInternal search
+    after () ->
+      hActor.h_tearDown()
+      hActor = null
 
-    it "should send NOT_AVAILABLE when the acteur is not started but not have socket_in adapter", (done) ->
-      hActor.send = (hMessage) ->
-        hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
-        hMessage.payload.result.should.be.equal("Actor not found")
-        done()
-
-      search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[3].urn, pid: 1212, ip: "127.0.0.1"}})
-      search.timeout = 1000
-      hActor.h_onMessageInternal search
-
-    it "should send NOT_AVAILABLE when the acteur is not starting and have socket_in adapter", (done) ->
-      hActor.send = (hMessage) ->
-        hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
-        hMessage.payload.result.should.be.equal("Actor not found")
-        done()
-
-      search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[5].urn, pid: 1212, ip: "127.0.0.1"}})
-      search.timeout = 1000
-      hActor.h_onMessageInternal search
-
-    it "should send outboundAdapter when search actor with bareURN", (done) ->
-      hActor.send = (hMessage) ->
-        hMessage.payload.should.have.property "status", hResultStatus.OK
-        hMessage.payload.result.targetActorAid.should.be.equal(config.logins[1].urn)
-        done()
-
-      search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 1212, ip: "127.0.0.1"}})
-      search.timeout = 1000
-      hActor.h_onMessageInternal search
-
-    it "should send outboundAdapter when search actor with bareURN with load balancing", (done) ->
-      @timeout(4000)
-      hActor.peers = [
-        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
-      ]
-
-      goodResult = [config.logins[1].urn, config.logins[3].urn, config.logins[5].urn]
-      result1 = 0
-      result2 = 0
-      result3 = 0
-      index = 0
-      index2 = 0
-      hActor.send = (hMessage) ->
-        index2++
-        hMessage.payload.should.have.property "status", hResultStatus.OK
-        goodResult.should.include(hMessage.payload.result.targetActorAid)
-        if hMessage.payload.result.targetActorAid is config.logins[1].urn
-          result1++
-        else if hMessage.payload.result.targetActorAid is config.logins[3].urn
-          result2++
-        else
-          result3++
-        if index2 is 20
-          result1.should.be.above(0)
-          result2.should.be.above(0)
-          result3.should.be.above(0)
+    describe "topology constructor", ->
+      it "should automatically add the trackchannel if not set", (done) ->
+        if hActor.topology.children[0].type == "hchannel"
           done()
 
-      search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 1212, ip: "127.0.0.1"}})
-      search.timeout = 1000
-      while index < 20
+      it "should have db properties", (done) ->
+        if hActor.topology.children[0].properties.db
+          done()
+
+    describe "Peer-info", ->
+      it "should add peer when receive peer-info", (done) ->
+        info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"started", peerInbox:[]}})
+        hActor.h_onMessageInternal info
+        hActor.peers.length.should.be.equal(1)
+        done()
+
+      it "should remove peer when receive peer-info stopping", (done) ->
+        hActor.stopAlert = (actor)->
+        info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"stopped", peerInbox:[]}})
+        hActor.h_onMessageInternal info
+        hActor.peers.length.should.be.equal(0)
+        done()
+
+      it "should remove peer after 3 unreceived peer-info", (done) ->
+        hActor.touchDelay = 100
+        hActor.timeoutDelay = 300
+        hActor.stopAlert = (actor)->
+        info = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-info", params:{peerType:"hactor", peerId:config.logins[2].urn, peerStatus:"started", peerInbox:[]}})
+        hActor.h_onMessageInternal info
+        hActor.peers.length.should.be.equal(1)
+        setTimeout(=>
+          hActor.peers.length.should.be.equal(0)
+          done()
+        , 500)
+
+    describe "Peer-search", ->
+      before () ->
+        hActor.peers = [
+          {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"started", peerInbox:[]},
+          {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"stopped", peerInbox:[{type:"socket_in", url:"url"}]}
+        ]
+
+      it "should send outboundAdapter when the acteur is started and have socket_in adapter", (done) ->
+        hActor.send = (hMessage) ->
+          hMessage.payload.should.have.property "status", hResultStatus.OK
+          hMessage.payload.result.should.be.an.instanceof(Object, null)
+          done()
+
+        search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[1].urn, pid: 1212, ip: "127.0.0.1"}})
+        search.timeout = 1000
         hActor.h_onMessageInternal search
-        index++
 
-    it "should send outboundAdapter when search actor with bareURN and same PID", (done) ->
-      hActor.peers = [
-        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 2121, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "192.12.12.12", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
-      ]
+      it "should send NOT_AVAILABLE when the acteur is not started but not have socket_in adapter", (done) ->
+        hActor.send = (hMessage) ->
+          hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
+          hMessage.payload.result.should.be.equal("Actor not found")
+          done()
 
-      hActor.send = (hMessage) ->
-        hMessage.payload.should.have.property "status", hResultStatus.OK
-        hMessage.payload.result.targetActorAid.should.be.equal(config.logins[1].urn)
-        done()
+        search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[3].urn, pid: 1212, ip: "127.0.0.1"}})
+        search.timeout = 1000
+        hActor.h_onMessageInternal search
 
-      search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 1212, ip: "127.0.0.1"}})
-      search.timeout = 1000
-      hActor.h_onMessageInternal search
+      it "should send NOT_AVAILABLE when the acteur is not starting and have socket_in adapter", (done) ->
+        hActor.send = (hMessage) ->
+          hMessage.payload.should.have.property "status", hResultStatus.INVALID_ATTR
+          hMessage.payload.result.should.be.equal("Actor not found")
+          done()
 
-    it "should send outboundAdapter when search actor with bareURN and same host", (done) ->
-      hActor.peers = [
-        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 2121, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "192.12.12.12", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
-      ]
+        search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[5].urn, pid: 1212, ip: "127.0.0.1"}})
+        search.timeout = 1000
+        hActor.h_onMessageInternal search
 
-      hActor.send = (hMessage) ->
-        hMessage.payload.should.have.property "status", hResultStatus.OK
-        hMessage.payload.result.targetActorAid.should.be.equal(config.logins[5].urn)
-        done()
+      it "should send outboundAdapter when search actor with bareURN", (done) ->
+        hActor.send = (hMessage) ->
+          hMessage.payload.should.have.property "status", hResultStatus.OK
+          hMessage.payload.result.targetActorAid.should.be.equal(config.logins[1].urn)
+          done()
 
-      search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 4242, ip: "192.12.12.12"}})
-      search.timeout = 1000
-      hActor.h_onMessageInternal search
+        search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 1212, ip: "127.0.0.1"}})
+        search.timeout = 1000
+        hActor.h_onMessageInternal search
 
-    it "should send outboundAdapter when search actor with bareURN and other host", (done) ->
-      hActor.peers = [
-        {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 2121, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
-        {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "192.12.12.12", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
-      ]
+      it "should send outboundAdapter when search actor with bareURN with load balancing", (done) ->
+        @timeout(4000)
+        hActor.peers = [
+          {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
+        ]
 
-      answer = [config.logins[1].urn, config.logins[3].urn, config.logins[5].urn]
-      hActor.send = (hMessage) ->
-        hMessage.payload.should.have.property "status", hResultStatus.OK
-        answer.should.include(hMessage.payload.result.targetActorAid)
-        done()
+        goodResult = [config.logins[1].urn, config.logins[3].urn, config.logins[5].urn]
+        result1 = 0
+        result2 = 0
+        result3 = 0
+        index = 0
+        index2 = 0
+        hActor.send = (hMessage) ->
+          index2++
+          hMessage.payload.should.have.property "status", hResultStatus.OK
+          goodResult.should.include(hMessage.payload.result.targetActorAid)
+          if hMessage.payload.result.targetActorAid is config.logins[1].urn
+            result1++
+          else if hMessage.payload.result.targetActorAid is config.logins[3].urn
+            result2++
+          else
+            result3++
+          if index2 is 20
+            result1.should.be.above(0)
+            result2.should.be.above(0)
+            result3.should.be.above(0)
+            done()
 
-      search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 4242, ip: "127.12.12.12"}})
-      search.timeout = 1000
-      hActor.h_onMessageInternal search
+        search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 1212, ip: "127.0.0.1"}})
+        search.timeout = 1000
+        while index < 20
+          hActor.h_onMessageInternal search
+          index++
 
+      it "should send outboundAdapter when search actor with bareURN and same PID", (done) ->
+        hActor.peers = [
+          {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 2121, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "192.12.12.12", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
+        ]
 
+        hActor.send = (hMessage) ->
+          hMessage.payload.should.have.property "status", hResultStatus.OK
+          hMessage.payload.result.targetActorAid.should.be.equal(config.logins[1].urn)
+          done()
 
+        search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 1212, ip: "127.0.0.1"}})
+        search.timeout = 1000
+        hActor.h_onMessageInternal search
+
+      it "should send outboundAdapter when search actor with bareURN and same host", (done) ->
+        hActor.peers = [
+          {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 2121, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "192.12.12.12", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
+        ]
+
+        hActor.send = (hMessage) ->
+          hMessage.payload.should.have.property "status", hResultStatus.OK
+          hMessage.payload.result.targetActorAid.should.be.equal(config.logins[5].urn)
+          done()
+
+        search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 4242, ip: "192.12.12.12"}})
+        search.timeout = 1000
+        hActor.h_onMessageInternal search
+
+      it "should send outboundAdapter when search actor with bareURN and other host", (done) ->
+        hActor.peers = [
+          {peerType:"hactor", peerFullId:config.logins[1].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[3].urn, peerId:config.logins[0].urn, peerIP: "127.0.0.1", peerPID: 2121, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]},
+          {peerType:"hactor", peerFullId:config.logins[5].urn, peerId:config.logins[0].urn, peerIP: "192.12.12.12", peerPID: 1212, peerStatus:"ready", peerInbox:[{type:"socket_in", url:"url"}]}
+        ]
+
+        answer = [config.logins[1].urn, config.logins[3].urn, config.logins[5].urn]
+        hActor.send = (hMessage) ->
+          hMessage.payload.should.have.property "status", hResultStatus.OK
+          answer.should.include(hMessage.payload.result.targetActorAid)
+          done()
+
+        search = config.makeHMessage(hActor.actor, config.logins[3].urn, "hSignal", {name: "peer-search", params:{actor:config.logins[0].urn, pid: 4242, ip: "127.12.12.12"}})
+        search.timeout = 1000
+        hActor.h_onMessageInternal search

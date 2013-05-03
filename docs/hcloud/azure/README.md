@@ -1,5 +1,5 @@
 # Installing Hubiquitus on Windows
-An already compiled, fully working version is available [here](). Use it if you have any trouble compiling hubiquitus on Windows.
+An already compiled, fully working version is available [Hubiquitus for Windows.zip (10.5 Mo)](https://mega.co.nz/#!XQRGUKgB!ZP6v7gExM-mMuAaX7LGNx0vSXOQV6XIKrJtqSJUkyKY). Use it if you have any trouble compiling hubiquitus on Windows.
 
 Hubiquitus is originally made to work on Unix systems. To make it work on Windows, a few adjustments are needed.
 
@@ -18,13 +18,12 @@ For Windows 32-bits, try "git://github.com/matthiasg/zeromq-node-windows.git" **
 
 5. Node-gyp is a build tool for Node.js native addons. Its installation is needed for Hubiquitus but complex on Windows... Install in this order :
  - [Microsoft Visual Studio C++ 2010 Express](http://go.microsoft.com/?linkid=9709949)
- - [Windows 7 64-bit SDK](http://www.microsoft.com/en-us/download/details.aspx?id=8279).
-If installation fails, try to uninstall Visual C++ librairies 2010 x64 & x86 Redistributable versions 10.4.xxx).
-
+ - [Windows 7 64-bit SDK](http://www.microsoft.com/en-us/download/details.aspx?id=8279). If installation fails, try to uninstall Visual C++ librairies 2010 x64 & x86 Redistributable versions 10.4.xxx.
  - For Windows 64-bits install [Compiler Update for the Windows SDK 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=4422)
 
- Many issues have been encountered on the way to make "node-gyp" work properly. If it is impossible to re-compile, use the already compiled versions of *time* and *zmq* from the already compiled Hubiquitus for Windows [here]()
-A detailed procedure is found [here](https://github.com/TooTallNate/node-gyp) for installing node-gyp. [This link](http://stackoverflow.com/questions/14029262/how-to-install-zeromq-for-node-js) can also be useful
+ Many issues have been encountered on the way to make "node-gyp" work properly. If it is impossible to re-compile, use the already compiled versions of *time* and *zmq* from the already compiled Hubiquitus for Windows here : [Hubiquitus for Windows.zip (10.5 Mo)](https://mega.co.nz/#!XQRGUKgB!ZP6v7gExM-mMuAaX7LGNx0vSXOQV6XIKrJtqSJUkyKY).
+
+
 6. Start a command-line shell in Admin mode (use Powershell rather than Windows default command-line shell !) and go in your hubiquitus folder where package.json appears (use **dir** or **ls** to list files).
 
 7. Run **npm install**. If no errors appear, you have just compiled Hubiquitus on Windows successfully !
@@ -96,12 +95,6 @@ Then import your downloaded file :
 ```
 Import-AzurePublishSettingsFile [path to file]
 ```
-### Enable Remote Desktop
-You may want to enable Remote Desktop in order to debug your deployed application (avoid this for a production deployment)
-```
- Enable-AzureServiceProjectRemoteDesktop
-```
-You will be asked to enter a username and a password. Remember them, they will be needed for connection later
 ### Publishing the Application
 ```
 Publish-AzureServiceProject –ServiceName NodeHelloWorld –Location "East US” -Launch
@@ -119,17 +112,14 @@ To delete the service :
 ```
 Remove-AzureService
 ```
+
 If you want to redeploy an existing service, first remove it to avoid problems. Note that it won't delete the storage account created
 
 
-### Connect to your deployed application with RDP (Remote Desktop Protocol)
-If you enabled Remote Desktop before deploying your application, you will be able to connect to it through Windows Management board [here](manage.windowsazure.com). Look for your application in the "Cloud Services" part. Click on its name, go to the *Instances* tab and click on "Connect" in the footbar. This will download a rdp file, that allows you to connect to your deployed instance. Select your username and enter the password previously specified when enabling Remote Desktop.
-Your application is located in **E:/approot** folder. You can run a Powershell and execute many useful things to deploy your application successfully.
-Find screenshots [here](http://www.windowsazure.com/en-us/develop/nodejs/common-tasks/enable-remote-desktop/)
+Find more informations about Node.js project on Azure [here](http://www.windowsazure.com/en-us/develop/nodejs/tutorials/getting-started/)
 
-**Find more informations about Node.js project on Azure [here](http://www.windowsazure.com/en-us/develop/nodejs/tutorials/getting-started/) and on Azure Remote Desktop [here](http://www.windowsazure.com/en-us/develop/nodejs/common-tasks/enable-remote-desktop/)**
-
-## Create a start-up task to install Node.js 0.8.22
+## Create a start-up task to install Node.js 0.8.9
+### Create the start-up task
 Windows Azure gives the choice between three versions of Node.js : 0.6.17, 0.6.20 and 0.8.4, the first one being the default version. Unfortunately none work with Hubiquitus. On Azure you will need to install your own version by creating a start-up task that will run at deployment on an Azure cloud service. The version tested with Hubiquitus for Windows is **0.8.22**. Current last version of Node.js v0.10.5 doesn't run with our zmq compilation for windows.
 
 Edit file *ServiceDefinition.csdef* and add a new `<Task>` element before the other in the `<Startup>` element :
@@ -143,6 +133,15 @@ xcopy "%programfiles%\nodejs" "%programfiles(x86)%\nodejs" /s /i /Y
 start /w msiexec.exe /i "%~dp0iisnode-dev-v0.1.21.msi" /qn /l* "%~dp0InstallIISNodeLog.txt"
 netsh advfirewall firewall add rule name="Node.js" dir=in action=allow program="%programfiles%\nodejs\node.exe" enable=yes
 ```
+### Download and modify the Node installer
+
+The Node.js installer as you download it won't manage to install properly on Azure. You have to edit it with Orca, a database table editor for Windows installer packages. It needs to be installed first : the installer can be found along the Microsoft Windows SDK for Windows 7 and .NET Framework 4 binaries, in %ProgramFiles%\Microsoft SDKs\Windows\v7.1\Bin. You can also find in alone on the web. 
+Once done, you can right-click the node.js installer and select the Edit with Orca menu.
+An installer package is actually nothing more than a database of all the components and actions performed during the install. Just select the InstallExecuteSequence table on the right, and remove the 3 rows named *WixSchedInternetShortcuts*, *WixRollbackInternetShortcuts* and *WixCreateInternetShortcuts*.
+![orca screenshot](https://github.com/mattgic/hubiquitus/raw/master/docs/hcloud/azure/img/orca.png)
+Save your changes, and it's good to go.
+Find more informations [here](http://macinsoft.blogspot.fr/2013/03/install-nodejs-on-windows-azure-cloud.html)
+
 
 This script executes the following :
 - Installation of Node.js 0.8.22

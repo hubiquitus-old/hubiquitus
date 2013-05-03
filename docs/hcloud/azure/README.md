@@ -138,7 +138,8 @@ netsh advfirewall firewall add rule name="Node.js" dir=in action=allow program="
 The Node.js installer as you download it won't manage to install properly on Azure. You have to edit it with Orca, a database table editor for Windows installer packages. It needs to be installed first : the installer can be found along the Microsoft Windows SDK for Windows 7 and .NET Framework 4 binaries, in %ProgramFiles%\Microsoft SDKs\Windows\v7.1\Bin. You can also find in alone on the web. 
 Once done, you can right-click the node.js installer and select the Edit with Orca menu.
 An installer package is actually nothing more than a database of all the components and actions performed during the install. Just select the InstallExecuteSequence table on the right, and remove the 3 rows named *WixSchedInternetShortcuts*, *WixRollbackInternetShortcuts* and *WixCreateInternetShortcuts*.
-![orca screenshot](https://github.com/mattgic/hubiquitus/raw/master/docs/hcloud/azure/img/orca.png)
+![orca screenshot](img/orca.png)
+
 Save your changes, and it's good to go.
 Find more informations [here](http://macinsoft.blogspot.fr/2013/03/install-nodejs-on-windows-azure-cloud.html)
 

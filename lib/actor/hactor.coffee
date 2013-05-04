@@ -366,7 +366,7 @@ class Actor extends EventEmitter
               cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : " + hResult.payload.result)
             else
               @log "debug", "Can't send hMessage : " + hResult.payload.result
-      else
+      else if @type isnt "htracker"
         if cb
           cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't find actor")
           return
@@ -672,8 +672,8 @@ class Actor extends EventEmitter
       outboundsTabCopy.push (outbound)
     _.forEach @inboundAdapters, (inbound) =>
       inboundsTabCopy.push (inbound)
-    # Stop adapters
-    _.invoke inboundsTabCopy, "stop"
+    # Stop adapters with "true" option so channel_in adapters don't try to re-subscribe
+    _.invoke inboundsTabCopy, "stop", true
     _.invoke outboundsTabCopy, "stop"
     done()
 

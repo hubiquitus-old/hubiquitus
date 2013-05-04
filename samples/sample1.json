@@ -6,6 +6,19 @@
     "type": "htracker",
     "children": [
         {
+            "actor": "urn:localhost:pubChannel",
+            "type": "hchannel",
+            "properties": {
+                "subscribers": [],
+                "db":{
+                    "host": "localhost",
+                    "port": 27017,
+                    "name": "admin"
+                },
+                "collection": "pubChannel"
+            }
+        },
+        {
             "actor": "urn:localhost:gateway",
             "type": "hgateway",
             "children": [
@@ -56,7 +69,8 @@
                 },
                 "collection": "trackChannel"
             }
-        }
+        },
+        "pubChannel": "urn:localhost:pubChannel"
     },
 
     /*"actor":"urn:localhost:trackChannel",

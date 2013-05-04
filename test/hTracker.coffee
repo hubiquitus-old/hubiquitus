@@ -27,50 +27,74 @@ config = require("./_config")
 factory = require "../lib/hfactory"
 _ = require "underscore"
 
-topologies = []
 
-topology1 =
-  actor: config.logins[0].urn,
-  type: "hTracker"
-  children: []
-  properties:[]
+describe "hTracker", ->
+  hActor = undefined
+  hResultStatus = require("../lib/codes").hResultStatus
+  Tracket = require "../lib/actor/htracker"
 
-topology2 =
-  actor: config.logins[0].urn,
-  type: "hTracker"
-  children: []
-  properties:
-    db:
-      host: "mylocalhost",
-      port: 27017,
-      name: "test"
-    collection: "trackChannel"
-
-topology3 =
-  actor: config.logins[0].urn,
-  type: "hTracker"
-  children: []
-  properties:
-    channel:
-      actor: "urn:localhost:trackChannel",
-      type: "hchannel",
-      method: "inproc",
-      properties:
-        db:
-          host: "localhost",
-          port: 27017,
-          name: "test"
-        collection: "trackChannel"
-
-topologies.push topology1, topology2, topology3
-
-_.forEach topologies, (topology, index) =>
-  describe "hTracker - topology"+index, ->
-    hActor = undefined
-    hResultStatus = require("../lib/codes").hResultStatus
-    Tracket = require "../lib/actor/htracker"
-
+  describe "topology without channel", ->
     before () ->
+      topology =
+        actor: config.logins[0].urn,
+        type: "hTracker"
+        children: []
+        properties:[]
+
+      hActor = new Tracket topology
+
+    after () ->
+      #hActor.h_tearDown()
+      hActor = null
+
+    it "should automatically add the trackchannel if not set", (done) ->
+      if hActor.topology.children[0].type == "hchannel"
+        done()
+
+  describe "topology without channel but with db properties", ->
+    before () ->
+      topology =
+        actor: config.logins[0].urn,
+        type: "hTracker"
+        children: []
+        properties:
+          db:
+            host: "mylocalhost27017",
+            port: 27017,
+            name: "test"
+          collection: "trackChannel"
+
+      hActor = new Tracket topology
+
+    after () ->
+      #hActor.h_tearDown()
+      hActor = null
+
+    it "should automatically add the trackchannel if not set", (done) ->
+      if hActor.topology.children[0].type == "hchannel"
+        done()
+
+    it "should have the db properties specified in properties", (done) ->
+      if hActor.topology.children[0].properties.db.host == "mylocalhost27017"
+        done()
+
+  describe "other", ->
+    before () ->
+      topology =
+        actor: config.logins[0].urn,
+        type: "hTracker"
+        children: []
+        properties:
+          channel:
+            actor: "urn:localhost:trackChannel",
+            type: "hchannel",
+            method: "inproc",
+            properties:
+              db:
+                host: "localhost",
+                port: 27017,
+                name: "test"
+              collection: "trackChannel"
 
       hActor = new Tracket topology
 
@@ -79,15 +103,6 @@ _.forEach topologies, (topology, index) =>
     after () ->
       hActor.h_tearDown()
       hActor = null
-
-    describe "topology constructor", ->
-      it "should automatically add the trackchannel if not set", (done) ->
-        if hActor.topology.children[0].type == "hchannel"
-          done()
-
-      it "should have db properties", (done) ->
-        if hActor.topology.children[0].properties.db
-          done()
 
     describe "Peer-info", ->
       it "should add peer when receive peer-info", (done) ->

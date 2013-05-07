@@ -132,6 +132,25 @@ In each, add the following **iisnode** element
 
 **Warning :** This doesn't make the previous copy of nodejs folder from *Program Files* to *Program Files (x86)* obsolete. You still have to do it. Without nodejs in the **Program Files (x86)* folder, IIS just won't start.
 
+## Deploy your application in a virtual network
+Hubiquitus clusters need to be deployed in the same topology if you want them to connect to each other. You first have to create a virtual network, then set up your application before deployment to deploy in that virtual network you created.
+1. Follow instructions [here](http://www.windowsazure.com/en-us/manage/services/networking/create-a-virtual-network/?fb=fr-fr#header-2) to create a virtual network.
+
+2. To connect to this virtual network, all you would need to do is paste the following below the last Role tag in your service configuration file *ServiceConfiguration.Cloud.cscfg* and deploy.
+```xml
+  <NetworkConfiguration>
+    <VirtualNetworkSite name="LocalNetworkTest1" />
+    <AddressAssignments>
+      <InstanceAddress roleName="WebRole1">
+        <Subnets>
+          <Subnet name="Subnet-1" />
+        </Subnets>
+      </InstanceAddress>
+    </AddressAssignments>
+  </NetworkConfiguration>
+```
+Make sure Web Role name and Subnet name are correct.
+Find more informations [here](http://michaelwasham.com/2012/08/06/connecting-web-or-worker-roles-to-a-simple-virtual-network-in-windows-azure)
 ## Create a start-up task to add local IP to the topology.
 
 On Unix systems, specifying local IP is optional since Hubiquitus actors will automatically detect their local IP and add it to their paramaters. However this automatic doesn't work on Windows since there is no default name for the default Ethernet card (depends on the language), and a specific patch is needed. This is done by creating another start-up task, that will launch a start-up.js file.

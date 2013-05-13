@@ -134,9 +134,11 @@ In each, add the following **iisnode** element
 
 ## Deploy your application in a virtual network
 Hubiquitus clusters need to be deployed in the same topology if you want them to connect to each other. You first have to create a virtual network, then set up your application before deployment to deploy in that virtual network you created.
+
 1. Follow instructions [here](http://www.windowsazure.com/en-us/manage/services/networking/create-a-virtual-network/?fb=fr-fr#header-2) to create a virtual network.
 
 2. To connect to this virtual network, all you would need to do is paste the following below the last Role tag in your service configuration file *ServiceConfiguration.Cloud.cscfg* and deploy.
+
 ```xml
   <NetworkConfiguration>
     <VirtualNetworkSite name="LocalNetworkTest1" />
@@ -149,7 +151,8 @@ Hubiquitus clusters need to be deployed in the same topology if you want them to
     </AddressAssignments>
   </NetworkConfiguration>
 ```
-Make sure Web Role name and Subnet name are correct.
+
+Make sure Web Role name, Virtual Network name and Subnet name are all correct.
 Find more informations [here](http://michaelwasham.com/2012/08/06/connecting-web-or-worker-roles-to-a-simple-virtual-network-in-windows-azure)
 ## Create a start-up task to add local IP to the topology.
 

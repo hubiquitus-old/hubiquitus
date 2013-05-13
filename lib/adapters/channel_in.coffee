@@ -132,13 +132,14 @@ class ChannelInboundAdapter extends InboundAdapter
             index++
           adapterProps = new Object()
           adapterProps.channel = @channel
-          @owner.subscribe adapterProps.channel, (status, result) =>
-            unless status is codes.hResultStatus.OK
-              @owner.log "debug", "Resubscription to #{adapterProps.channel} failed cause #{result}"
-              ## TODO Call UUID.generate
-              errorID = @owner.h_makeMsgId()
-              @owner.raiseError(errorID, "Resubscription to #{adapterProps.channel} failed")
-              @owner.h_autoSubscribe(adapterProps, 500, errorID)
+          unless @dontRetryToSub
+            @owner.subscribe adapterProps.channel, (status, result) =>
+              unless status is codes.hResultStatus.OK
+                @owner.log "debug", "Resubscription to #{adapterProps.channel} failed cause #{result}"
+                ## TODO Call UUID.generate
+                errorID = @owner.h_makeMsgId()
+                @owner.raiseError(errorID, "Resubscription to #{adapterProps.channel} failed")
+                @owner.h_autoSubscribe(adapterProps, 500, errorID)
           @destroy()
         @h_watchPeer(@channel, cb)
 
@@ -147,7 +148,8 @@ class ChannelInboundAdapter extends InboundAdapter
   #   Method which stop the adapter.
   #   When this adapter is stopped, the actor will not receive hMessage publish on the channel anymore
   #
-  stop: ->
+  stop: (dontRetryToSubscribe) ->
+    @dontRetryToSub = dontRetryToSubscribe
     if @started
       if @sock._zmq.state is 0
         @sock.close()

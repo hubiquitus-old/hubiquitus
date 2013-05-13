@@ -39,6 +39,10 @@ https://mega.co.nz/#!7YoXSZ5A!SzYtMxStVxq9weEfPmt1IjCSCwtGYNVL2mnBw0Yy7JE) (This
  - Open the ZMQ solution (builds\msvc\msvc10.sln) with Microsoft Visual C++ (2010 Express is fine)
 	- Add '#define FD_SETSIZE 16384' before each ```#include <winsock.h>``` and ```#include <winsock2.h>``` : You will find these in *windows.hpp*, *zmq.h*, *select.hpp*
 	- Also change ```#define ZMQ_MAX_SOCKETS_DFLT 16384``` (instead of 1024) in *zmq.h*
+	- Then, rebuild the libzmq project.
+	  - You will find the dll in ```\zeromq-3.2.3\bin\x64\libzmq.dll```
+	  - And the lib file in ```\zeromq-3.2.3\lib\x64\libzmq.lib```
+	- Move the .dll and the .lib in ```hubiquitus\node_modules\zmq\windows\lib\x64\```
 	- Finally, you have to replace the name of the new DLL/LIB you just created in the ZMQ binding files :
 	
  In *\hubiquitus\node_modules\zmq\binding.cc*
@@ -55,3 +59,4 @@ https://mega.co.nz/#!7YoXSZ5A!SzYtMxStVxq9weEfPmt1IjCSCwtGYNVL2mnBw0Yy7JE) (This
  ```
  
  ,change **libzmq-v100-mt-3_2_2** to the new lib name.
+ 

@@ -1,5 +1,6 @@
 # Installing Hubiquitus on Windows
-An already compiled, fully working version is available [Hubiquitus for Windows.zip (10.5 Mo)](https://mega.co.nz/#!XQRGUKgB!ZP6v7gExM-mMuAaX7LGNx0vSXOQV6XIKrJtqSJUkyKY). Use it if you have any trouble compiling hubiquitus on Windows.
+An already compiled, fully working version on **Windows 7 64-bits** is available [Hubiquitus for Windows.zip (10.5 Mo)](https://mega.co.nz/#!XQRGUKgB!ZP6v7gExM-mMuAaX7LGNx0vSXOQV6XIKrJtqSJUkyKY). Use it if you have any trouble compiling hubiquitus on Windows.
+This version seems **NOT TO WORK** on Windows 8. Working on Windows 7 64-bit is strongly recommended.
 
 Hubiquitus is originally made to work on Unix systems. To make it work on Windows, a few adjustments are needed.
 

@@ -31,3 +31,27 @@ For Windows 32-bits, try "git://github.com/matthiasg/zeromq-node-windows.git" **
 
 8. Installing MongoDB has **NOT** been tested. If you don't need it, you have to modify *hubiquitus\lib\actor\hchannel.coffee* in order to remove all references to databases, so that Hubiquitus doesn't use MongoDB. Find an example  [here](https://mega.co.nz/#!7YoXSZ5A!SzYtMxStVxq9weEfPmt1IjCSCwtGYNVL2mnBw0Yy7JE
 https://mega.co.nz/#!7YoXSZ5A!SzYtMxStVxq9weEfPmt1IjCSCwtGYNVL2mnBw0Yy7JE) (This might not be the up-to-date version of the file)
+
+9. Windows (especially Windows Server 2008 R2) have limitations on FD_SETSIZE and ZMQ_MAX_SOCKETS. the only way to modify these is to rebuild ZMQ for Windows.
+ This custom build is already included in the package "Hubiquitus for Windows.zip" (link on top), but you can rebuild this ZMQ lib by following these steps:
+ - Use the same environement as in section #5 (Node-gyp build)
+ - Download the [ZMQ Windows Sources](http://www.zeromq.org/intro:get-the-software)
+ - Open the ZMQ solution (builds\msvc\msvc10.sln) with Microsoft Visual C++ (2010 Express is fine)
+	- Add '#define FD_SETSIZE 16384' before each ```#include <winsock.h>``` and ```#include <winsock2.h>``` : You will find these in *windows.hpp*, *zmq.h*, *select.hpp*
+	- Also change ```#define ZMQ_MAX_SOCKETS_DFLT 16384``` (instead of 1024) in *zmq.h*
+	- Finally, you have to replace the name of the new DLL/LIB you just created in the ZMQ binding files :
+	
+ In *\hubiquitus\node_modules\zmq\binding.cc*
+ ```
+                Line 991:       LoadLibrary("libzmq-v100-mt-3_2_2");
+ ```
+
+ And in *\hubiquitus\node_modules\zmq\binding.gyp*
+ 
+ ```
+                Line 16:                   '<(PRODUCT_DIR)/../../windows/lib/x86/libzmq-v100-mt-3_2_2.lib',
+                Line 20:                   '<(PRODUCT_DIR)/../../windows/lib/x64/libzmq-v100-mt-3_2_2.lib',
+                Line 27:               'DelayLoadDLLs': ['libzmq-v100-mt-3_2_2.dll']
+ ```
+ 
+ ,change **libzmq-v100-mt-3_2_2** to the new lib name.

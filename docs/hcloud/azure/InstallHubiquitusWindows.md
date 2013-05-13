@@ -27,3 +27,6 @@ For Windows 32-bits, try "git://github.com/matthiasg/zeromq-node-windows.git" **
 6. Start a command-line shell in Admin mode (use Powershell rather than Windows default command-line shell !) and go in your hubiquitus folder where package.json appears (use **dir** or **ls** to list files).
 
 7. Run **npm install**. If no errors appear, you have just compiled Hubiquitus on Windows successfully !
+
+8. Installing MongoDB has **NOT** been tested. If you don't need it, you have to modify *hubiquitus\lib\actor\hchannel.coffee* in order to remove all references to databases, so that Hubiquitus doesn't use MongoDB. Find an example  [here](https://mega.co.nz/#!7YoXSZ5A!SzYtMxStVxq9weEfPmt1IjCSCwtGYNVL2mnBw0Yy7JE
+https://mega.co.nz/#!7YoXSZ5A!SzYtMxStVxq9weEfPmt1IjCSCwtGYNVL2mnBw0Yy7JE) (This might not be the up-to-date version of the file)

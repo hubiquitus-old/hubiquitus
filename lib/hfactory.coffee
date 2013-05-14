@@ -23,6 +23,9 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
+
+# Factory : 
+# load all dependencies
 fs = require "fs"
 winston = require "winston"
 logger = new winston.Logger
@@ -30,6 +33,12 @@ logger = new winston.Logger
     new winston.transports.Console(colorize: true)
   ]
 
+builtinActorsName = ['hactor','hauth','hchannel','hdispatcher','hgateway',
+                     'hsession','htracker']
+builtinAdaptersName = ['channel_in','channel_out','fork','http_in',
+                       'http_out','inproc','lb_socket_in','lb_socket_out',
+                       'socket_in','socket_out','socketIO','timerAdapter',
+                       'twitter_in']
 
 actors = {}
 adapters = {}
@@ -55,55 +64,48 @@ withAdapter = (type, adapter) ->
 
 
 newActor = (type, properties) ->
-  if not type then throw new Error "Actor's type undefined"
-  if not actors[type] then actors[type] = require type
-  else if typeof actors[type] is "string" then actors[type] = require actors[type]
+  # Controls and warning about builtinAdapters override
+  throw new Error "Actor's type undefined" if not type
+  if not actors[type] 
+    actors[type] = require type
+  else if typeof actors[type] is "string" 
+    actors[type] = require actors[type]
   new actors[type] properties
 
 newAdapter = (type, properties) ->
-  if not type then throw new Error "Adapter's type undefined"
-  if not adapters[type] then adapters[type] = require type
-  else if typeof adapters[type] is "string" then adapters[type] = require adapters[type]
+  # Controls and warning about builtinAdapters override
+  throw new Error "Adapter's type undefined" if not type
+  if not adapters[type] 
+    adapters[type] = require type
+  else if typeof adapters[type] is "string" 
+    adapters[type] = require adapters[type]
   new adapters[type] properties
 
 
-scan = (path, callback) ->
-  if fs.existsSync path
-    stats =  fs.statSync path
-    if stats.isDirectory()
-      logger.info "Scanning #{path}..."
-      files = fs.readdirSync path
-      files.forEach (file) ->
-        pos = file.indexOf ".coffee"
-        if pos isnt -1
-          stats = fs.statSync "#{path}/#{file}"
-          if stats.isFile()
-            callback file.substr(0, pos), "#{path}/#{file}"
+loadDirectory = (path, callback) ->
+  return unless fs.existsSync path
+  stats =  fs.statSync path
+  return unless stats.isDirectory()
+  logger.info "Scanning #{path}..."
+  files = fs.readdirSync path
+  files.forEach (file) ->
+    # TODO Recursive file loading 
+    if (file.indexOf ".coffee" isnt -1) and (fs.statSync("#{path}/#{file}").isFile())
+      callback file.substr(0, pos), "#{path}/#{file}"  
 
-scan "#{process.cwd()}/actors", withActor
-scan "#{process.cwd()}/adapters", withAdapter
+loadActors = () ->
+  builtinActorsName.forEach(name) -> 
+    require "./actor/#{name}"
+  loadDirectory "#{process.cwd()}/actors", withActor  
 
-actors['hactor'] = require "./actor/hactor"
-actors['hauth'] = require "./actor/hauth"
-actors['hchannel'] = require "./actor/hchannel"
-actors['hdispatcher'] = require "./actor/hdispatcher"
-actors['hgateway'] = require "./actor/hgateway"
-actors['hsession'] = require "./actor/hsession"
-actors['htracker'] = require "./actor/htracker"
+loadAdapters = () -> 
+  builtinAdaptersName.forEach(name) -> 
+    require "./adapters/#{name}"
+  loadDirectory "#{process.cwd()}/adapters", withAdapter
 
-adapters['channel_in'] = require "./adapters/channel_in"
-adapters['channel_out'] = require "./adapters/channel_out"
-adapters['fork'] = require "./adapters/fork"
-adapters['http_in'] = require "./adapters/http_in"
-adapters['http_out'] = require "./adapters/http_out"
-adapters['inproc'] = require "./adapters/inproc"
-adapters['lb_socket_in'] = require "./adapters/lb_socket_in"
-adapters['lb_socket_out'] = require "./adapters/lb_socket_out"
-adapters['socket_in'] = require "./adapters/socket_in"
-adapters['socket_out'] = require "./adapters/socket_out"
-adapters['socketIO'] = require "./adapters/socketIO"
-adapters['timerAdapter'] = require "./adapters/timerAdapter"
-adapters['twitter_in'] = require "./adapters/twitter_in"
+
+loadAdapters
+loadActors
 
 
 exports.withActor = withActor

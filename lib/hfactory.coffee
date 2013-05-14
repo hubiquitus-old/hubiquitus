@@ -45,8 +45,8 @@ adapters = {}
 
 
 withActor = (type, actor) ->
-  if not type then throw new Error "Actor's type undefined"
-  if not actor then throw new Error "Actor undefined"
+  throw new Error "Actor's type undefined" if not type 
+  throw new Error "Actor undefined" if not actor
   if actors[type]
     logger.warn "Actor '#{type}' already defined"
   else
@@ -54,8 +54,8 @@ withActor = (type, actor) ->
     actors[type] = actor
 
 withAdapter = (type, adapter) ->
-  if not type then throw new Error "Adapter's type undefined"
-  if not adapter then throw new Error "Adapter undefined"
+  throw new Error "Adapter's type undefined" if not type
+  throw new Error "Adapter undefined" if not adapter
   if adapters[type]
     logger.warn "Adapter '#{type}' already defined"
   else
@@ -66,7 +66,7 @@ withAdapter = (type, adapter) ->
 newActor = (type, properties) ->
   # Controls and warning about builtinAdapters override
   throw new Error "Actor's type undefined" if not type
-  if not actors[type] 
+  if not actors[type]
     actors[type] = require type
   else if typeof actors[type] is "string" 
     actors[type] = require actors[type]
@@ -75,7 +75,7 @@ newActor = (type, properties) ->
 newAdapter = (type, properties) ->
   # Controls and warning about builtinAdapters override
   throw new Error "Adapter's type undefined" if not type
-  if not adapters[type] 
+  if not adapters[type]
     adapters[type] = require type
   else if typeof adapters[type] is "string" 
     adapters[type] = require adapters[type]
@@ -90,22 +90,22 @@ loadDirectory = (path, callback) ->
   files = fs.readdirSync path
   files.forEach (file) ->
     # TODO Recursive file loading 
-    if (file.indexOf ".coffee" isnt -1) and (fs.statSync("#{path}/#{file}").isFile())
+    pos = file.indexOf ".coffee"
+    if (pos isnt -1) and (fs.statSync("#{path}/#{file}").isFile())
       callback file.substr(0, pos), "#{path}/#{file}"  
 
-loadActors = () ->
-  builtinActorsName.forEach(name) -> 
-    require "./actor/#{name}"
+loadActors = ->
+  builtinActorsName.forEach (name) -> 
+    actors[name]=require "./actor/#{name}"
   loadDirectory "#{process.cwd()}/actors", withActor  
 
 loadAdapters = () -> 
-  builtinAdaptersName.forEach(name) -> 
-    require "./adapters/#{name}"
+  builtinAdaptersName.forEach (name) -> 
+    adapters[name]=require "./adapters/#{name}"
   loadDirectory "#{process.cwd()}/adapters", withAdapter
 
-
-loadAdapters
-loadActors
+loadActors()
+loadAdapters()
 
 
 exports.withActor = withActor

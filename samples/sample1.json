@@ -56,6 +56,19 @@
                 },
                 "collection": "trackChannel"
             }
+        },
+        "pubChannel": {
+            "actor": "urn:localhost:pubChannel",
+            "type": "hchannel",
+            "properties": {
+                "subscribers": [],
+                "db":{
+                    "host": "localhost",
+                    "port": 27017,
+                    "name": "admin"
+                },
+                "collection": "pubChannel"
+            }
         }
     },
     "adapters": [ { "type": "socket_in"} ]

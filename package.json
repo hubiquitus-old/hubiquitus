@@ -22,14 +22,14 @@
       "time": "=0.9.0",
       "ntwitter": "git://github.com/hubiquitus/ntwitter.git",
       "winston" : ">=0.6.2",
-      "socket.io" : "=0.9.10",
+      "socket.io" : "=0.9.14",
       "mongodb" : "=1.2.14"
   },
   "devDependencies": {
       "should" : "=1.2.2",
       "mocha" : "=1.8.2",
       "coffee-script" : "=1.6.2",
-      "socket.io-client": "=0.9.10"
+      "socket.io-client": "=0.9.11"
   },
    "scripts": {
       "test": "mocha --compilers coffee:coffee-script -R spec test/*"

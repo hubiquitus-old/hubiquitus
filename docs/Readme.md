@@ -14,6 +14,22 @@
 * See the details about our [Adapters](https://github.com/hubiquitus/hubiquitus/tree/master/docs/adapters)
 * See the details about our [API](http://coffeedoc.info/github/hubiquitus/hubiquitus/master/)
 
+## Current version informations
 
+Current version is Hubiquitus 0.6.3
+Here are the versions of the dependencies used in Hubiquitus :
 
-
+   Dependencies   |  Version
+------------------|-----------
+      Node.js     |   0.10.6
+    Underscore    |   1.4.4
+       ZMQ        |  2.4.0 (modified)
+       Cron       |  1.0.1
+     Ntwitter     |  0.5.0 (modified)
+     Winston      |  0.6.2
+    Socket.IO     |  0.9.14
+     MongoDB      |  1.2.14
+      Should      |  1.2.2
+      Mocha       |  1.8.2
+  Coffee-Script   |  1.6.2
+ Socket.IO-Client |  0.9.11

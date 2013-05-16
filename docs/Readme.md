@@ -16,12 +16,12 @@
 
 ## Current version informations
 
-Current version is Hubiquitus 0.6.3
+Current version of Hubiquitus is **0.6.3**
 Here are the versions of the dependencies used in Hubiquitus :
 
    Dependencies   |  Version
 ------------------|-----------
-      Node.js     |   0.8.22
+    **Node.js**   |   **0.8.23**
     Underscore    |   1.4.4
        ZMQ        |  2.4.0 (modified)
        Cron       |  1.0.1

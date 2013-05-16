@@ -16,7 +16,8 @@
 
 ## Current version informations
 
-Current version of Hubiquitus is **0.6.3**
+Current version of Hubiquitus is **0.6.3**.
+
 Here are the versions of the dependencies used in Hubiquitus :
 
    Dependencies   |  Version

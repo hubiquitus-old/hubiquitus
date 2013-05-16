@@ -21,7 +21,7 @@ Here are the versions of the dependencies used in Hubiquitus :
 
    Dependencies   |  Version
 ------------------|-----------
-      Node.js     |   0.10.6
+      Node.js     |   0.8.22
     Underscore    |   1.4.4
        ZMQ        |  2.4.0 (modified)
        Cron       |  1.0.1

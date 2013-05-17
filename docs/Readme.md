@@ -30,6 +30,12 @@ Here are the versions of the dependencies used in Hubiquitus :
      Winston      |  0.6.2
     Socket.IO     |  0.9.14
      MongoDB      |  1.2.14
+     
+     
+For developping purposes, you will also need some specific dependencies. These are not needed to **use** Hubiquitus. They are :
+
+  DevDependencies |  Version
+------------------|-----------
       Should      |  1.2.2
       Mocha       |  1.8.2
   Coffee-Script   |  1.6.2

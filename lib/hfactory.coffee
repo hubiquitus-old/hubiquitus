@@ -23,22 +23,19 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-
+_ = require "underscore"
 # Factory : 
 # load all dependencies
 fs = require "fs"
+path = require "path" 
 winston = require "winston"
 logger = new winston.Logger
   transports: [
     new winston.transports.Console(colorize: true)
   ]
 
-builtinActorsName = ['hactor','hauth','hchannel','hdispatcher','hgateway',
-                     'hsession','htracker']
-builtinAdaptersName = ['channel_in','channel_out','fork','http_in',
-                       'http_out','inproc','lb_socket_in','lb_socket_out',
-                       'socket_in','socket_out','socketIO','timerAdapter',
-                       'twitter_in']
+builtinActorNames = require("./hbuiltin").builtinActorNames
+builtinAdapterNames = require("./hbuiltin").builtinAdapterNames
 
 actors = {}
 adapters = {}
@@ -53,6 +50,7 @@ withActor = (type, actor) ->
     logger.info "Actor '#{type}' added"
     actors[type] = actor
 
+
 withAdapter = (type, adapter) ->
   throw new Error "Adapter's type undefined" if not type
   throw new Error "Adapter undefined" if not adapter
@@ -62,6 +60,52 @@ withAdapter = (type, adapter) ->
     logger.info "Adapter '#{type}' added"
     adapters[type] = adapter
 
+loadBuiltinActors = ->
+  _.pairs(builtinActorNames).forEach (pair) ->
+    name = pair[1]
+    actors[name]=require "./actor/#{name}"
+
+loadBuiltinAdapters = ->  
+  _.pairs(builtinAdapterNames).forEach (pair) ->
+    name = pair[1]
+    adapters[name]=require "./adapters/#{name}"
+
+loadCustom = (pathToLoad,fn) ->
+  walk pathToLoad, (err,results) ->
+    throw err if err
+    _(results).each (file) ->
+      ext = path.extname(file)
+      if ext is ".js" or ext is ".node" or ext is ".json"
+        # TODO : Error or Warning 
+        logger.warn "File #{file} will override the .coffee version" 
+      return if path.extname(file) isnt ".coffee"
+      fn path.basename(file,".coffee"),file 
+
+walk = (dir, done) -> 
+  logger.info "Loading #{dir}"
+  results = [];
+  fs.readdir dir, (err, list) ->
+    return done(err) if err
+    i = 0;
+    next = () ->
+      file = list[i++];
+      return done(null, results) if not file
+      file = dir + '/' + file;
+      fs.stat file, (err, stat) ->
+        if (stat and stat.isDirectory())
+          walk file, (err, res) ->
+            results = results.concat(res);
+            next();
+        else
+          results.push(file);
+          next();
+    next()
+
+loadBuiltinActors()
+loadBuiltinAdapters()
+
+loadCustom "#{process.cwd()}/actors", withActor
+loadCustom "#{process.cwd()}/adapters", withAdapter
 
 newActor = (type, properties) ->
   # Controls and warning about builtinAdapters override
@@ -81,34 +125,7 @@ newAdapter = (type, properties) ->
     adapters[type] = require adapters[type]
   new adapters[type] properties
 
-
-loadDirectory = (path, callback) ->
-  return unless fs.existsSync path
-  stats =  fs.statSync path
-  return unless stats.isDirectory()
-  logger.info "Scanning #{path}..."
-  files = fs.readdirSync path
-  files.forEach (file) ->
-    # TODO Recursive file loading 
-    pos = file.indexOf ".coffee"
-    if (pos isnt -1) and (fs.statSync("#{path}/#{file}").isFile())
-      callback file.substr(0, pos), "#{path}/#{file}"  
-
-loadActors = ->
-  builtinActorsName.forEach (name) -> 
-    actors[name]=require "./actor/#{name}"
-  loadDirectory "#{process.cwd()}/actors", withActor  
-
-loadAdapters = () -> 
-  builtinAdaptersName.forEach (name) -> 
-    adapters[name]=require "./adapters/#{name}"
-  loadDirectory "#{process.cwd()}/adapters", withAdapter
-
-loadActors()
-loadAdapters()
-
-
-exports.withActor = withActor
-exports.withAdapter = withAdapter
 exports.newActor = newActor
 exports.newAdapter = newAdapter
+
+

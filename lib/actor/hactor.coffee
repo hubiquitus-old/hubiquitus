@@ -366,7 +366,7 @@ class Actor extends EventEmitter
               cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : " + hResult.payload.result)
             else
               @log "debug", "Can't send hMessage : " + hResult.payload.result
-      else
+      else if @type isnt "htracker"
         if cb
           cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't find actor")
           return

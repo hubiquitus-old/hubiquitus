@@ -672,8 +672,8 @@ class Actor extends EventEmitter
       outboundsTabCopy.push (outbound)
     _.forEach @inboundAdapters, (inbound) =>
       inboundsTabCopy.push (inbound)
-    # Stop adapters
-    _.invoke inboundsTabCopy, "stop"
+    # Stop adapters with "true" option so channel_in adapters don't try to re-subscribe
+    _.invoke inboundsTabCopy, "stop", true
     _.invoke outboundsTabCopy, "stop"
     done()
 

@@ -59,24 +59,25 @@ class HttpOutboundAdapter extends OutboundAdapter
     @querystring = require 'querystring'
     @http = require 'http'
 
-    # Setting the configuration
-    post_options =
-      host: @server_url
-      port: @port
-      path: @path
-      method: "POST"
-      headers:
-        "Content-Type": "application/x-www-form-urlencoded"
-        "Content-Length": JSON.stringify(hMessage.payload).length
+    @serializer.encode hMessage.payload, (buffer) =>
+      # Setting the configuration
+      post_options =
+        host: @server_url
+        port: @port
+        path: @path
+        method: "POST"
+        headers:
+          "Content-Type": "application/x-www-form-urlencoded"
+          "Content-Length": buffer.length
 
-    post_req = @http.request post_options, (res) =>
+      post_req = @http.request post_options, (res) =>
 
-    post_req.on "error", (e) ->
-      @owner.log "warn", "problem with request: " + e.message
+      post_req.on "error", (e) ->
+        @owner.log "warn", "problem with request: " + e.message
 
-    # write parameters to post body
-    post_req.write JSON.stringify(hMessage.payload)
-    post_req.end()
+      # write parameters to post body
+      post_req.write buffer
+      post_req.end()
 
 
 module.exports = HttpOutboundAdapter

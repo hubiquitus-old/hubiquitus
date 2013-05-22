@@ -50,7 +50,8 @@ class LBSocketInboundAdapter extends InboundAdapter
     @sock = zmq.socket "pull"
     @sock.identity = "LBSocketIA_of_#{@owner.actor}"
     @sock.on "message", (data) =>
-      @owner.emit "message", JSON.parse(data)
+      @serializer.decode data, (hMessage) =>
+        @owner.emit "message", hMessage
 
   #
   # @overload start()

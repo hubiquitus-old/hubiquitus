@@ -34,7 +34,7 @@ validator = require "../validator"
 #
 class Tracker extends Actor
 
-# @property {Array<Object>} List all the peers connect in the hEngine
+  # @property {Array<Object>} List all the peers connect in the hEngine
   peers: undefined
   # @property {string} URN of the tracker's channel
   trackerChannelAid: undefined
@@ -45,7 +45,6 @@ class Tracker extends Actor
   # @property {integer} Delay before removing peer if he doesn't send a peer-info
   timeoutDelay: undefined
 
-
   #
   # Actor's constructor
   # @param topology {object} Launch topology of the actor
@@ -54,12 +53,10 @@ class Tracker extends Actor
     #TODO check properties
     @peers = []
     @trackerChannelAid = topology.properties.channel.actor
+    @pubChannelAid = topology.properties.pubChannel
+
     unless topology.children
       topology.children = []
-
-    if topology.properties.pubChannel
-      @pubChannelAid = topology.properties.pubChannel.actor
-      topology.children.unshift topology.properties.pubChannel
 
     topology.children.unshift topology.properties.channel
     @timerPeers = {}

@@ -33,38 +33,42 @@ logger = new winston.Logger
 
 actors = {}
 adapters = {}
+serializers = {}
 
+
+_with = (name, type, tab, clazz) ->
+  if not type then throw new Error "#{name}'s type undefined"
+  if not clazz then throw new Error "#{name} undefined"
+  if tab[type]
+    logger.warn "#{name} '#{type}' already defined"
+  else
+    logger.info "#{name} '#{type}' added"
+    tab[type] = clazz
 
 withActor = (type, actor) ->
-  if not type then throw new Error "Actor's type undefined"
-  if not actor then throw new Error "Actor undefined"
-  if actors[type]
-    logger.warn "Actor '#{type}' already defined"
-  else
-    logger.info "Actor '#{type}' added"
-    actors[type] = actor
+  _with 'Actor', type, actors, actor
 
 withAdapter = (type, adapter) ->
-  if not type then throw new Error "Adapter's type undefined"
-  if not adapter then throw new Error "Adapter undefined"
-  if adapters[type]
-    logger.warn "Adapter '#{type}' already defined"
-  else
-    logger.info "Adapter '#{type}' added"
-    adapters[type] = adapter
+  _with 'Adapter', type, adapters, adapter
 
+withSerializer = (type, serializer) ->
+  _with 'Serializer', type, serializers, serializer
+
+
+_new = (type, tab, properties) ->
+  if not type then throw new Error "type undefined"
+  if not tab[type] then tab[type] = require type
+  else if typeof tab[type] is "string" then tab[type] = require tab[type]
+  new tab[type] properties
 
 newActor = (type, properties) ->
-  if not type then throw new Error "Actor's type undefined"
-  if not actors[type] then actors[type] = require type
-  else if typeof actors[type] is "string" then actors[type] = require actors[type]
-  new actors[type] properties
+  _new type, actors, properties
 
 newAdapter = (type, properties) ->
-  if not type then throw new Error "Adapter's type undefined"
-  if not adapters[type] then adapters[type] = require type
-  else if typeof adapters[type] is "string" then adapters[type] = require adapters[type]
-  new adapters[type] properties
+  _new type, adapters, properties
+
+newSerializer = (type, properties) ->
+  _new type, serializers, properties
 
 
 scan = (path, callback) ->
@@ -82,6 +86,8 @@ scan = (path, callback) ->
 
 scan "#{process.cwd()}/actors", withActor
 scan "#{process.cwd()}/adapters", withAdapter
+scan "#{process.cwd()}/serializers", withSerializer
+
 
 actors['hactor'] = require "./actor/hactor"
 actors['hauth'] = require "./actor/hauth"
@@ -105,8 +111,12 @@ adapters['socketIO'] = require "./adapters/socketIO"
 adapters['timerAdapter'] = require "./adapters/timerAdapter"
 adapters['twitter_in'] = require "./adapters/twitter_in"
 
+serializers['json'] = require "./serializers/json"
+
 
 exports.withActor = withActor
 exports.withAdapter = withAdapter
+exports.withSerializer = withSerializer
 exports.newActor = newActor
 exports.newAdapter = newAdapter
+exports.newSerializer = newSerializer

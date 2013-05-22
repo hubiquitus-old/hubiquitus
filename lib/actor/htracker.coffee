@@ -38,11 +38,12 @@ class Tracker extends Actor
   peers: undefined
   # @property {string} URN of the tracker's channel
   trackerChannelAid: undefined
+  # @property {string} URN of the tracker's pub channel
+  pubChannelAid: undefined
   # @property {object} List all timeout before remove a peer if he doesn't send a peer-info
   timerPeers: undefined
   # @property {integer} Delay before removing peer if he doesn't send a peer-info
   timeoutDelay: undefined
-
 
   #
   # Actor's constructor
@@ -52,8 +53,11 @@ class Tracker extends Actor
     #TODO check properties
     @peers = []
     @trackerChannelAid = topology.properties.channel.actor
+    @pubChannelAid = topology.properties.pubChannel
+
     unless topology.children
       topology.children = []
+
     topology.children.unshift topology.properties.channel
     @timerPeers = {}
     @timeoutDelay = 180000
@@ -110,7 +114,8 @@ class Tracker extends Actor
         if outbox
           @outboundAdapters.push factory.newAdapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
 
-      @send @buildMessage @trackerChannelAid, "peer-info", hMessage.payload.params
+      if @pubChannelAid
+        @send @buildMessage @pubChannelAid, "peer-info", hMessage.payload.params
 
     else if hMessage.payload.name is "peer-search"
       # TODO reflexion sur le lookup et implementation
@@ -138,7 +143,7 @@ class Tracker extends Actor
         trackerId : @actor,
         trackerUrl : @inboundAdapters[0].url,
         trackerChannel : @trackerChannelAid
-        }]
+      }]
       unless childProps.method
         childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps
@@ -177,8 +182,8 @@ class Tracker extends Actor
       if outTab.length > 0
         lb_peers = outTab[Math.floor(Math.random() * outTab.length)]
         _.forEach lb_peers.peerInbox, (inbox) =>
-           if inbox.type is "socket_in"
-             outboundadapter = {type: "socket_out", targetActorAid: lb_peers.peerFullId, url: inbox.url}
+          if inbox.type is "socket_in"
+            outboundadapter = {type: "socket_out", targetActorAid: lb_peers.peerFullId, url: inbox.url}
     outboundadapter
 
   #
@@ -187,6 +192,8 @@ class Tracker extends Actor
   #
   stopAlert: (actor) ->
     @send @h_buildSignal(@trackerChannelAid, "hStopAlert", actor, {headers:{h_quickFilter: actor}})
+    if @pubChannelAid
+      @send @buildMessage @pubChannelAid, "peer-stop", actor
 
 
 module.exports = Tracker

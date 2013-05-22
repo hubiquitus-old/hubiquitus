@@ -171,7 +171,7 @@ class Channel extends Actor
   #
   initialize: (done) ->
     @h_connectToDatabase @properties.db, () =>
-      done()
+    done()
 
   #
   # Method called to connect the hChannel to the mongoDB database.

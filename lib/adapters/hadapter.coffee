@@ -24,6 +24,7 @@
 #
 
 url = require "url"
+factory = require "../hfactory"
 
 #
 # Class that defines an Adapter
@@ -45,6 +46,9 @@ class Adapter
   # @property {string} Url use by the adapter
   url: undefined
 
+  # @property {Serializer} Adapter's serializer
+  serializer: undefined
+
   #
   # Adapter's constructor
   # @param properties {object} Launch properties of the adapter
@@ -52,6 +56,7 @@ class Adapter
   constructor: (properties) ->
     @started = false
     @properties = properties.properties
+    @serializer = factory.newSerializer properties.serializer or 'json'
     if properties.owner
       @owner = properties.owner
     else

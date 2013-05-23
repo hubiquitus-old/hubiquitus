@@ -31,7 +31,7 @@ _ = require "underscore"
 describe "hTracker", ->
   hActor = undefined
   hResultStatus = require("../lib/codes").hResultStatus
-  Tracket = require "../lib/actor/htracker"
+  Tracker = require "../lib/actor/htracker"
 
   describe "topology without channel", ->
     before () ->
@@ -39,9 +39,9 @@ describe "hTracker", ->
         actor: config.logins[0].urn,
         type: "hTracker"
         children: []
-        properties:[]
+        properties:{}
 
-      hActor = new Tracket topology
+      hActor = new Tracker topology
 
     after () ->
       #hActor.h_tearDown()
@@ -64,7 +64,7 @@ describe "hTracker", ->
             name: "test"
           collection: "trackChannel"
 
-      hActor = new Tracket topology
+      hActor = new Tracker topology
 
     after () ->
       #hActor.h_tearDown()
@@ -96,7 +96,7 @@ describe "hTracker", ->
                 name: "test"
               collection: "trackChannel"
 
-      hActor = new Tracket topology
+      hActor = new Tracker topology
 
       hActor.send = (hMessage) ->
 

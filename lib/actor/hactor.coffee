@@ -995,60 +995,6 @@ class Actor extends EventEmitter
     @buildMessage actor, "hResult", hResult, options
 
   #
-  # Method called to build correct hMeasure
-  # @param actor {string} URN of the target of the hMessage
-  # @param value {number} The value of the hMeasure
-  # @param unit {string} The unit in which the measure is expressed
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  buildMeasure: (actor, value, unit, options) ->
-    unless value
-      throw new Error("missing value")
-    else throw new Error("missing unit")  unless unit
-    @buildMessage actor, "hMeasure", {unit: unit, value: value}, options
-
-  #
-  # Method called to build correct hAlert
-  # @param actor {string} URN of the target of the hMessage
-  # @param alert {string} The message provided by the author to describe the alert
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  buildAlert: (actor, alert, options) ->
-    throw new Error("missing alert")  unless alert
-    @buildMessage actor, "hAlert", {alert: alert}, options
-
-  #
-  # Method called to build correct hAck
-  # @param actor {string} URN of the target of the hMessage
-  # @param ref {string} The message provided by the author to describe the alert
-  # @param ack {string} The status of the acknowledgement
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  buildAck: (actor, ref, ack, options) ->
-    throw new Error("missing ack")  unless ack
-    unless ref
-      throw new Error("missing ref")
-    else throw new Error("ack does not match \"recv\" or \"read\"")  unless /recv|read/i.test(ack)
-    options = {}  if typeof options isnt "object"
-    options.ref = ref
-    @buildMessage actor, "hAck", {ack: ack}, options
-
-  #
-  # Method called to build correct hConvState
-  # @param actor {string} URN of the target of the hMessage
-  # @param convid {string} Convid of the thread describe by the status
-  # @param status {string} The status of the thread
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  buildConvState: (actor, convid, status, options) ->
-    unless convid
-      throw new Error("missing convid")
-    else throw new Error("missing status")  unless status
-    options = {}  unless options
-    options.convid = convid
-    @buildMessage actor, "hConvState", {status: status}, options
-
-  #
   # Create a unique message id
   # @private
   #

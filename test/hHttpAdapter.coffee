@@ -117,7 +117,8 @@ describe "hHttpAdapter", ->
             if not err
               done()
             else
-              @owner.log "hMessage not conform : " + JSON.stringify(result)
+              console.log "hMessage not conform : " + JSON.stringify(result)
+              #@owner.log "hMessage not conform : " + JSON.stringify(result)
 
 
       server.listen 8989, "127.0.0.1"

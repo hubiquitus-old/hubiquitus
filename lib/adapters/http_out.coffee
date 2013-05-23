@@ -63,20 +63,21 @@ class HttpOutboundAdapter extends OutboundAdapter
 
     validator.validateHMessage hMessage, (err, result) =>
       if not err
-        # Setting the configuration
-        post_options =
-          url: url.format {protocol: 'http:', hostname: @server_url, port: @port, pathname: @path}
-          method: 'POST'
-          encoding: "UTF-8"
-          json: hMessage
+        @serializer.encode hMessage, (buffer) =>
+          # Setting the configuration
+          post_options =
+            url: url.format {protocol: 'http:', hostname: @server_url, port: @port, pathname: @path}
+            method: 'POST'
+            headers:
+              "Content-Type": "application/x-www-form-urlencoded"
+              "Content-Length": buffer.length
+            body: buffer
 
-        @reqst post_options, (err, res) =>
-          if err
-            @owner.log "warn", "problem with request: " + err
+          @reqst post_options, (err, res) =>
+            if err
+              @owner.log "warn", "problem with request: " + err
       else
         console.log 'hm', hMessage
         @owner.log "error", "hMessage not conform : " + JSON.stringify(result)
-
-
 
 module.exports = HttpOutboundAdapter

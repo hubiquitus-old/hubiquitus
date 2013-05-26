@@ -43,7 +43,7 @@ to_exports = {}
 # Helper for accessing to Hubiquitus built-in classes in developer code.
 builtinActorNames = require("./hbuiltin").builtinActorNames
 _.pairs(builtinActorNames).forEach (pair) ->
-  to_exports[pair[0]] = require "./actor/#{pair[1]}"
+  to_exports[pair[0]] = require "./actors/#{pair[1]}"
 
 builtinAdapterNames = require("./hbuiltin").builtinAdapterNames
 _.pairs(builtinAdapterNames).forEach (pair) ->

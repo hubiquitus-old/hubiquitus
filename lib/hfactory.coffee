@@ -36,39 +36,38 @@ logger = new winston.Logger
 
 builtinActorNames = require("./hbuiltin").builtinActorNames
 builtinAdapterNames = require("./hbuiltin").builtinAdapterNames
+builtinSerializerNames = require("./hbuiltin").builtinSerializerNames
 
 actors = {}
 adapters = {}
+serializers = {}
 
+
+_with = (name, type, tab, clazz) ->
+  if not type then throw new Error "#{name}'s type undefined"
+  if not clazz then throw new Error "#{name} undefined"
+  if tab[type]
+    logger.warn "#{name} '#{type}' already defined"
+  else
+    logger.info "#{name} '#{type}' added"
+    tab[type] = clazz
 
 withActor = (type, actor) ->
-  throw new Error "Actor's type undefined" if not type 
-  throw new Error "Actor undefined" if not actor
-  if actors[type]
-    logger.warn "Actor '#{type}' already defined"
-  else
-    logger.info "Actor '#{type}' added"
-    actors[type] = actor
+  _with 'Actor', type, actors, actor
 
 
 withAdapter = (type, adapter) ->
-  throw new Error "Adapter's type undefined" if not type
-  throw new Error "Adapter undefined" if not adapter
-  if adapters[type]
-    logger.warn "Adapter '#{type}' already defined"
-  else
-    logger.info "Adapter '#{type}' added"
-    adapters[type] = adapter
+  _with 'Adapter', type, adapters, adapter
 
-loadBuiltinActors = ->
-  _.pairs(builtinActorNames).forEach (pair) ->
-    name = pair[1]
-    actors[name]=require "./actor/#{name}"
+withSerializer = (type, serializer) ->
+  _with 'Serializer', type, serializers, serializer
 
-loadBuiltinAdapters = ->  
-  _.pairs(builtinAdapterNames).forEach (pair) ->
+loadBuiltin  = (builtinNames,tab,type) ->  
+  _.pairs(builtinNames).forEach (pair) ->
     name = pair[1]
-    adapters[name]=require "./adapters/#{name}"
+    tab[name]=require "./#{type}/#{name}"
+
+
 
 loadCustom = (pathToLoad,fn) ->
   walk pathToLoad, (err,results) ->
@@ -101,31 +100,34 @@ walk = (dir, done) ->
           next();
     next()
 
-loadBuiltinActors()
-loadBuiltinAdapters()
+loadBuiltin builtinActorNames,actors,"actor"
+loadBuiltin builtinAdapterNames,adapters,"adapters"
+loadBuiltin builtinSerializerNames,serializers,"serializers"
 
 loadCustom "#{process.cwd()}/actors", withActor
 loadCustom "#{process.cwd()}/adapters", withAdapter
+loadCustom "#{process.cwd()}/serializers", withSerializer
+
+_new = (type, tab, properties) ->
+  throw new Error "type undefined" if not type
+  if not tab[type]
+    tab[type] = require type
+  else 
+    if typeof tab[type] is "string"   
+      tab[type] = require tab[type]
+  new tab[type] properties
 
 newActor = (type, properties) ->
-  # Controls and warning about builtinAdapters override
-  throw new Error "Actor's type undefined" if not type
-  if not actors[type]
-    actors[type] = require type
-  else if typeof actors[type] is "string" 
-    actors[type] = require actors[type]
-  new actors[type] properties
+  _new type, actors, properties
 
 newAdapter = (type, properties) ->
-  # Controls and warning about builtinAdapters override
-  throw new Error "Adapter's type undefined" if not type
-  if not adapters[type]
-    adapters[type] = require type
-  else if typeof adapters[type] is "string" 
-    adapters[type] = require adapters[type]
-  new adapters[type] properties
+  _new type, adapters, properties
+
+newSerializer = (type, properties) ->
+  _new type, serializers, properties
+
+
 
 exports.newActor = newActor
 exports.newAdapter = newAdapter
-
-
+exports.newSerializer = newSerializer

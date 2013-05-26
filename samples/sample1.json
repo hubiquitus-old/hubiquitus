@@ -6,10 +6,23 @@
     "type": "htracker",
     "children": [
         {
+            "actor": "urn:localhost:pubChannel",
+            "type": "hchannel",
+            "properties": {
+                "subscribers": [],
+                "db":{
+                    "host": "localhost",
+                    "port": 27017,
+                    "name": "admin"
+                },
+                "collection": "pubChannel"
+            }
+        },
+        {
             "actor": "urn:localhost:gateway",
             "type": "hgateway",
             "children": [
-            	{
+                {
                     "actor": "urn:localhost:auth",
                     "type": "hauth"
                 }
@@ -56,7 +69,23 @@
                 },
                 "collection": "trackChannel"
             }
-        }
+        },
+        "pubChannel": "urn:localhost:pubChannel"
     },
+
+    /*"actor":"urn:localhost:trackChannel",
+    "type":"hchannel","method":"inproc",
+    "properties":{
+        "listenOn":"tcp://127.0.0.1:1221",
+        "broadcastOn":"tcp://127.0.0.1:2998",
+        "subscribers":[],
+        "db":{
+            "host":"localhost",
+            "port":27017,
+            "name":"test"
+        },
+        "collection":"trackChannel"
+    }*/
+
     "adapters": [ { "type": "socket_in"} ]
 }

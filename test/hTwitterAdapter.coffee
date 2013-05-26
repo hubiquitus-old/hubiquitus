@@ -47,7 +47,7 @@ describe "hTwitterAdapter", ->
             consumerSecret: "VklYGUWU31Qh8ZnhAX1rt82nTkmfvey3U6rbuBxnAk",
             twitterAccesToken: "819820982-H4lPh9e0EvsivXdfaORl1lJSdzPdCpQYfHAqclsP",
             twitterAccesTokenSecret: "Zex6O4tEgEPIF2cE39XVcg0C5MJNxJfV7FNRqSupu0c",
-            tags:"apple"
+            tags:""
           }
         } ]
       }
@@ -58,8 +58,15 @@ describe "hTwitterAdapter", ->
       hActor.h_tearDown()
       hActor = null
 
-    it "should receive hTweet with apple tags", (done) ->
+    it "should not started with an empty tag", (done) ->
+      if hActor.inboundAdapters[0].started is false
+        done()
+
+    it "should update tag, start and receive hTweet with apple tags", (done) ->
       count = 0
+      newProperties.tags = "apple"
+      hActor.updateAdapter("twitter", newProperties)
+
       hActor.onMessage = (hMessage) =>
         count++
         hMessage.type.should.be.equal("hTweet")

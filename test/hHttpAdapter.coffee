@@ -24,6 +24,7 @@
 #
 should = require("should")
 factory = require "../lib/hfactory"
+validator = require "../lib/validator.coffee"
 
 describe "hHttpAdapter", ->
   hActor = undefined
@@ -36,10 +37,10 @@ describe "hHttpAdapter", ->
 
     before () ->
       topology = {
-        actor: "urn:localhost:actor",
-        type: "hactor",
-        properties: {},
-        adapters: [ { type: "http_in", url: "http://127.0.0.1:8888" } ]
+      actor: "urn:localhost:actor",
+      type: "hactor",
+      properties: {},
+      adapters: [ { type: "http_in", url: "http://127.0.0.1:8888" } ]
       }
       hActor = new Actor topology
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
@@ -49,8 +50,12 @@ describe "hHttpAdapter", ->
       hActor = null
 
     it "should receive the http POST request", (done) ->
+      myHMessage = JSON.stringify(hActor.buildMessage(hActor.actor, "hHttpMessage", {goodBye:'worldPOST'}, {headers:{ 'host: "127.0.0.1:8888",
+                     connection: "keep-alive",
+                     transfer-encoding: "chunked"' }}))
+
       hActor.onMessage = (hMessage) ->
-        hMessage.type.should.be.equal('hHttpData')
+        hMessage.type.should.be.equal('hHttpMessage')
         hMessage.should.have.property("headers").and.be.an.instanceOf(Object)
         hMessage.should.have.property("payload").and.be.an.instanceOf(Object)
         done()
@@ -63,12 +68,16 @@ describe "hHttpAdapter", ->
 
       req = http.request options, (res) ->
 
-      req.write "hello=world"
+      req.write myHMessage
+
       req.end()
 
     it "should receive the http GET request", (done) ->
+      myHMessage = JSON.stringify(hActor.buildMessage(hActor.actor, "hHttpMessage", {goodBye:'worldGET'}, {headers:{ 'host: "127.0.0.1:8888",
+                           connection: "keep-alive",
+                           transfer-encoding: "chunked"' }}))
       hActor.onMessage = (hMessage) ->
-        hMessage.type.should.be.equal('hHttpData')
+        hMessage.type.should.be.equal('hHttpMessage')
         hMessage.should.have.property("headers").and.be.an.instanceOf(Object)
         hMessage.should.have.property("payload").and.be.an.instanceOf(Object)
         done()
@@ -76,11 +85,10 @@ describe "hHttpAdapter", ->
       options =
         hostname: "127.0.0.1"
         port: 8888
-        path: '/hello=world'
-
+        path: '/hmessage='+myHMessage.replace(/\s/g, '');
       http.get options, (res) ->
 
-  ###
+
   describe "Http_outbound", ->
     http = require "http"
     qs = require "querystring"
@@ -90,7 +98,7 @@ describe "hHttpAdapter", ->
         actor: "urn:localhost:actor",
         type: "hactor",
         properties: {},
-        adapters: [ {type: "http_out", url: "127.0.0.1", targetActorAid :"http_out_box" ,path: "/" ,port: 8989 } ]
+        adapters: [ {type: "http_out", url: "127.0.0.1", targetActorAid :"urn:localhost:httpOutMochaTest" ,path: "/" ,port: 8989 } ]
       }
       hActor = new Actor(topology)
       hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
@@ -105,15 +113,16 @@ describe "hHttpAdapter", ->
         req.on "data", (data) ->
           body = data
         req.on "end", =>
-          post_data =  qs.parse(body)
-          console.log "recept", post_data
-          done()
+          validator.validateHMessage JSON.parse( body.toString('utf8') ), (err, result) =>
+            if not err
+              done()
+            else
+              console.log "hMessage not conform : " + JSON.stringify(result)
+              #@owner.log "hMessage not conform : " + JSON.stringify(result)
 
-        server.listen 8989, "127.0.0.1"
 
-      hActor.send hActor.buildMessage("http_out_box", type:"hHttpDate", {hello:"world"})
-
-  ###
+      server.listen 8989, "127.0.0.1"
+      hActor.send hActor.buildMessage("urn:localhost:httpOutMochaTest", "hHttpMessage", {hello:"world"})
 
 
 

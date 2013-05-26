@@ -1,3 +1,5 @@
+#
+# * Copyright (c) Novedia Group 2012.
 # *
 # *    This file is part of Hubiquitus
 # *
@@ -20,36 +22,31 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+Serializer = require "./hserializer"
 
-exports.builtinActorNames = {
-    Actor:"hactor",
-    Auth:"hauth",
-    Channel:"hchannel",
-    Dispatcher:"hdispatcher",
-    Gateway:"hgateway",
-    Session:"hsession",
-    Tracker:"htracker",
-}
+#
+# Class that defines a JSON Serializer
+#
+class JSONSerializer extends Serializer
 
-exports.builtinAdapterNames = {
-  Adapter:"Adapter",
-  InboundAdapter:"InboundAdapter",
-  OutboundAdapter:"OutboundAdapter",
-  ChannelInboundAdapter:"channel_in",
-  ChannelOutboundAdapter:"channel_out",
-  ChildprocessOutboundAdapter:"fork",
-  HttpInboundAdapter:"http_in",
-  HttpOutboundAdapter:"http_out",
-  LocalOutboundAdapter:"inproc",
-  LBSocketInboundAdapter:"lb_socket_in",
-  LBSocketOutboundAdapter:"lb_socket_out",
-  SocketInboundAdapter:"socket_in",
-  SocketOutboundAdapter:"socket_out",
-  SocketIOAdapter:"socketIO",
-  TimerAdapter:"timerAdapter",
-  TwitterInboundAdapter:"twitter_in"
-}
+  #
+  # JSON Serializer's constructor
+  #
+  constructor: () ->
 
-exports.builtinSerializerNames ={
-  JSONSerializer:"json",
-}
+  #
+  # @param hMessage {object} the message to encode
+  # @param callback {function} callback
+  #
+  encode: (hMessage, callback) ->
+    callback new Buffer(JSON.stringify(hMessage), "utf-8")
+
+  #
+  # @param buffer {Buffer} the data to decode
+  # @param callback {function} callback
+  #
+  decode: (buffer, callback) ->
+    callback JSON.parse(buffer.toString("utf-8"))
+
+
+module.exports = JSONSerializer

@@ -92,10 +92,11 @@ class ChannelOutboundAdapter extends OutboundAdapter
   send: (hMessage) ->
     @start() unless @started
     if hMessage.headers and hMessage.headers.h_quickFilter and typeof hMessage.headers.h_quickFilter is "string"
-      message = hMessage.headers.h_quickFilter+"$"+JSON.stringify(hMessage)
-      @sock.send message
+      @serializer.encode hMessage, (buffer) =>
+        @sock.send hMessage.headers.h_quickFilter + "$" + buffer
     else
-      @sock.send JSON.stringify(hMessage)
+      @serializer.encode hMessage, (buffer) =>
+        @sock.send buffer
 
 
 module.exports = ChannelOutboundAdapter

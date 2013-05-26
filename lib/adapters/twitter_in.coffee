@@ -53,48 +53,49 @@ class TwitterInboundAdapter extends InboundAdapter
   #
   start: ->
     unless @started
-      @twit = new twitter(
-        proxy: @properties.proxy
-        consumer_key: @properties.consumerKey
-        consumer_secret: @properties.consumerSecret
-        access_token_key: @properties.twitterAccesToken
-        access_token_secret: @properties.twitterAccesTokenSecret
-      )
-      @twit.stream "statuses/filter", track: @properties.tags, (stream) =>
-        @stream = stream
-        @stream.on "error", (type, code) =>
-          @owner.log "error", "Twitter stream error : #{type} #{code}"
+      if @properties.tags and @properties.tags isnt ""
+        @twit = new twitter(
+          proxy: @properties.proxy
+          consumer_key: @properties.consumerKey
+          consumer_secret: @properties.consumerSecret
+          access_token_key: @properties.twitterAccesToken
+          access_token_secret: @properties.twitterAccesTokenSecret
+        )
+        @twit.stream "statuses/filter", track: @properties.tags, (stream) =>
+          @stream = stream
+          @stream.on "error", (type, code) =>
+            @owner.log "error", "Twitter stream error : #{type} #{code}"
 
-        @stream.on "data", (data) =>
-          unless data.disconnect
-            if @properties.langFilter is undefined or data.user.lang is @properties.langFilter
-              hTweet = {}
-              hTweetAuthor = {}
-              hTweetAuthor.listed = data.user.listed_count
-              hTweetAuthor.geo = data.user.geo_enabled
-              hTweetAuthor.verified = data.user.verified
-              hTweetAuthor.status = data.user.statuses_count
-              hTweetAuthor.location = data.user.location
-              hTweetAuthor.lang = data.user.lang
-              hTweetAuthor.url = data.user.url
-              hTweetAuthor.scrName = data.user.screen_name
-              hTweetAuthor.followers = data.user.followers_count
-              hTweetAuthor.profileImg = data.user.profile_image_url
-              hTweetAuthor.friends = data.user.friends_count
-              hTweetAuthor.description = data.user.description
-              hTweetAuthor.createdAt = new Date(data.user.created_at)
-              hTweetAuthor.name = data.user.name
-              hTweet.id = data.id_str
-              hTweet.source = data.source
-              hTweet.text = data.text
-              hTweet.author = hTweetAuthor
-              @owner.emit "message", @owner.buildMessage(@owner.actor, "hTweet", hTweet, {author: data.user.screen_name + "@twitter.com"})
-          else
-            @owner.log "debug", "Disconnecting data"
+          @stream.on "data", (data) =>
+            unless data.disconnect
+              if @properties.langFilter is undefined or data.user.lang is @properties.langFilter
+                hTweet = {}
+                hTweetAuthor = {}
+                hTweetAuthor.listed = data.user.listed_count
+                hTweetAuthor.geo = data.user.geo_enabled
+                hTweetAuthor.verified = data.user.verified
+                hTweetAuthor.status = data.user.statuses_count
+                hTweetAuthor.location = data.user.location
+                hTweetAuthor.lang = data.user.lang
+                hTweetAuthor.url = data.user.url
+                hTweetAuthor.scrName = data.user.screen_name
+                hTweetAuthor.followers = data.user.followers_count
+                hTweetAuthor.profileImg = data.user.profile_image_url
+                hTweetAuthor.friends = data.user.friends_count
+                hTweetAuthor.description = data.user.description
+                hTweetAuthor.createdAt = new Date(data.user.created_at)
+                hTweetAuthor.name = data.user.name
+                hTweet.id = data.id_str
+                hTweet.source = data.source
+                hTweet.text = data.text
+                hTweet.author = hTweetAuthor
+                @owner.emit "message", @owner.buildMessage(@owner.actor, "hTweet", hTweet, {author: data.user.screen_name + "@twitter.com"})
+            else
+              @owner.log "debug", "Disconnecting data"
 
-        @stream.on "destroy", (data) =>
-          @owner.log "debug", "twitter stream close"
-      super
+          @stream.on "destroy", (data) =>
+            @owner.log "debug", "twitter stream close"
+        super
 
   #
   # @overload stop()

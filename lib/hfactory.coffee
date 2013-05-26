@@ -99,7 +99,7 @@ walkSync = (dir) ->
   return results
 
 
-loadBuiltin builtinActorNames,actors,"actor"
+loadBuiltin builtinActorNames,actors,"actors"
 loadBuiltin builtinAdapterNames,adapters,"adapters"
 loadBuiltin builtinSerializerNames,serializers,"serializers"
 

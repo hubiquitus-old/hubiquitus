@@ -27,7 +27,7 @@ config = require("./_config")
 
 describe "builder", ->
   hActor = undefined
-  Actor = require "../lib/actor/hactor"
+  Actor = require "../lib/actors/hactor"
 
   before () ->
     topology = {

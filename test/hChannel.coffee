@@ -32,7 +32,7 @@ describe "hChannel", ->
   hChild = undefined
   hChildFilter = undefined
   status = require("../lib/codes").hResultStatus
-  Channel = require "../lib/actor/hchannel"
+  Channel = require "../lib/actors/hchannel"
 
   describe "publish", ->
     before () ->

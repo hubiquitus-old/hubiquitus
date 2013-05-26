@@ -31,7 +31,7 @@ describe "hActor", ->
   hActor2 = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  Actor = require("../lib/actor/hactor")
+  Actor = require("../lib/actors/hactor")
 
   describe "#FilterMessage()", ->
     hMsg = undefined

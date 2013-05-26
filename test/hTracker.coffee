@@ -31,7 +31,7 @@ _ = require "underscore"
 describe "hTracker", ->
   hActor = undefined
   hResultStatus = require("../lib/codes").hResultStatus
-  Tracker = require "../lib/actor/htracker"
+  Tracker = require "../lib/actors/htracker"
 
   describe "topology without channel", ->
     before () ->

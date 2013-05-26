@@ -30,7 +30,7 @@ describe "hHttpAdapter", ->
   hActor = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  Actor = require "../lib/actor/hactor"
+  Actor = require "../lib/actors/hactor"
 
   describe "Http_inbound", ->
     http = require "http"

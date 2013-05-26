@@ -22,53 +22,47 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-should = require("should")
-config = require("./_config")
-factory = require "../lib/hfactory"
 
-describe "hEcho", ->
-  echoCmd = undefined
-  hActor = undefined
-  status = require("../lib/codes").hResultStatus
-  Session = require "../lib/actors/hsession"
+Actor = require "./hactor"
+SocketIO_Connector = require "../client_connector/socketio_connector"
+zmq = require "zmq"
+_ = require "underscore"
+validator = require "../validator"
 
-  before () ->
-    topology = {
-      actor: config.logins[0].urn,
-      type: "hsession"
-    }
-    hActor = new Session topology
+#
+# Class that defines a gateway actor
+#
+class Gateway extends Actor
 
-  after () ->
-    hActor.h_tearDown()
-    hActor = null
+  #
+  # Actor's constructor
+  # @param topology {object} Launch topology of the actor
+  #
+  constructor: (topology) ->
+    super
+    # Setting outbound adapters
+    @type = 'gateway'
+    if topology.properties.socketIOPort
+      new SocketIO_Connector({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
 
-  beforeEach (done) ->
-    echoCmd = config.makeHMessage("session", hActor.actor, "hCommand", {})
-    echoCmd.payload =
-      cmd: "hEcho"
-      params:
-        hello: "world"
-    done()
+  #
+  # @overload onMessage(hMessage)
+  #   Method that processes the incoming message on a hGateway.
+  #   @param hMessage {Object} the hMessage receive
+  #
+  onMessage: (hMessage) ->
+    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
+      @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
+      @send hMessage
 
-  it "should return hResult error if the hMessage can not be treat", (done) ->
-    echoCmd.payload.params.error = "DIV0"
-    hActor.send = (hMessage) ->
-      hMessage.should.have.property "ref", echoCmd.msgid
-      hMessage.payload.should.have.property "status", status.TECH_ERROR
-      done()
+  #
+  # @overload h_fillAttribut(hMessage, cb)
+  #   Method called to override some hMessage's attributs before sending.
+  #   Overload the hActor method with an empty function to not altering a hMessage publish in a channel
+  #   @private
+  #
+  h_fillAttribut: (hMessage, cb) ->
+    #Override with empty function to not altering hMessage
 
-    hActor.h_onMessageInternal echoCmd
 
-
-  describe "#Execute hEcho", ->
-    it "should emit result echoing input", (done) ->
-      hActor.send = (hMessage) ->
-        should.exist hMessage.payload.status
-        should.exist hMessage.payload.result
-        hMessage.payload.status.should.be.equal status.OK
-        hMessage.payload.result.should.be.equal echoCmd.payload.params
-        done()
-
-      hActor.h_onMessageInternal echoCmd
-
+module.exports = Gateway

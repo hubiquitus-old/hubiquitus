@@ -22,7 +22,7 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{InboundAdapter} = require "./hadapter"
+{InboundAdapter} = require "./InboundAdapter"
 twitter = require "ntwitter"
 
 #

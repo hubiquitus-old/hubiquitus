@@ -71,7 +71,6 @@ loadBuiltin  = (builtinNames,array,type) ->
 
 loadCustom = (pathToLoad,fn) ->
   results = walkSync pathToLoad
-  console.log results
   _(results).each (file) ->
     ext = path.extname(file)
     return if ext isnt ".coffee"
@@ -85,8 +84,11 @@ loadCustom = (pathToLoad,fn) ->
 
 walkSync = (dir) ->
   logger.info "Loading #{dir}"
-  results = [];
-  list = fs.readdirSync dir
+  results = []
+  try
+    list = fs.readdirSync dir
+  catch error
+    logger.info "#{dir} doesn't exist"
   _(list).each (file) ->
     file = dir + '/' + file
     stat = fs.statSync(file)

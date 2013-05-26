@@ -68,16 +68,14 @@ to_exports.start = (topology) ->
     topology = require "#{process.cwd()}/#{topology or "topology"}"
 
   logger.info "Hubiquitus is starting ...."
-  setTimeout ()->
-    engine = factory.newActor topology.type, topology
-    engine.on "hStatus", (status) ->
-      return unless status is "started"
-      process.on "SIGINT", ->
-        engine.h_tearDown()
-        process.exit()
-    engine.h_start()
-    logger.info "Hubiquitus started"
-  ,1000
+  engine = factory.newActor topology.type, topology
+  engine.on "hStatus", (status) ->
+    return unless status is "started"
+    process.on "SIGINT", ->
+      engine.h_tearDown()
+      process.exit()
+  engine.h_start()
+  logger.info "Hubiquitus started"
 
 # Exports
 module.exports = to_exports;

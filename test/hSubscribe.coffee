@@ -34,8 +34,8 @@ describe "hSubscribe", ->
   hChannel = undefined
   hChannel2 = undefined
   status = require("../lib/codes").hResultStatus
-  Actor = require "../lib/actor/hactor"
-  Tracker = require ("../lib/actor/htracker")
+  Actor = require "../lib/actors/hactor"
+  Tracker = require ("../lib/actors/htracker")
   existingCHID = "urn:localhost:#{config.getUUID()}"
 
   before () ->

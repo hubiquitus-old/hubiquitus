@@ -29,7 +29,7 @@ describe "hTimerAdapter", ->
   hActor = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  Actor = require "../lib/actor/hactor"
+  Actor = require "../lib/actors/hactor"
 
   describe "millisecond", ->
     before () ->

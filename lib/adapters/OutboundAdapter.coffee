@@ -22,43 +22,35 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{OutboundAdapter} = require "./OutboundAdapter"
+
+url = require "url"
+{Adapter} = require "./Adapter"
 
 #
-# Class that defines a fork Adapter.
-# It is used between a parent and his child create with fork method
+# Class that defines an Outbound adapter
 #
-class ChildprocessOutboundAdapter extends OutboundAdapter
+class OutboundAdapter extends Adapter
+
+  # @property {string}
+  targetActorAid: undefined
 
   #
   # Adapter's constructor
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
-    super
-    if properties.ref
-      @ref = properties.ref
+    @direction = "out"
+    if properties.targetActorAid
+      @targetActorAid = properties.targetActorAid
     else
-      throw new Error "You must explicitely pass an actor child process as reference to a ChildOutboundAdapter"
-
-  #
-  # @overload stop()
-  #   Method which stop the adapter.
-  #   When this adapter is stopped, the actor's process is kill
-  #
-  stop: ->
-    if @started
-      @ref.kill()
+      throw new Error "You must provide the AID of the targeted actor"
     super
 
   #
-  # @overload send(hMessage)
-  #   Method which send the hMessage between parent and child
-  #   @param hMessage {object} The hMessage to send
+  # Method which has to be override to specify an outbound adapter
+  # @param hMessage {object}
   #
   send: (hMessage) ->
-    @start() unless @started
-    @ref.send hMessage
+    throw new Error "Send method should be overriden"
 
-
-module.exports = ChildprocessOutboundAdapter
+exports.OutboundAdapter = OutboundAdapter

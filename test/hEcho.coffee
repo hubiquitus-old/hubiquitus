@@ -30,7 +30,7 @@ describe "hEcho", ->
   echoCmd = undefined
   hActor = undefined
   status = require("../lib/codes").hResultStatus
-  Session = require "../lib/actor/hsession"
+  Session = require "../lib/actors/hsession"
 
   before () ->
     topology = {

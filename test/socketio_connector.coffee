@@ -31,7 +31,7 @@ describe "socketio_connector", ->
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
   SocketIO_Connector = require("../lib/client_connector/socketio_connector")
-  Actor = require "../lib/actor/hactor"
+  Actor = require "../lib/actors/hactor"
   codes = require "../lib/codes"
 
   hActor = undefined

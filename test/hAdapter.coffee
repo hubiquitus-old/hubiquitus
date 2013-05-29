@@ -31,8 +31,8 @@ describe "hAdapter", ->
   hActor = undefined
   hActor2 = undefined
   hResultStatus = require("../lib/codes").hResultStatus
-  Actor = require "../lib/actor/hactor"
-  Channel = require "../lib/actor/hchannel"
+  Actor = require "../lib/actors/hactor"
+  Channel = require "../lib/actors/hchannel"
 
   describe "socket_in collision", ->
     http = require "http"

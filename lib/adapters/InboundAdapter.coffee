@@ -22,43 +22,20 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{OutboundAdapter} = require "./OutboundAdapter"
 
+url = require "url"
+{Adapter} = require "./Adapter"
 #
-# Class that defines a fork Adapter.
-# It is used between a parent and his child create with fork method
+# Class that defines an Inbound adapter
 #
-class ChildprocessOutboundAdapter extends OutboundAdapter
+class InboundAdapter extends Adapter
 
   #
   # Adapter's constructor
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
-    super
-    if properties.ref
-      @ref = properties.ref
-    else
-      throw new Error "You must explicitely pass an actor child process as reference to a ChildOutboundAdapter"
-
-  #
-  # @overload stop()
-  #   Method which stop the adapter.
-  #   When this adapter is stopped, the actor's process is kill
-  #
-  stop: ->
-    if @started
-      @ref.kill()
+    @direction = "in"
     super
 
-  #
-  # @overload send(hMessage)
-  #   Method which send the hMessage between parent and child
-  #   @param hMessage {object} The hMessage to send
-  #
-  send: (hMessage) ->
-    @start() unless @started
-    @ref.send hMessage
-
-
-module.exports = ChildprocessOutboundAdapter
+exports.InboundAdapter = InboundAdapter

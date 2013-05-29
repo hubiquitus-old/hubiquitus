@@ -1,3 +1,4 @@
+
 #
 # * Copyright (c) Novedia Group 2012.
 # *
@@ -25,7 +26,6 @@
 
 url = require "url"
 factory = require "../hfactory"
-
 #
 # Class that defines an Adapter
 #
@@ -108,47 +108,5 @@ class Adapter
     # Function to overide if you need to update adapter's properties
 
 
-#
-# Class that defines an Inbound adapter
-#
-class InboundAdapter extends Adapter
-
-  #
-  # Adapter's constructor
-  # @param properties {object} Launch properties of the adapter
-  #
-  constructor: (properties) ->
-    @direction = "in"
-    super
-
-
-#
-# Class that defines an Outbound adapter
-#
-class OutboundAdapter extends Adapter
-
-  # @property {string}
-  targetActorAid: undefined
-
-  #
-  # Adapter's constructor
-  # @param properties {object} Launch properties of the adapter
-  #
-  constructor: (properties) ->
-    @direction = "out"
-    if properties.targetActorAid
-      @targetActorAid = properties.targetActorAid
-    else
-      throw new Error "You must provide the AID of the targeted actor"
-    super
-
-  #
-  # Method which has to be override to specify an outbound adapter
-  # @param hMessage {object}
-  #
-  send: (hMessage) ->
-    throw new Error "Send method should be overriden"
 
 exports.Adapter = Adapter
-exports.InboundAdapter = InboundAdapter
-exports.OutboundAdapter = OutboundAdapter

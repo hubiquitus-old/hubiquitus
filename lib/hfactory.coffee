@@ -44,6 +44,25 @@ actors = {}
 adapters = {}
 serializers = {}
 
+# Return an array containing all filepath in the given directory
+walkSync = (dir) ->
+  logger.info "Loading #{dir}"
+  results = []
+  
+  try
+    list = fs.readdirSync dir
+  catch error
+    logger.info "#{dir} doesn't exist"
+  
+  # find all file in the directory
+  _(list).each (file) ->
+    file = dir + '/' + file
+    stat = fs.statSync(file)
+    if stat and stat.isFile()
+      results.push(file)
+  
+  return results
+
 
 _with = (name, type, array, clazz) ->
   if not type then throw new Error "#{name}'s type undefined"
@@ -57,7 +76,6 @@ _with = (name, type, array, clazz) ->
 withActor = (type, actor) ->
   _with 'Actor', type, actors, actor
 
-
 withAdapter = (type, adapter) ->
   _with 'Adapter', type, adapters, adapter
 
@@ -69,34 +87,18 @@ loadBuiltin  = (builtinNames,array,type) ->
     name = pair[1]
     array[name]=require "./#{type}/#{name}"
 
-loadCustom = (pathToLoad,fn) ->
+# Load in the factory all hComponent (Actors, Adapters, ... )  contained in a directory
+loadCustom = (pathToLoad,cb_with) ->
   results = walkSync pathToLoad
   _(results).each (file) ->
     ext = path.extname(file)
     return if ext isnt ".coffee"
-
     # Built the relative name 
-    # actors/tools/myActor.coffe 
-    # => type : tools/myActor
+    # actors/myActor.coffe 
+    # => type : myActor
     relative = path.relative(pathToLoad,file)
     type = relative.match(/(.+)\.coffee$/)[1]
-    fn type,file 
-
-walkSync = (dir) ->
-  logger.info "Loading #{dir}"
-  results = []
-  try
-    list = fs.readdirSync dir
-  catch error
-    logger.info "#{dir} doesn't exist"
-  _(list).each (file) ->
-    file = dir + '/' + file
-    stat = fs.statSync(file)
-    if (stat and stat.isDirectory())
-      results=results.concat(walkSync(file))
-    else
-      results.push(file)
-  return results
+    cb_with type,file 
 
 
 loadBuiltin builtinActorNames,actors,"actors"

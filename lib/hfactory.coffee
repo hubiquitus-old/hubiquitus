@@ -23,27 +23,55 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
+_ = require "underscore"
+
+# Factory : 
+# load all dependencies
 fs = require "fs"
+path = require "path" 
+
 winston = require "winston"
 logger = new winston.Logger
   transports: [
     new winston.transports.Console(colorize: true)
   ]
 
+builtinActorNames = require("./hbuiltin").builtinActorNames
+builtinAdapterNames = require("./hbuiltin").builtinAdapterNames
+builtinSerializerNames = require("./hbuiltin").builtinSerializerNames
 
 actors = {}
 adapters = {}
 serializers = {}
 
+# Return an array containing all filepath in the given directory
+walkSync = (dir) ->
+  logger.info "Loading #{dir}"
+  results = []
+  
+  try
+    list = fs.readdirSync dir
+  catch error
+    logger.info "#{dir} doesn't exist"
+  
+  # find all file in the directory
+  _(list).each (file) ->
+    file = dir + '/' + file
+    stat = fs.statSync(file)
+    if stat and stat.isFile()
+      results.push(file)
+  
+  return results
 
-_with = (name, type, tab, clazz) ->
+
+_with = (name, type, array, clazz) ->
   if not type then throw new Error "#{name}'s type undefined"
   if not clazz then throw new Error "#{name} undefined"
-  if tab[type]
+  if array[type]
     logger.warn "#{name} '#{type}' already defined"
   else
     logger.info "#{name} '#{type}' added"
-    tab[type] = clazz
+    array[type] = clazz
 
 withActor = (type, actor) ->
   _with 'Actor', type, actors, actor
@@ -54,12 +82,42 @@ withAdapter = (type, adapter) ->
 withSerializer = (type, serializer) ->
   _with 'Serializer', type, serializers, serializer
 
+loadBuiltin  = (builtinNames,array,type) ->  
+  _.pairs(builtinNames).forEach (pair) ->
+    name = pair[1]
+    array[name]=require "./#{type}/#{name}"
 
-_new = (type, tab, properties) ->
-  if not type then throw new Error "type undefined"
-  if not tab[type] then tab[type] = require type
-  else if typeof tab[type] is "string" then tab[type] = require tab[type]
-  new tab[type] properties
+# Load in the factory all hComponent (Actors, Adapters, ... )  contained in a directory
+loadCustom = (pathToLoad,cb_with) ->
+  results = walkSync pathToLoad
+  _(results).each (file) ->
+    ext = path.extname(file)
+    return if ext isnt ".coffee"
+    # Built the relative name 
+    # actors/myActor.coffe 
+    # => type : myActor
+    relative = path.relative(pathToLoad,file)
+    type = relative.match(/(.+)\.coffee$/)[1]
+    cb_with type,file 
+
+
+loadBuiltin builtinActorNames,actors,"actors"
+loadBuiltin builtinAdapterNames,adapters,"adapters"
+loadBuiltin builtinSerializerNames,serializers,"serializers"
+
+loadCustom "#{process.cwd()}/actors", withActor
+loadCustom "#{process.cwd()}/adapters", withAdapter
+loadCustom "#{process.cwd()}/serializers", withSerializer
+
+_new = (type, array, properties) ->
+  throw new Error "type undefined" if not type
+  if not array[type]
+    # can require a type into external module
+    array[type] = require type
+  else 
+    if typeof array[type] is "string"   
+      array[type] = require array[type]
+  new array[type] properties
 
 newActor = (type, properties) ->
   _new type, actors, properties
@@ -71,52 +129,7 @@ newSerializer = (type, properties) ->
   _new type, serializers, properties
 
 
-scan = (path, callback) ->
-  if fs.existsSync path
-    stats =  fs.statSync path
-    if stats.isDirectory()
-      logger.info "Scanning #{path}..."
-      files = fs.readdirSync path
-      files.forEach (file) ->
-        pos = file.indexOf ".coffee"
-        if pos isnt -1
-          stats = fs.statSync "#{path}/#{file}"
-          if stats.isFile()
-            callback file.substr(0, pos), "#{path}/#{file}"
 
-scan "#{process.cwd()}/actors", withActor
-scan "#{process.cwd()}/adapters", withAdapter
-scan "#{process.cwd()}/serializers", withSerializer
-
-
-actors['hactor'] = require "./actor/hactor"
-actors['hauth'] = require "./actor/hauth"
-actors['hchannel'] = require "./actor/hchannel"
-actors['hdispatcher'] = require "./actor/hdispatcher"
-actors['hgateway'] = require "./actor/hgateway"
-actors['hsession'] = require "./actor/hsession"
-actors['htracker'] = require "./actor/htracker"
-
-adapters['channel_in'] = require "./adapters/channel_in"
-adapters['channel_out'] = require "./adapters/channel_out"
-adapters['fork'] = require "./adapters/fork"
-adapters['http_in'] = require "./adapters/http_in"
-adapters['http_out'] = require "./adapters/http_out"
-adapters['inproc'] = require "./adapters/inproc"
-adapters['lb_socket_in'] = require "./adapters/lb_socket_in"
-adapters['lb_socket_out'] = require "./adapters/lb_socket_out"
-adapters['socket_in'] = require "./adapters/socket_in"
-adapters['socket_out'] = require "./adapters/socket_out"
-adapters['socketIO'] = require "./adapters/socketIO"
-adapters['timerAdapter'] = require "./adapters/timerAdapter"
-adapters['twitter_in'] = require "./adapters/twitter_in"
-
-serializers['json'] = require "./serializers/json"
-
-
-exports.withActor = withActor
-exports.withAdapter = withAdapter
-exports.withSerializer = withSerializer
 exports.newActor = newActor
 exports.newAdapter = newAdapter
 exports.newSerializer = newSerializer

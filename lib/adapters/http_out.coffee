@@ -22,7 +22,7 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{OutboundAdapter} = require "./hadapter"
+{OutboundAdapter} = require "./OutboundAdapter"
 url = require "url"
 validator = require "../validator.coffee"
 #

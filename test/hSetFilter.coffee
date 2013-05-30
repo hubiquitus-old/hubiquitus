@@ -30,7 +30,7 @@ describe "hSetFilter", ->
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
   cmd = {}
-  Actor = require "../lib/actor/hactor"
+  Actor = require "../lib/actors/hactor"
 
   before () ->
     topology = {

@@ -51,7 +51,7 @@ describe "hSession", ->
         name: "test"
       },
       collection: existingCHID.replace(/[-.]/g, "")
-    hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
       hChannel = child
 
   before (done) ->
@@ -63,17 +63,6 @@ describe "hSession", ->
     hActor.send = (hMessage) =>
     hActor.h_tearDown()
     hActor = null
-
-  it "should emit result echoing input", (done) ->
-    echoCmd = hActor.buildCommand("session", "hEcho", {hello: "world"})
-    hActor.send = (hMessage) ->
-      should.exist hMessage.payload.status
-      should.exist hMessage.payload.result
-      hMessage.payload.status.should.be.equal status.OK
-      hMessage.payload.result.should.be.equal echoCmd.payload.params
-      done()
-
-    hActor.h_onMessageInternal echoCmd
 
   it "should return hResult OK and filter attribut must be set", (done) ->
     setCmd = hActor.buildCommand("session", "hSetFilter", {eq:{publisher:config.logins[0].urn}})

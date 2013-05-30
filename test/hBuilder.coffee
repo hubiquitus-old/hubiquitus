@@ -32,6 +32,7 @@ describe "builder", ->
   before () ->
     topology = {
       actor: config.logins[0].urn,
+      type : "hActor"
     }
     hActor = new Actor(topology)
   #

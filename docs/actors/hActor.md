@@ -24,6 +24,12 @@ Every actor need a topology to run. This topology describes every actor's attrib
             <td>Yes</td>
         </tr>
         <tr>
+            <td>ip</td>
+            <td>String</td>
+            <td>It contains the IP of the actor</td>
+            <td>No</td>
+        </tr>
+        <tr>
             <td>type</td>
             <td>String</td>
             <td>The type of the hActor. It contains the name of the implementation used for the hActor.<br/>
@@ -117,7 +123,7 @@ Tracker's attributes :
     </thead>
     <tbody>
         <tr>
-            <td>trackerID</td>
+            <td>trackerId</td>
             <td>String</td>
             <td>URN of the hTracker</td>
             <td>Yes</td>

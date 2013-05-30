@@ -98,7 +98,7 @@ Hubiquitus use a few structure to run :
         </tr>
         <tr>
             <td>payload</td>
-            <td>Object</td>
+            <td>Object or string</td>
             <td>The content of the message. It can be plain text or more structured data (HTML, XML, JSON, etc.)</td>
             <td>No</td>
         </tr>
@@ -112,7 +112,7 @@ Hubiquitus use a few structure to run :
             <td>sent</td>
             <td>Date</td>
             <td>This attribute contains the creation date (timestamp in milliseconds) of the hMessage</td>
-            <td>Yes <sup>(4)</td>
+            <td>No</td>
         </tr>
     </tbody>
 </table>

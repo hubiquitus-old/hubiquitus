@@ -43,6 +43,7 @@ describe "socketio_connector", ->
   before () ->
     topology = {
       actor: actorUrn,
+      type : "hActor",
       properties: {authActor: authUrn}
     }
     hActor = new Actor topology

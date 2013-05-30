@@ -141,6 +141,10 @@ class Actor extends EventEmitter
         logLevel: "info"
       @h_initLogger()
 
+    result = validator.validateTopology topology
+    unless result.valid
+      @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.errors)
+
     # setting up instance attributes
     if(validator.validateFullURN(topology.actor))
       @actor = topology.actor
@@ -247,34 +251,34 @@ class Actor extends EventEmitter
   h_onMessageInternal: (hMessage) ->
     @log "debug", "onMessage :" + JSON.stringify(hMessage)
     try
-      validator.validateHMessage hMessage, (err, result) =>
-        if err
-          @log "debug", "hMessage not conform : " + JSON.stringify(result)
-          hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "actor is missing")
-          @send hMessageResult
-        else
-          #Complete missing values
-          hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
-          hMessage.published = hMessage.published or new Date().getTime()
+      result = validator.validateHMessage hMessage
+      unless result.valid
+        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.errors)
+        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, JSON.stringify(result.errors))
+        @send hMessageResult
+      else
+        #Complete missing values
+        hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
+        hMessage.published = hMessage.published or new Date().getTime()
 
-          #Empty location and headers should not be sent/saved.
-          validator.cleanEmptyAttrs hMessage, ["headers", "location"]
+        #Empty location and headers should not be sent/saved.
+        validator.cleanEmptyAttrs hMessage, ["headers", "location"]
 
-          if hMessage.type is "hSignal" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
-            switch hMessage.payload.name
-              when "start"
-                @h_start()
-              when "stop"
-                @h_tearDown()
-              else
-                @h_onSignal(hMessage)
-          else
-            #Check if hMessage respect filter
-            checkValidity = @validateFilter(hMessage)
-            if checkValidity.result is true
-              @onMessage hMessage
+        if hMessage.type is "hSignal" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
+          switch hMessage.payload.name
+            when "start"
+              @h_start()
+            when "stop"
+              @h_tearDown()
             else
-              @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
+              @h_onSignal(hMessage)
+        else
+          #Check if hMessage respect filter
+          checkValidity = @validateFilter(hMessage)
+          if checkValidity.result is true
+            @onMessage hMessage
+          else
+            @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
 
     catch error
       @log "warn", "An error occured while processing incoming message: " + error
@@ -417,6 +421,9 @@ class Actor extends EventEmitter
 
       #Send it to transport
       @log "debug", "Sending message: #{JSON.stringify(hMessage)}"
+      result = validator.validateHMessage hMessage
+      unless result.valid
+        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.errors)
       outboundAdapter.send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"

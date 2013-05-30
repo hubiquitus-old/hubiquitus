@@ -30,7 +30,7 @@ factory = require "../lib/hfactory"
 describe "hGateway", ->
   hActor = undefined
   status = require("../lib/codes").hResultStatus
-  Gateway = require "../lib/actor/hgateway"
+  Gateway = require "../lib/actors/hgateway"
   socket = undefined
 
   describe "socket IO with ssl", ->

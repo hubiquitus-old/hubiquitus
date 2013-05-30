@@ -1,5 +1,3 @@
-#
-# * Copyright (c) Novedia Group 2012.
 # *
 # *    This file is part of Hubiquitus
 # *
@@ -22,43 +20,36 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{OutboundAdapter} = require "./OutboundAdapter"
 
-#
-# Class that defines a fork Adapter.
-# It is used between a parent and his child create with fork method
-#
-class ChildprocessOutboundAdapter extends OutboundAdapter
+exports.builtinActorNames = {
+    Actor:"hactor",
+    Auth:"hauth",
+    Channel:"hchannel",
+    Dispatcher:"hdispatcher",
+    Gateway:"hgateway",
+    Session:"hsession",
+    Tracker:"htracker",
+}
 
-  #
-  # Adapter's constructor
-  # @param properties {object} Launch properties of the adapter
-  #
-  constructor: (properties) ->
-    super
-    if properties.ref
-      @ref = properties.ref
-    else
-      throw new Error "You must explicitely pass an actor child process as reference to a ChildOutboundAdapter"
+exports.builtinAdapterNames = {
+  Adapter:"Adapter",
+  InboundAdapter:"InboundAdapter",
+  OutboundAdapter:"OutboundAdapter",
+  ChannelInboundAdapter:"channel_in",
+  ChannelOutboundAdapter:"channel_out",
+  ChildprocessOutboundAdapter:"fork",
+  HttpInboundAdapter:"http_in",
+  HttpOutboundAdapter:"http_out",
+  LocalOutboundAdapter:"inproc",
+  LBSocketInboundAdapter:"lb_socket_in",
+  LBSocketOutboundAdapter:"lb_socket_out",
+  SocketInboundAdapter:"socket_in",
+  SocketOutboundAdapter:"socket_out",
+  SocketIOAdapter:"socketIO",
+  TimerAdapter:"timerAdapter",
+  TwitterInboundAdapter:"twitter_in"
+}
 
-  #
-  # @overload stop()
-  #   Method which stop the adapter.
-  #   When this adapter is stopped, the actor's process is kill
-  #
-  stop: ->
-    if @started
-      @ref.kill()
-    super
-
-  #
-  # @overload send(hMessage)
-  #   Method which send the hMessage between parent and child
-  #   @param hMessage {object} The hMessage to send
-  #
-  send: (hMessage) ->
-    @start() unless @started
-    @ref.send hMessage
-
-
-module.exports = ChildprocessOutboundAdapter
+exports.builtinSerializerNames ={
+  JSONSerializer:"json",
+}

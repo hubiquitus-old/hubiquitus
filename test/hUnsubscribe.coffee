@@ -34,7 +34,7 @@ describe "hUnsubscribe", ->
   hActor = undefined
   hChannel = undefined
   status = require("../lib/codes").hResultStatus
-  Actor = require "../lib/actor/hactor"
+  Actor = require "../lib/actors/hactor"
   existingCHID = "urn:localhost:#{config.getUUID()}"
   existingCHID2 = "urn:localhost:#{config.getUUID()}"
 

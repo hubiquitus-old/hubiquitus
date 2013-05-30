@@ -31,7 +31,7 @@ describe "schemas", ->
   hMsg = undefined
   codes = require "../lib/codes"
   hubiquitus = require "../lib/hubiquitus"
-  Actor = require "../lib/actor/hactor"
+  Actor = require "../lib/actors/hactor"
 
   beforeEach () ->
     topology = {

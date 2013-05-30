@@ -22,6 +22,7 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+_ = require("underscore")
 
 winston = require "winston"
 logger = new winston.Logger
@@ -29,65 +30,55 @@ logger = new winston.Logger
     new winston.transports.Console(colorize: true)
   ]
 
-validator = require "./validator"
-filter = require "./hFilter"
-codes = require "./codes"
-factory = require "./hfactory"
 
 # Set ZMQ_MAX_SOCKETS to the highest possible value because hubiquitus uses a lot of sockets.
 if not process.env.ZMQ_MAX_SOCKETS or process.env.ZMQ_MAX_SOCKETS <= 0
   process.env.ZMQ_MAX_SOCKETS = 1000000
 
-exports.Actor = require "./actor/hactor"
-exports.Auth = require "./actor/hauth"
-exports.Channel = require "./actor/hchannel"
-exports.Dispatcher = require "./actor/hdispatcher"
-exports.Gateway = require "./actor/hgateway"
-exports.Session = require "./actor/hsession"
-exports.Tracker = require "./actor/htracker"
-
-exports.InboundAdapter = require("./adapters/hadapter").InboundAdapter
-exports.OutboundAdapter = require("./adapters/hadapter").OutboundAdapter
-exports.ChannelInboundAdapter = require "./adapters/channel_in"
-exports.ChannelOutboundAdapter = require "./adapters/channel_out"
-exports.ChildprocessOutboundAdapter = require "./adapters/fork"
-exports.HttpInboundAdapter = require "./adapters/http_in"
-exports.HttpOutboundAdapter = require "./adapters/http_out"
-exports.LocalOutboundAdapter = require "./adapters/inproc"
-exports.LBSocketInboundAdapter = require "./adapters/lb_socket_in"
-exports.LBSocketOutboundAdapter = require "./adapters/lb_socket_out"
-exports.SocketInboundAdapter = require "./adapters/socket_in"
-exports.SocketOutboundAdapter = require "./adapters/socket_out"
-exports.SocketIOAdapter = require "./adapters/socketIO"
-exports.TimerAdapter = require "./adapters/timerAdapter"
-exports.TwitterInboundAdapter = require "./adapters/twitter_in"
-
-exports.validator = validator
-exports.filter = filter
-exports.codes = codes
+factory = require "./hfactory"
 
 
-exports.withActor = (type, actor) ->
-  factory.withActor type, actor
-  module.exports
+to_exports = {}
 
-exports.withAdapter = (type, adapter) ->
-  factory.withAdapter type, adapter
-  module.exports
+# Helper for accessing to Hubiquitus built-in classes in developer code.
+builtinActorNames = require("./hbuiltin").builtinActorNames
+_.pairs(builtinActorNames).forEach (pair) ->
+  to_exports[pair[0]] = require "./actors/#{pair[1]}"
 
-exports.start = (topology) ->
-  if not topology then topology = "topology"
-  if typeof topology is "string" then topology = require "#{process.cwd()}/#{topology}"
+builtinAdapterNames = require("./hbuiltin").builtinAdapterNames
+_.pairs(builtinAdapterNames).forEach (pair) ->
+  to_exports[pair[0]] = require "./adapters/#{pair[1]}"
+
+validator = require "./validator"
+to_exports.validator = validator
+
+filter = require "./hFilter"
+to_exports.filter = filter
+
+codes = require "./codes"
+to_exports.codes = codes
+
+# Start an engine based on a topoplogy.
+# topology can be :
+# - undefined   =>  require "current_path/topology"
+# - a string    =>  require "current_path/string" 
+# - an object   =>  the object is the topology
+to_exports.start = (topology) ->
+  unless typeof topology is "object"
+    topology = require "#{process.cwd()}/#{topology or "topology"}"
   result = validator.validateTopology topology
   unless result.valid
     logger.warn "syntax error in topology : " + JSON.stringify(result.errors)
   else
+    logger.info "Hubiquitus is starting ...."
     engine = factory.newActor topology.type, topology
     engine.on "hStatus", (status) ->
-      if status is "started"
-        logger.info "Hubiquitus started"
-        process.on "SIGINT", ->
-          engine.h_tearDown()
-          process.exit()
+      return unless status is "started"
+      process.on "SIGINT", ->
+        engine.h_tearDown()
+        process.exit()
     engine.h_start()
+    logger.info "Hubiquitus started"
 
+# Exports
+module.exports = to_exports;

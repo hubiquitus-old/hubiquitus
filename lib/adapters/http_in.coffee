@@ -22,8 +22,9 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{InboundAdapter} = require "./hadapter"
+{InboundAdapter} = require "./InboundAdapter"
 url = require "url"
+validator = require "../validator.coffee"
 
 #
 # Class that defines a http Inbound Adapter.
@@ -31,10 +32,10 @@ url = require "url"
 #
 class HttpInboundAdapter extends InboundAdapter
 
-  #
-  # Adapter's constructor
-  # @param properties {object} Launch properties of the adapter
-  #
+#
+# Adapter's constructor
+# @param properties {object} Launch properties of the adapter
+#
   constructor: (properties) ->
     super
     if properties.url
@@ -61,14 +62,25 @@ class HttpInboundAdapter extends InboundAdapter
         req.on "data", (data) ->
           body += data
         req.on "end", =>
-          post_data =  @qs.parse(body)
-          @owner.emit "message", @owner.buildMessage(@owner.actor, "hHttpData", post_data, {headers:req.headers})
+          my_hmessage = JSON.parse(body)
+          result = validator.validateHMessage my_hmessage
+          unless result.valid
+            @owner.log "hMessage not conform : " + JSON.stringify(result.errors)
+          else
+            @owner.emit "message", my_hmessage
+
+
 
       else if req.method is 'GET'
-        req.on 'end', -> res.writeHead 200, 'ontent-Type' : 'text/plain'
+        req.on 'end', -> res.writeHead 200, 'content-Type' : 'text/plain'
         res.end()
         url_parts =  @qs.parse(req.url)
-        @owner.emit "message", @owner.buildMessage(@owner.actor, "hHttpData", url_parts, {headers:req.headers})
+        my_hMessage = JSON.parse(@qs.parse(req.url)['/hmessage'])
+        result = validator.validateHMessage my_hMessage
+        unless result.valid
+          @owner.log "hMessage not conform : " + JSON.stringify(result.errors)
+        else
+          @owner.emit "message", my_hMessage
 
     server.listen @port,@serverPath
 

@@ -2,7 +2,7 @@
   "name": "hubiquitus",
   "author": "Alexis Lesage",
   "description": "Actor model for Hubiquitus",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "homepage": "www.hubiquitus.com",
   "repository": {
     "type": "git",
@@ -24,7 +24,8 @@
       "winston" : ">=0.6.2",
       "json-schema" : ">=0.2.2",
       "socket.io" : "=0.9.14",
-      "mongodb" : "=1.2.14"
+      "mongodb" : "=1.2.14",
+      "request": "=2.21.0"
   },
   "devDependencies": {
       "should" : "=1.2.2",

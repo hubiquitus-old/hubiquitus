@@ -29,8 +29,8 @@ describe "hAuth", ->
   hAuth = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
-  Auth = require "../lib/actor/hauth"
-  Session = require "../lib/actor/hsession"
+  Auth = require "../lib/actors/hauth"
+  Session = require "../lib/actors/hsession"
   codes = require "../lib/codes"
 
   userUrn = config.logins[0].urn

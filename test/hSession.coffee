@@ -31,7 +31,7 @@ describe "hSession", ->
   hActor = undefined
   hChannel = undefined
   status = require("../lib/codes").hResultStatus
-  Session = require "../lib/actor/hsession"
+  Session = require "../lib/actors/hsession"
   existingCHID = "urn:localhost:#{config.getUUID()}"
 
   before () ->

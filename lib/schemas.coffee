@@ -181,8 +181,7 @@ exports.hMessage = {
     },
     "author" : {
       "type" : "string",
-      "description": "The URN of the author (the object or device at the origin of the message).",
-      "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
+      "description": "The URN of the author (the object or device at the origin of the message)."
     },
     "publisher" : {
       "type" : "string",

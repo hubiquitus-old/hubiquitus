@@ -51,7 +51,7 @@ describe "hSession", ->
         name: "test"
       },
       collection: existingCHID.replace(/[-.]/g, "")
-    hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
       hChannel = child
 
   before (done) ->
@@ -64,17 +64,6 @@ describe "hSession", ->
     hActor.h_tearDown()
     hActor = null
 
-  it "should emit result echoing input", (done) ->
-    echoCmd = hActor.buildCommand("session", "hEcho", {hello: "world"})
-    hActor.send = (hMessage) ->
-      should.exist hMessage.payload.status
-      should.exist hMessage.payload.result
-      hMessage.payload.status.should.be.equal status.OK
-      hMessage.payload.result.should.be.equal echoCmd.payload.params
-      done()
-
-    hActor.h_onMessageInternal echoCmd
-
   it "should return hResult OK and filter attribut must be set", (done) ->
     setCmd = hActor.buildCommand("session", "hSetFilter", {eq:{publisher:config.logins[0].urn}})
     hActor.send = (hMessage) ->
@@ -82,7 +71,7 @@ describe "hSession", ->
       hMessage.payload.should.have.property "status", status.OK
       hActor.filter.should.have.property('eq')
       done()
-
+    setCmd.sent = new Date().getTime()
     hActor.h_onMessageInternal setCmd
 
 
@@ -94,7 +83,7 @@ describe "hSession", ->
       hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
       hMessage.payload.result.length.should.be.equal(1)
       done()
-
+    getSubsCmd.sent = new Date().getTime()
     hActor.h_onMessageInternal getSubsCmd
 
 
@@ -105,7 +94,7 @@ describe "hSession", ->
       hMessage.payload.should.have.property "status", status.OK
       hActor.getSubscriptions().length.should.be.equal(0)
       done()
-
+    unSubCmd.sent = new Date().getTime()
     hActor.h_onMessageInternal unSubCmd
 
 
@@ -116,7 +105,7 @@ describe "hSession", ->
       hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
       hMessage.payload.should.have.property('result').and.match(/Command not available/)
       done();
-
+    otherCmd.sent = new Date().getTime()
     hActor.h_onMessageInternal otherCmd
 
   it "should always override publisher before sending", (done) ->
@@ -128,6 +117,7 @@ describe "hSession", ->
 
     msg = hActor.buildMessage("urn:localhost:otherActor", "string", {})
     msg.publisher = config.logins[0].urn
+    msg.sent = new Date().getTime()
     hActor.onMessage msg
 
 

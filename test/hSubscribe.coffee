@@ -55,7 +55,7 @@ describe "hSubscribe", ->
         name: "test"
       },
       collection: existingCHID.replace(/[-.]/g, "")
-    hActor.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
       hChannel = child
 
   after () ->
@@ -130,7 +130,7 @@ describe "hSubscribe", ->
           name: "test",
         }
         collection: existingCHID.replace(/[-.]/g, "")
-      hActor2.createChild "hchannel", "inproc", {actor: existingCHID, properties: properties}, (child) =>
+      hActor2.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
         hChannel2 = child
 
     after () ->

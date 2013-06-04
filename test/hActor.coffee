@@ -84,7 +84,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = eq:
           attribut: "bad"
 
@@ -102,7 +102,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"eq\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"eq\" filter with multiple hCondition", (done) ->
         filter = eq:
           priority: 2
           author: config.logins[0].urn
@@ -157,7 +157,7 @@ describe "hActor", ->
 
 
     describe "#neFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"ne\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"ne\" filter", (done) ->
         filter = ne:
           priority: 2
 
@@ -176,7 +176,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = ne:
           attribut: "bad"
 
@@ -194,7 +194,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"ne\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"ne\" filter with multiple hCondition", (done) ->
         filter = ne:
           priority: 2
           author: config.logins[0].urn
@@ -249,7 +249,7 @@ describe "hActor", ->
 
 
     describe "#gtFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"gt\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"gt\" filter", (done) ->
         filter = gt:
           priority: 2
 
@@ -268,7 +268,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = gt:
           attribut: 12
 
@@ -286,7 +286,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if an attribute is not a number", (done) ->
+      it "should return an error message if an attribute is not a number", (done) ->
         filter = gt:
           priority: "not a number"
 
@@ -304,7 +304,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"gt\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"gt\" filter with multiple hCondition", (done) ->
         filter = gt:
           priority: 2
           timeout: 10000
@@ -358,7 +358,7 @@ describe "hActor", ->
 
 
     describe "#gteFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"gte\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"gte\" filter", (done) ->
         filter = gte:
           priority: 2
 
@@ -377,7 +377,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = gte:
           attribut: 12
 
@@ -395,7 +395,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if an attribute is not a number", (done) ->
+      it "should return an error message if an attribute is not a number", (done) ->
         filter = gte:
           priority: "not a number"
 
@@ -413,7 +413,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"gte\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"gte\" filter with multiple hCondition", (done) ->
         filter = gte:
           priority: 2
           timeout: 10000
@@ -468,7 +468,7 @@ describe "hActor", ->
 
 
     describe "#ltFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"lt\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"lt\" filter", (done) ->
         filter = lt:
           priority: 2
 
@@ -487,7 +487,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = lt:
           attribut: 12
 
@@ -505,7 +505,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if an attribute is not a number", (done) ->
+      it "should return an error message if an attribute is not a number", (done) ->
         filter = lt:
           priority: "not a number"
 
@@ -523,7 +523,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"lt\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"lt\" filter with multiple hCondition", (done) ->
         filter = lt:
           priority: 2
           timeout: 10000
@@ -579,7 +579,7 @@ describe "hActor", ->
 
 
     describe "#lteFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"lte\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"lte\" filter", (done) ->
         filter = lte:
           priority: 2
 
@@ -598,7 +598,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = lte:
           attribut: 12
 
@@ -616,7 +616,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if an attribute is not a number", (done) ->
+      it "should return an error message if an attribute is not a number", (done) ->
         filter = lte:
           priority: "not a number"
 
@@ -634,7 +634,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"lte\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"lte\" filter with multiple hCondition", (done) ->
         filter = lte:
           priority: 2
           timeout: 10000
@@ -690,7 +690,7 @@ describe "hActor", ->
 
 
     describe "#inFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"in\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"in\" filter", (done) ->
         filter = in:
           publisher: ["urn:localhost:u2", "urn:localhost:u3"]
 
@@ -708,7 +708,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = in:
           attribut: "bad"
 
@@ -726,7 +726,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if the attribute is not a array", (done) ->
+      it "should return an error message if the attribute is not a array", (done) ->
         filter = in:
           publisher: "urn:localhost:u1"
 
@@ -744,7 +744,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"in\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"in\" filter with multiple hCondition", (done) ->
         filter = in:
           publisher: ["urn:localhost:u1"]
           author: ["urn:localhost:u2"]
@@ -798,7 +798,7 @@ describe "hActor", ->
 
 
     describe "#ninFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"nin\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"nin\" filter", (done) ->
         filter = nin:
           publisher: ["urn:localhost:u2", "urn:localhost:u1"]
 
@@ -816,7 +816,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = nin:
           attribut: ["urn:localhost:u2", "urn:localhost:u1"]
 
@@ -834,7 +834,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if the attribute is not a array", (done) ->
+      it "should return an error message if the attribute is not a array", (done) ->
         filter = nin:
           publisher: "urn:localhost:u2"
 
@@ -852,7 +852,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"nin\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"nin\" filter with multiple hCondition", (done) ->
         filter = nin:
           publisher: ["urn:localhost:u2"]
           author: ["urn:localhost:u1"]
@@ -906,7 +906,7 @@ describe "hActor", ->
 
 
     describe "#andFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"and\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"and\" filter", (done) ->
         filter = and: [
           in:
             publisher: ["urn:localhost:u2", "urn:localhost:u1"]
@@ -929,7 +929,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = and: [
           in:
             publisher: ["urn:localhost:u2", "urn:localhost:u1"]
@@ -993,7 +993,7 @@ describe "hActor", ->
 
 
     describe "#orFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"or\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"or\" filter", (done) ->
         filter = or: [
           in:
             publisher: ["urn:localhost:u2", "urn:localhost:u3"]
@@ -1016,7 +1016,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if a bad attribute of hMessage is use", (done) ->
+      it "should return an error message if a bad attribute of hMessage is use", (done) ->
         filter = or: [
           in:
             publisher: ["urn:localhost:u2", "urn:localhost:u3"]
@@ -1080,7 +1080,7 @@ describe "hActor", ->
 
 
     describe "#norFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"nor\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"nor\" filter", (done) ->
         filter = nor: [
           in:
             publisher: ["urn:localhost:u2", "urn:localhost:u3"]
@@ -1145,7 +1145,7 @@ describe "hActor", ->
 
 
     describe "#notFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"not\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"not\" filter", (done) ->
         filter = not:
           in:
             publisher: ["urn:localhost:u2", "urn:localhost:u1"]
@@ -1164,7 +1164,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect \"not\" filter with multiple hCondition", (done) ->
+      it "should return an error message if hMessage don't respect \"not\" filter with multiple hCondition", (done) ->
         filter = not:
           in:
             publisher: ["urn:localhost:u2", "urn:localhost:u1"]
@@ -1229,7 +1229,7 @@ describe "hActor", ->
 
 
     describe "#relevantFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect true \"relevant\" filter", (done) ->
+      it "should return an error message if hMessage don't respect true \"relevant\" filter", (done) ->
         filter = relevant: true
         hMsg.relevance = new Date(79, 5, 24, 11, 33, 0).getTime()
         hActor.setFilter filter, (status) ->
@@ -1246,7 +1246,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if hMessage don't respect false \"relevant\" filter", (done) ->
+      it "should return an error message if hMessage don't respect false \"relevant\" filter", (done) ->
         filter = relevant: false
         hMsg.relevance = new Date(2024, 5, 24, 11, 33, 0).getTime()
         hActor.setFilter filter, (status) ->
@@ -1263,7 +1263,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if attribute relevance of hMessage is not set", (done) ->
+      it "should return an error message if attribute relevance of hMessage is not set", (done) ->
         filter = relevant: false
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -1282,17 +1282,16 @@ describe "hActor", ->
       it "should return INVALID_ATTR if attribute relevance of hMessage is incorrect", (done) ->
         filter = relevant: false
         hMsg.relevance = "wrong date"
-        hActor.setFilter filter, (status) ->
-          status.should.be.equal(hResultStatus.OK)
 
         msgSent = 0
         hActor.send = (hMessage) ->
+          hMessage.payload.status.should.be.equal(hResultStatus.INVALID_ATTR)
           msgSent++
 
         hActor.h_onMessageInternal hMsg
 
         setTimeout( ->
-          msgSent.should.be.eql 0
+          msgSent.should.be.eql 1
           done()
         , 100)
 
@@ -1323,7 +1322,7 @@ describe "hActor", ->
         hActor.h_onMessageInternal hMsg
 
     describe "#geoFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"geo\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"geo\" filter", (done) ->
         filter = geo:
           lat: 12
           lng: 24
@@ -1348,7 +1347,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if attribut radius is missing in filter", (done) ->
+      it "should return an error message if attribut radius is missing in filter", (done) ->
         filter = geo:
           lat: 12
           lng: 24
@@ -1372,7 +1371,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if attribut lat/lng is not a number", (done) ->
+      it "should return an error message if attribut lat/lng is not a number", (done) ->
         filter = geo:
           lat: 24
           lng: "NaN"
@@ -1397,7 +1396,7 @@ describe "hActor", ->
           done()
         , 100)
 
-      it "should return INVALID_ATTR if attribut lat/lng of hMessage is not a number", (done) ->
+      it "should return an error message if attribut lat/lng of hMessage is not a number", (done) ->
         filter = geo:
           lat: 24
           lng: 12
@@ -1444,7 +1443,7 @@ describe "hActor", ->
         hActor.h_onMessageInternal hMsg
 
     describe "#booleanFilter()", ->
-      it "should return INVALID_ATTR if filter boolean = false", (done) ->
+      it "should return an error message if filter boolean = false", (done) ->
         filter = boolean: false
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)
@@ -1473,7 +1472,7 @@ describe "hActor", ->
         hActor.h_onMessageInternal hMsg
 
     describe "#domainFilter()", ->
-      it "should return INVALID_ATTR if hMessage don't respect \"domain\" filter", (done) ->
+      it "should return an error message if hMessage don't respect \"domain\" filter", (done) ->
         filter = domain: "domain"
         hActor.setFilter filter, (status) ->
           status.should.be.equal(hResultStatus.OK)

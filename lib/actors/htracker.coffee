@@ -150,7 +150,6 @@ class Tracker extends Actor
       else
         status = codes.INVALID_ATTR
         result = "Actor not found"
-
       @send @buildResult(hMessage.publisher, hMessage.msgid, status, result)
 
   #

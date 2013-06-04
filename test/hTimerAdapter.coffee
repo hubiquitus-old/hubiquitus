@@ -40,7 +40,9 @@ describe "hTimerAdapter", ->
         adapters: [ { type: "timerAdapter", properties: {alert:"timer_milli", mode: "millisecond", period:100}} ]
       }
       hActor = new Actor topology
-      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
+      hMessage = hActor.h_buildSignal(hActor.actor, "start", {})
+      hMessage.sent = new Date().getTime()
+      hActor.h_onMessageInternal(hMessage)
 
     after () ->
       hActor.h_tearDown()
@@ -66,7 +68,9 @@ describe "hTimerAdapter", ->
         adapters: [ { type: "timerAdapter", properties: {alert:"timer_cron", mode: "crontab", crontab:"* * * * * *"}} ]
       }
       hActor = new Actor topology
-      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
+      hMessage = hActor.h_buildSignal(hActor.actor, "start", {})
+      hMessage.sent = new Date().getTime()
+      hActor.h_onMessageInternal(hMessage)
 
     after () ->
       hActor.h_tearDown()

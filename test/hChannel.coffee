@@ -95,7 +95,7 @@ describe "hChannel", ->
       hChild.onMessage = (hMessage) ->
         hMessage.payload.should.be.equal("Hello #TΘ$Δ")
         done()
-
+      msg.sent = new Date().getTime()
       hActor.h_onMessageInternal msg
 
     it "should publish message with quickFilter", (done) ->
@@ -107,6 +107,7 @@ describe "hChannel", ->
 
       hChild.onMessage = (hMessage) ->
 
+      msg.sent = new Date().getTime()
       hActor.h_onMessageInternal msg
 
 

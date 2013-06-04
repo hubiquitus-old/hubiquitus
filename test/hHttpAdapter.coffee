@@ -28,6 +28,7 @@ validator = require "../lib/validator.coffee"
 
 describe "hHttpAdapter", ->
   hActor = undefined
+  hMessage = undefined
   config = require("./_config")
   hResultStatus = require("../lib/codes").hResultStatus
   Actor = require "../lib/actors/hactor"
@@ -43,7 +44,9 @@ describe "hHttpAdapter", ->
       adapters: [ { type: "http_in", url: "http://127.0.0.1:8888" } ]
       }
       hActor = new Actor topology
-      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
+      hMessage = hActor.h_buildSignal(hActor.actor, "start", {})
+      hMessage.sent = new Date().getTime()
+      hActor.h_onMessageInternal(hMessage)
 
     after () ->
       hActor.h_tearDown()
@@ -101,7 +104,9 @@ describe "hHttpAdapter", ->
         adapters: [ {type: "http_out", url: "127.0.0.1", targetActorAid :"urn:localhost:httpOutMochaTest" ,path: "/" ,port: 8989 } ]
       }
       hActor = new Actor(topology)
-      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
+      hMessage = hActor.h_buildSignal(hActor.actor, "start", {})
+      hMessage.sent = new Date().getTime()
+      hActor.h_onMessageInternal(hMessage)
 
     after () ->
       hActor.h_tearDown()
@@ -113,12 +118,13 @@ describe "hHttpAdapter", ->
         req.on "data", (data) ->
           body = data
         req.on "end", =>
-          validator.validateHMessage JSON.parse( body.toString('utf8') ), (err, result) =>
-            if not err
-              done()
-            else
-              console.log "hMessage not conform : " + JSON.stringify(result)
-              #@owner.log "hMessage not conform : " + JSON.stringify(result)
+          result = validator.validateHMessage JSON.parse( body.toString('utf8') )
+          unless result.valid
+            console.log "hMessage not conform : " + JSON.stringify(result)
+            #@owner.log "hMessage not conform : " + JSON.stringify(result)
+          else
+            done()
+
 
 
       server.listen 8989, "127.0.0.1"

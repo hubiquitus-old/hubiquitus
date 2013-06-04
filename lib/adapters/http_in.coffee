@@ -63,22 +63,26 @@ class HttpInboundAdapter extends InboundAdapter
           body += data
         req.on "end", =>
           my_hmessage = JSON.parse(body)
-          validator.validateHMessage my_hmessage, (err, result) =>
-            if not err
-              @owner.emit "message", my_hmessage
-            else
-              @owner.log "hMessage not conform : " + JSON.stringify(result)
+          my_hmessage.sent = new Date().getTime()
+          result = validator.validateHMessage my_hmessage
+          unless result.valid
+            @owner.log "hMessage not conform : " + JSON.stringify(result.error)
+          else
+            @owner.emit "message", my_hmessage
+
+
 
       else if req.method is 'GET'
         req.on 'end', -> res.writeHead 200, 'content-Type' : 'text/plain'
         res.end()
         url_parts =  @qs.parse(req.url)
         my_hMessage = JSON.parse(@qs.parse(req.url)['/hmessage'])
-        validator.validateHMessage my_hMessage, (err, result) =>
-          if not err
-            @owner.emit "message", my_hMessage
-          else
-            @owner.log "hMessage not conform : " + JSON.stringify(result)
+        my_hMessage.sent = new Date().getTime()
+        result = validator.validateHMessage my_hMessage
+        unless result.valid
+          @owner.log "hMessage not conform : " + JSON.stringify(result.error)
+        else
+          @owner.emit "message", my_hMessage
 
     server.listen @port,@serverPath
 

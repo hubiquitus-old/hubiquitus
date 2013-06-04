@@ -82,6 +82,7 @@ class Dispatcher extends Actor
   #
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
+    hMessage.sent = new Date().getTime()
 
 
 module.exports = Dispatcher

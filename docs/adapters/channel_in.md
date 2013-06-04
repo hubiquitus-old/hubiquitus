@@ -38,7 +38,7 @@ In this example the adapters attributes are :
             <td>url</td>
             <td>String</td>
             <td>
-                The URN of the channel to listen
+                The URL of the channel to listen
                 <em>If you don't add a port, it will be automatically set</em>
             </td>
             <td>Yes</td>

@@ -64,7 +64,7 @@ class HttpOutboundAdapter extends OutboundAdapter
     result = validator.validateHMessage hMessage
     unless result.valid
       console.log 'hm', hMessage
-      @owner.log "error", "hMessage not conform : " + JSON.stringify(result.errors)
+      @owner.log "error", "hMessage not conform : " + JSON.stringify(result.error)
     else
       @serializer.encode hMessage, (buffer) =>
         # Setting the configuration

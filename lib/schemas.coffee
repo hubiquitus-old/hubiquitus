@@ -34,18 +34,16 @@ exports.topology = {
     "actor" : {
       "type" : "string",
       "description": "The URN of the actor. Used to identify the actor in the system.",
-      "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/,
-      "required": true
+      "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
     },
     "ip" : {
       "type" : "string",
       "description" : "It contains the IP of the actor",
-      "pattern" : /^[1-2]?[0-9]{1,2}\.[1-2]?[0-9]{1,2}\.[1-2]?[0-9]{1,2}\.[1-2]?[0-9]{1,2}/,
+      "pattern" : /(^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))|((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))$)/
     },
     "type" : {
       "type" : "string",
-      "description": " It contains the name of the implementation used for the hActor.",
-      "required": true
+      "description": " It contains the name of the implementation used for the hActor."
     },
     "method" : {
       "type" : "string",
@@ -63,21 +61,19 @@ exports.topology = {
             "trackerId" : {
               "type" : "string",
               "description": "URN of the hTracker.",
-              "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/,
-              "required": true
+              "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
             },
             "trackerUrl" : {
               "type" : "string",
-              "description": "The url use to communicate with the hTracker.",
-              "required": true
+              "description": "The url use to communicate with the hTracker."
             },
             "trackerChannel" : {
               "type" : "string",
               "description": "URN of the hTracker's channel.",
-              "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/,
-              "required": true
+              "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
             }
           },
+          "required" : ["trackerId", "trackerUrl", "trackerChannel"],
           "additionalProperties" : false
         }
       ],
@@ -101,7 +97,21 @@ exports.topology = {
     },
     "adapters" : {
       "type" : "array",
-      "description": "List of adapters used by the actor to communicate."
+      "description": "List of adapters used by the actor to communicate.",
+      "items" : [
+        {
+          "type" : "object",
+          "properties": {
+            "type" : {
+              "type" : "string",
+              "description": "Type of the adapter."
+            }
+          },
+          "required" : ["type"],
+          "additionalProperties" : true
+        }
+      ],
+      "additionalItems" : true
     },
     "sharedProperties" : {
       "type" : "object",
@@ -113,9 +123,17 @@ exports.topology = {
     },
     "children" : {
       "type" : "array",
-      "description": "List of children the actor will create."
+      "description": "List of children the actor will create.",
+      "items" : [
+        {
+          "$ref" : "#",
+          "additionalProperties" : false
+        }
+      ],
+      "additionalItems" : true
     }
   },
+  "required" : ["actor", "type"],
   "additionalProperties" : false
 };
 
@@ -126,14 +144,12 @@ exports.hMessage = {
   "properties": {
     "msgid" : {
       "type" : "string",
-      "description": "Provides a permanent, universally unique identifier for the message in the form of an absolute IRI.",
-      "required": true
+      "description": "Provides a permanent, universally unique identifier for the message in the form of an absolute IRI."
     },
     "actor" : {
       "type" : "string",
       "description": "The URN through which the message is published ('urn:domain:actor').",
-      "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/,
-      "required": true
+      "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
     },
     "convid" : {
       "type" : "string",
@@ -145,8 +161,7 @@ exports.hMessage = {
     },
     "type" : {
       "type" : "string",
-      "description": "The type of the message payload.",
-      "required": true
+      "description": "The type of the message payload."
     },
     "priority" : {
       "type" : "integer",
@@ -166,25 +181,24 @@ exports.hMessage = {
     },
     "author" : {
       "type" : "string",
-      "description": "The URN of the author (the object or device at the origin of the message)."
+      "description": "The URN of the author (the object or device at the origin of the message).",
+      "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
     },
     "publisher" : {
       "type" : "string",
       "description": "The URN of the client that effectively published the message (it can be different than the author).",
-      "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/,
-      "required": true
+      "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
     },
     "published" : {
       "type" : "integer",
-      "description": "The date (timestamp in milliseconds) at which the message has been published.",
-      "required": true
+      "description": "The date (timestamp in milliseconds) at which the message has been published."
     },
     "headers" : {
       "type" : "object",
       "description": "A Headers object attached to this hMessage. It is a key-value pair map."
     },
     "payload" : {
-      "type" : {"object","string"},
+      "type" : ["object","string","boolean","number","array"],
       "description": "The content of the message. It can be plain text or more structured data (HTML, XML, JSON, etc.)."
     },
     "timeout" : {
@@ -196,6 +210,7 @@ exports.hMessage = {
       "description": "This attribute contains the creation date (timestamp in milliseconds) of the hMessage."
     }
   },
+  "required" : ["msgid", "actor", "type", "publisher", "published"],
   "additionalProperties" : false
 };
 
@@ -206,14 +221,18 @@ exports.hCommand = {
   "properties": {
     "cmd" : {
       "type" : "string",
-      "description": "The name of the command to execute.",
-      "required": true
+      "description": "The name of the command to execute."
     },
     "params" : {
       "type" : "object",
       "description": "The parameters to pass to the command (as a JSON Object)."
+    },
+    "filter" : {
+      "type" : "object",
+      "ddescription" : "the filter for the hCommand"
     }
   },
+  "required" : ["cmd"],
   "additionalProperties" : false
 };
 
@@ -224,14 +243,14 @@ exports.hResult = {
   "properties": {
     "status" : {
       "type" : "integer",
-      "description": "The status of the operation.",
-      "required": true
+      "description": "The status of the operation."
     },
     "result" : {
       "type" : "object",
       "description": "The result of a command operation (can be undefined)."
     }
   },
+  "required" : ["status"],
   "additionalProperties" : false
 };
 
@@ -243,74 +262,14 @@ exports.hSignal = {
   "properties": {
     "name" : {
       "type" : "string",
-      "description": "The name of the signal.",
-      "required": true
+      "description": "The name of the signal."
     },
     "params" : {
       "type" : "object",
-      "description": "The parameters to pass to the signal (as a JSON Object).",
-      "required": true
+      "description": "The parameters to pass to the signal (as a JSON Object)."
     }
   },
-  "additionalProperties" : false
-};
-
-exports.hLocation = {
-  "title": "hLocation",
-  "description": "Describe a geographical location.",
-  "type": "object",
-  "properties": {
-    "pos" : {
-      "type" : "hGeo",
-      "description": "Specifies the exact longitude and latitude of the location.",
-      "required": true
-    },
-    "num" : {
-      "type" : "string",
-      "description": "Specifies the way number of the address.",
-      "required": true
-    },
-    "wayType" : {
-      "type" : "string",
-      "description": "Specifies the type of the way.",
-      "required": true
-    },
-    "way" : {
-      "type" : "string",
-      "description": "Specifies the name of the street/way.",
-      "required": true
-    },
-    "addr" : {
-      "type" : "string",
-      "description": "Specifies address complement.",
-      "required": true
-    },
-    "floor" : {
-      "type" : "string",
-      "description": "Specifies the floor number of the address.",
-      "required": true
-    },
-    "building" : {
-      "type" : "string",
-      "description": "Specifies the building’s identifier of the address.",
-      "required": true
-    },
-    "zip" : {
-      "type" : "string",
-      "description": "Specifies a zip code for the location.",
-      "required": true
-    },
-    "city" : {
-      "type" : "string",
-      "description": "Specifies a city.",
-      "required": true
-    },
-    "countryCode" : {
-      "type" : "string",
-      "description": "Specifies a country code.",
-      "required": true
-    }
-  },
+  "required" : ["name", "params"],
   "additionalProperties" : false
 };
 
@@ -321,38 +280,13 @@ exports.hGeo = {
   "properties": {
     "lat" : {
       "type" : "number",
-      "description": "Specifies the exact longitude of the location.",
-      "required": true
+      "description": "Specifies the exact latitude of the location."
     },
     "lng" : {
       "type" : "number",
-      "description": "Specifies the exact latitude of the location.",
-      "required": true
+      "description": "Specifies the exact longitude of the location."
     }
   },
-  "additionalProperties" : false
-};
-
-exports.hPos = {
-  "title": "hPos",
-  "description": "This structure defines an area around a specific location.",
-  "type": "object",
-  "properties": {
-    "lat" : {
-      "type" : "number",
-      "description": "Specifies the exact latitude of the location.",
-      "required": true
-    },
-    "lng" : {
-      "type" : "number",
-      "description": "Specifies the exact longitude of the location.",
-      "required": true
-    },
-    "radius" : {
-      "type" : "integer",
-      "description": "The radius expressed in meter.",
-      "required": true
-    }
-  },
+  "required" : ["lat", "lng"],
   "additionalProperties" : false
 };

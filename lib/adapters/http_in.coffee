@@ -65,7 +65,7 @@ class HttpInboundAdapter extends InboundAdapter
           my_hmessage = JSON.parse(body)
           result = validator.validateHMessage my_hmessage
           unless result.valid
-            @owner.log "hMessage not conform : " + JSON.stringify(result.errors)
+            @owner.log "hMessage not conform : " + JSON.stringify(result.error)
           else
             @owner.emit "message", my_hmessage
 
@@ -78,7 +78,7 @@ class HttpInboundAdapter extends InboundAdapter
         my_hMessage = JSON.parse(@qs.parse(req.url)['/hmessage'])
         result = validator.validateHMessage my_hMessage
         unless result.valid
-          @owner.log "hMessage not conform : " + JSON.stringify(result.errors)
+          @owner.log "hMessage not conform : " + JSON.stringify(result.error)
         else
           @owner.emit "message", my_hMessage
 

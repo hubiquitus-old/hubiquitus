@@ -25,7 +25,7 @@
 
 codes = require("./codes").hResultStatus
 log = require("winston")
-schema = require('json-schema')
+tv4 = require('tv4').tv4
 schemas = require("./schemas")
 
 ###
@@ -35,7 +35,7 @@ result is an object
 ###
 exports.validateHMessage = (hMessage) ->
 
-  return schema.validate(hMessage, schemas.hMessage)
+  return tv4.validateResult(hMessage, schemas.hMessage)
 
 
 ###
@@ -46,7 +46,7 @@ result is a string or nothing
 ###
 exports.validateTopology = (topology) ->
 
-  return schema.validate(topology, schemas.topology)
+  return tv4.validateResult(topology, schemas.topology)
 
 ###
 Returns true or false if it is a valid URN following hubiquitus standards

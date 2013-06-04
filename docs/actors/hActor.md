@@ -66,7 +66,7 @@ Every actor need a topology to run. This topology describes every actor's attrib
                 They are inherited from the parent of the actor.
                 <em>Note that every system needs at least one tracker
             </td>
-            <td>Yes</td>
+            <td>No</td>
         </tr>
         <tr>
             <td>log</td>

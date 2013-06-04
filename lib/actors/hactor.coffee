@@ -143,7 +143,7 @@ class Actor extends EventEmitter
 
     result = validator.validateTopology topology
     unless result.valid
-      @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.errors)
+      @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.error)
 
     # setting up instance attributes
     if(validator.validateFullURN(topology.actor))
@@ -253,8 +253,8 @@ class Actor extends EventEmitter
     try
       result = validator.validateHMessage hMessage
       unless result.valid
-        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.errors)
-        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, JSON.stringify(result.errors))
+        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
+        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, JSON.stringify(result.error))
         @send hMessageResult
       else
         #Complete missing values
@@ -423,7 +423,7 @@ class Actor extends EventEmitter
       @log "debug", "Sending message: #{JSON.stringify(hMessage)}"
       result = validator.validateHMessage hMessage
       unless result.valid
-        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.errors)
+        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
       outboundAdapter.send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"

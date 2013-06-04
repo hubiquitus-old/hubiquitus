@@ -34,7 +34,7 @@ Hubiquitus use a few structure to run :
             <td>convid</td>
             <td>String</td>
             <td>The ID of the conversation to which the message belongs</td>
-            <td>Yes <sup>(2)</sup></td>
+            <td>No</td>
         </tr>
         <tr>
             <td>ref</td>
@@ -46,13 +46,13 @@ Hubiquitus use a few structure to run :
              <td>type</td>
              <td>String</td>
              <td>The type of the message payload</td>
-             <td>No</td>
+             <td>Yes</td>
         </tr>
         <tr>
              <td>priority</td>
              <td>Int</td>
              <td>The priority the hMessage</td>
-             <td>Yes <sup>(3)</sup></td>
+             <td>No</td>
         </tr>
         <tr>
             <td>relevance</td>
@@ -290,12 +290,12 @@ Hubiquitus use a few structure to run :
         <tr>
             <td>lat</td>
             <td>Number</td>
-            <td>Specifies the exact longitude of the location</td>
+            <td>Specifies the exact latitude of the location</td>
         </tr>
         <tr>
             <td>lng</td>
             <td>Number</td>
-            <td>Specifies the exact latitude of the location</td>
+            <td>Specifies the exact longitude of the location</td>
         </tr>
     </tbody>
 </table>

@@ -50,7 +50,7 @@ describe "schemas", ->
 
     hubiquitus.start topology
 
-  it "should emmit a warning during the reception of a hMessage if this one contains a syntax error (type not present)", (done) ->
+  it "should return a INVALID_ATTR message during the reception of a hMessage if this one contains a syntax error (type not present)", (done) ->
 
     hMsg =
       msgid : UUID.generate()

@@ -68,7 +68,7 @@ to_exports.start = (topology) ->
     topology = require "#{process.cwd()}/#{topology or "topology"}"
   result = validator.validateTopology topology
   unless result.valid
-    logger.warn "syntax error in topology : " + JSON.stringify(result.errors)
+    logger.warn "syntax error in topology : " + JSON.stringify(result.error)
   else
     logger.info "Hubiquitus is starting ...."
     engine = factory.newActor topology.type, topology

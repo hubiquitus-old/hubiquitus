@@ -209,7 +209,7 @@ exports.hMessage = {
       "description": "This attribute contains the creation date (timestamp in milliseconds) of the hMessage."
     }
   },
-  "required" : ["msgid", "actor", "type", "publisher", "published"],
+  "required" : ["msgid", "actor", "type", "publisher", "sent"],
   "additionalProperties" : false
 };
 

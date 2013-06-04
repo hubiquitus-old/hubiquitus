@@ -71,7 +71,7 @@ describe "hSession", ->
       hMessage.payload.should.have.property "status", status.OK
       hActor.filter.should.have.property('eq')
       done()
-
+    setCmd.sent = new Date().getTime()
     hActor.h_onMessageInternal setCmd
 
 
@@ -83,7 +83,7 @@ describe "hSession", ->
       hMessage.payload.should.have.property('result').and.be.an.instanceof(Array)
       hMessage.payload.result.length.should.be.equal(1)
       done()
-
+    getSubsCmd.sent = new Date().getTime()
     hActor.h_onMessageInternal getSubsCmd
 
 
@@ -94,7 +94,7 @@ describe "hSession", ->
       hMessage.payload.should.have.property "status", status.OK
       hActor.getSubscriptions().length.should.be.equal(0)
       done()
-
+    unSubCmd.sent = new Date().getTime()
     hActor.h_onMessageInternal unSubCmd
 
 
@@ -105,7 +105,7 @@ describe "hSession", ->
       hMessage.payload.should.have.property "status", status.NOT_AVAILABLE
       hMessage.payload.should.have.property('result').and.match(/Command not available/)
       done();
-
+    otherCmd.sent = new Date().getTime()
     hActor.h_onMessageInternal otherCmd
 
   it "should always override publisher before sending", (done) ->
@@ -117,6 +117,7 @@ describe "hSession", ->
 
     msg = hActor.buildMessage("urn:localhost:otherActor", "string", {})
     msg.publisher = config.logins[0].urn
+    msg.sent = new Date().getTime()
     hActor.onMessage msg
 
 

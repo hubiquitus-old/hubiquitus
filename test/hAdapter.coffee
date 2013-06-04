@@ -45,7 +45,9 @@ describe "hAdapter", ->
         adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2112" } ]
       }
       hActor = new Actor topology
-      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
+      hMessage = hActor.h_buildSignal(hActor.actor, "start", {})
+      hMessage.sent = new Date().getTime()
+      hActor.h_onMessageInternal(hMessage)
 
       topology = {
         actor: config.logins[3].urn,
@@ -54,7 +56,9 @@ describe "hAdapter", ->
         adapters: [ { type: "socket_in", url: "tcp://127.0.0.1:2112" } ]
       }
       hActor2 = new Actor(topology)
-      hActor2.h_onMessageInternal(hActor2.h_buildSignal(hActor2.actor, "start", {}))
+      hMessage2 = hActor2.h_buildSignal(hActor2.actor, "start", {})
+      hMessage2.sent = new Date().getTime()
+      hActor2.h_onMessageInternal(hMessage2)
 
     after () ->
       hActor.h_tearDown()
@@ -88,7 +92,9 @@ describe "hAdapter", ->
         }
       }
       hActor = new Channel topology
-      hActor.h_onMessageInternal(hActor.h_buildSignal(hActor.actor, "start", {}))
+      hMessage = hActor.h_buildSignal(hActor.actor, "start", {})
+      hMessage.sent = new Date().getTime()
+      hActor.h_onMessageInternal(hMessage)
 
       topology = {
         actor: config.logins[3].urn,
@@ -106,7 +112,9 @@ describe "hAdapter", ->
         }
       }
       hActor2 = new Channel topology
-      hActor2.h_onMessageInternal(hActor2.h_buildSignal(hActor2.actor, "start", {}))
+      hMessage2 = hActor2.h_buildSignal(hActor2.actor, "start", {})
+      hMessage2.sent = new Date().getTime()
+      hActor2.h_onMessageInternal(hMessage2)
 
     after () ->
       hActor.h_tearDown()

@@ -163,6 +163,7 @@ class Channel extends Actor
   #
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
+    hMessage.sent = new Date().getTime()
 
   # @overload initialize(done)
   #   Method called after starting the actor's adapters to connect the channel to the database.

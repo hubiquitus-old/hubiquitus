@@ -11,7 +11,7 @@
 # *    subject to the following conditions:
 # *
 # *    The above copyright notice and this permission notice shall be included in all copies
-# *    or substantial portions of the Software.
+# *    or substantilal portions of the Software.
 # *
 # *    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 # *    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -25,50 +25,28 @@
 
 codes = require("./codes").hResultStatus
 log = require("winston")
+tv4 = require('tv4').tv4
+schemas = require("./schemas")
 
 ###
 Checks if an hMessage is correctly formatted and has all the correct attributes
 @param hMessage - hMessage to validate
+result is an object
+###
+exports.validateHMessage = (hMessage) ->
+
+  return tv4.validateResult(hMessage, schemas.hMessage)
+
+
+###
+Checks if a topology is correctly formatted and has all the correct attributes
+@param topology - topology to validate
 @param cb - Function (err, result) where err is from hResult.status or nothing and
 result is a string or nothing
 ###
-exports.validateHMessage = (hMessage, cb) ->
-  if not hMessage or typeof hMessage isnt "object"
-    return cb(codes.MISSING_ATTR, "invalid params object received")
-  unless hMessage.actor
-    return cb(codes.MISSING_ATTR, "missing actor attribute in hMessage")
-  unless exports.validateURN(hMessage.actor)
-    return cb(codes.INVALID_ATTR, "hMessages actor is invalid")
-  if hMessage.type and typeof hMessage.type isnt "string"
-    return cb(codes.INVALID_ATTR, "hMessage type is not a string")
-  if hMessage.priority
-    unless typeof hMessage.priority is "number"
-      return cb(codes.INVALID_ATTR, "hMessage priority is not a number")
-    if hMessage.priority > 5 or hMessage.priority < 0
-      return cb(codes.INVALID_ATTR, "hMessage priority is not a valid constant")
-  if hMessage.relevance
-    hMessage.relevance = new Date(hMessage.relevance).getTime() #Sent as a string, convert back to date
-    if hMessage.relevance is "Invalid Date"
-      return cb(codes.INVALID_ATTR, "hMessage relevance is specified and is not a valid date object")
-  if hMessage.persistent and typeof hMessage.persistent isnt "boolean"
-    return cb(codes.INVALID_ATTR, "hMessage persistent is not a boolean")
-  if hMessage.location and (hMessage.location not instanceof Object)
-    return cb(codes.INVALID_ATTR, "hMessage location is not an Object")
-  unless hMessage.publisher
-    return cb(codes.MISSING_ATTR, "hMessage missing publisher")
-  if hMessage.published
-    hMessage.published = new Date(hMessage.published).getTime() #Sent as a string, convert back to date
-    if hMessage.published is "Invalid Date"
-      return cb(codes.INVALID_ATTR, "hMessage published is specified and is not a valid date object")
-  if typeof hMessage.headers isnt "undefined" and (hMessage.headers not instanceof Object)
-    return cb(codes.INVALID_ATTR, "invalid headers object received")
-  if hMessage.headers
-    if hMessage.headers.RELEVANCE_OFFSET and typeof hMessage.headers.RELEVANCE_OFFSET isnt "number"
-      return cb(codes.INVALID_ATTR, "invalid RELEVANCE_OFFSET header received")
-    if hMessage.headers.MAX_MSG_RETRIEVAL and typeof hMessage.headers.MAX_MSG_RETRIEVAL isnt "number"
-      return cb(codes.INVALID_ATTR, "invalid MAX_MSG_RETRIEVAL header received")
+exports.validateTopology = (topology) ->
 
-  cb codes.OK
+  return tv4.validateResult(topology, schemas.topology)
 
 ###
 Returns true or false if it is a valid URN following hubiquitus standards

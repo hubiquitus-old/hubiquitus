@@ -66,16 +66,19 @@ to_exports.codes = codes
 to_exports.start = (topology) ->
   unless typeof topology is "object"
     topology = require "#{process.cwd()}/#{topology or "topology"}"
-
-  logger.info "Hubiquitus is starting ...."
-  engine = factory.newActor topology.type, topology
-  engine.on "hStatus", (status) ->
-    return unless status is "started"
-    process.on "SIGINT", ->
-      engine.h_tearDown()
-      process.exit()
-  engine.h_start()
-  logger.info "Hubiquitus started"
+  result = validator.validateTopology topology
+  unless result.valid
+    logger.warn "syntax error in topology : " + JSON.stringify(result.error)
+  else
+    logger.info "Hubiquitus is starting ...."
+    engine = factory.newActor topology.type, topology
+    engine.on "hStatus", (status) ->
+      return unless status is "started"
+      process.on "SIGINT", ->
+        engine.h_tearDown()
+        process.exit()
+    engine.h_start()
+    logger.info "Hubiquitus started"
 
 # Exports
 module.exports = to_exports;

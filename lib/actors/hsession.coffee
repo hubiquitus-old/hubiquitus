@@ -112,10 +112,6 @@ class Session extends Actor
     # If hCommand, execute it
     if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor) and hMessage.publisher is @actor
       switch hMessage.payload.cmd
-        when "hEcho"
-          command = require("./../hcommands/hEcho").Command
-          module = new command()
-          @runCommand(hMessage, module)
         when "hSetFilter"
           @setFilter hMessage.payload.params, (status, result) =>
             hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, status, result)
@@ -202,6 +198,7 @@ class Session extends Actor
       module.exec hMessage, @, onResult
     catch err
       clearTimeout timerObject
+      console.log hMessage
       @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
       @send(self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 

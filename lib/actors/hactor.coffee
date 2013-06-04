@@ -141,6 +141,10 @@ class Actor extends EventEmitter
         logLevel: "info"
       @h_initLogger()
 
+    result = validator.validateTopology topology
+    unless result.valid
+      @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.error)
+
     # setting up instance attributes
     if(validator.validateFullURN(topology.actor))
       @actor = topology.actor
@@ -247,34 +251,34 @@ class Actor extends EventEmitter
   h_onMessageInternal: (hMessage) ->
     @log "debug", "onMessage :" + JSON.stringify(hMessage)
     try
-      validator.validateHMessage hMessage, (err, result) =>
-        if err
-          @log "debug", "hMessage not conform : " + JSON.stringify(result)
-          hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "actor is missing")
-          @send hMessageResult
-        else
-          #Complete missing values
-          hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
-          hMessage.published = hMessage.published or new Date().getTime()
+      result = validator.validateHMessage hMessage
+      unless result.valid
+        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
+        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, JSON.stringify(result.error))
+        @send hMessageResult
+      else
+        #Complete missing values
+        hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
+        hMessage.published = hMessage.published or new Date().getTime()
 
-          #Empty location and headers should not be sent/saved.
-          validator.cleanEmptyAttrs hMessage, ["headers", "location"]
+        #Empty location and headers should not be sent/saved.
+        validator.cleanEmptyAttrs hMessage, ["headers", "location"]
 
-          if hMessage.type is "hSignal" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
-            switch hMessage.payload.name
-              when "start"
-                @h_start()
-              when "stop"
-                @h_tearDown()
-              else
-                @h_onSignal(hMessage)
-          else
-            #Check if hMessage respect filter
-            checkValidity = @validateFilter(hMessage)
-            if checkValidity.result is true
-              @onMessage hMessage
+        if hMessage.type is "hSignal" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
+          switch hMessage.payload.name
+            when "start"
+              @h_start()
+            when "stop"
+              @h_tearDown()
             else
-              @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
+              @h_onSignal(hMessage)
+        else
+          #Check if hMessage respect filter
+          checkValidity = @validateFilter(hMessage)
+          if checkValidity.result is true
+            @onMessage hMessage
+          else
+            @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
 
     catch error
       @log "warn", "An error occured while processing incoming message: " + error
@@ -417,6 +421,9 @@ class Actor extends EventEmitter
 
       #Send it to transport
       @log "debug", "Sending message: #{JSON.stringify(hMessage)}"
+      result = validator.validateHMessage hMessage
+      unless result.valid
+        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
       outboundAdapter.send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"
@@ -993,60 +1000,6 @@ class Actor extends EventEmitter
 
     options.ref = ref
     @buildMessage actor, "hResult", hResult, options
-
-  #
-  # Method called to build correct hMeasure
-  # @param actor {string} URN of the target of the hMessage
-  # @param value {number} The value of the hMeasure
-  # @param unit {string} The unit in which the measure is expressed
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  buildMeasure: (actor, value, unit, options) ->
-    unless value
-      throw new Error("missing value")
-    else throw new Error("missing unit")  unless unit
-    @buildMessage actor, "hMeasure", {unit: unit, value: value}, options
-
-  #
-  # Method called to build correct hAlert
-  # @param actor {string} URN of the target of the hMessage
-  # @param alert {string} The message provided by the author to describe the alert
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  buildAlert: (actor, alert, options) ->
-    throw new Error("missing alert")  unless alert
-    @buildMessage actor, "hAlert", {alert: alert}, options
-
-  #
-  # Method called to build correct hAck
-  # @param actor {string} URN of the target of the hMessage
-  # @param ref {string} The message provided by the author to describe the alert
-  # @param ack {string} The status of the acknowledgement
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  buildAck: (actor, ref, ack, options) ->
-    throw new Error("missing ack")  unless ack
-    unless ref
-      throw new Error("missing ref")
-    else throw new Error("ack does not match \"recv\" or \"read\"")  unless /recv|read/i.test(ack)
-    options = {}  if typeof options isnt "object"
-    options.ref = ref
-    @buildMessage actor, "hAck", {ack: ack}, options
-
-  #
-  # Method called to build correct hConvState
-  # @param actor {string} URN of the target of the hMessage
-  # @param convid {string} Convid of the thread describe by the status
-  # @param status {string} The status of the thread
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  buildConvState: (actor, convid, status, options) ->
-    unless convid
-      throw new Error("missing convid")
-    else throw new Error("missing status")  unless status
-    options = {}  unless options
-    options.convid = convid
-    @buildMessage actor, "hConvState", {status: status}, options
 
   #
   # Create a unique message id

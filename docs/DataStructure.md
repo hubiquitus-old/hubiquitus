@@ -4,7 +4,7 @@ Hubiquitus use a few structure to run :
 
 ## hMessage
 * Messages form the relevant piece of information into a conversation.
-* Messages cannot be modified after having been published, except to specify the ID of the conversation (convid) for a conversation started from an already published message.
+* Messages cannot be modified once published.
 
 ### Expected attributes of a hMessage :
 
@@ -22,18 +22,18 @@ Hubiquitus use a few structure to run :
             <td>msgid</td>
             <td>String</td>
             <td>Provides a permanent, universally unique identifier for the message in the form of an absolute IRI</td>
-            <td>Yes <sup>(1)</sup></td>
+            <td>Yes, but filled by hubiquitus</td>
         </tr>
         <tr>
             <td>actor</td>
             <td>String</td>
             <td>The URN through which the message is published ("urn:domain:actor")</td>
-            <td>Yes</td>
+            <td>Yes, but filled by hubiquitus</td>
         </tr>
         <tr>
             <td>convid</td>
             <td>String</td>
-            <td>The ID of the conversation to which the message belongs</td>
+            <td><b>Deprecated</b>, should be removed in next releases. The ID of the conversation to which the message belongs</td>
             <td>No</td>
         </tr>
         <tr>
@@ -45,31 +45,31 @@ Hubiquitus use a few structure to run :
         <tr>
              <td>type</td>
              <td>String</td>
-             <td>The type of the message payload</td>
-             <td>Yes</td>
+             <td>The type of the message payload. If undefined, filled with the value "empty" on send</td>
+             <td>Yes, but if undefined, filled by hubiquitus</td>
         </tr>
         <tr>
              <td>priority</td>
              <td>Int</td>
-             <td>The priority the hMessage</td>
+             <td><b>Deprecated</b>, should be removed in next releases. The priority the hMessage</td>
              <td>No</td>
         </tr>
         <tr>
             <td>relevance</td>
             <td>Date</td>
-            <td>Defines the date (timestamp in milliseconds) until which the message is considered as relevant</td>
+            <td><b>Deprecated</b>, should be removed in next releases. Defines the date (timestamp in milliseconds) until which the message is considered as relevant</td>
             <td>No</td>
         </tr>
         <tr>
             <td>persistent</td>
             <td>Boolean</td>
-            <td>Indicates if the message MUST/MUST NOT be persisted by the middleware</td>
+            <td>Indicates if the message MUST/MUST NOT be persisted by the middleware. Default value : false</td>
             <td>No</td>
         </tr>
         <tr>
             <td>location</td>
-            <td>hLocation</td>
-            <td>The geographical location to which the message refer</td>
+            <td>Object</td>
+            <td>The geographical location to which the message refers. (Recommended structure, hLocation).</td>
             <td>No</td>
         </tr>
         <tr>
@@ -82,18 +82,18 @@ Hubiquitus use a few structure to run :
             <td>publisher</td>
             <td>String</td>
             <td>The URN of the client that effectively published the message (it can be different than the author)</td>
-            <td>Yes <sup>(4)</sup></td>
+            <td>Yes, but filled by hubiquitus</td>
         </tr>
         <tr>
             <td>published</td>
             <td>Date</td>
-            <td>The date (timestamp in milliseconds) at which the message has been published</td>
-            <td>Yes <sup>(3)</sup></td>
+            <td><b>Deprecated</b>, should be removed in next releases. The date (timestamp in milliseconds) at which the message has been published</td>
+            <td>No</td>
         </tr>
         <tr>
             <td>headers</td>
-            <td>hHeader</td>
-            <td>A Headers object attached to this hMessage. It is a key-value pair map</td>
+            <td>Object</td>
+            <td>Headers attached to this hMessage.</td>
             <td>No</td>
         </tr>
         <tr>
@@ -105,23 +105,17 @@ Hubiquitus use a few structure to run :
         <tr>
             <td>timeout</td>
             <td>Int</td>
-            <td>Define the timeout (ms) to get an answer to the hMessage</td>
+            <td>Should be removed in next releases and added as an argument of send function. Define the timeout (ms) to get an answer to the hMessage</td>
             <td>No</td>
         </tr>
         <tr>
             <td>sent</td>
             <td>Date</td>
             <td>This attribute contains the creation date (timestamp in milliseconds) of the hMessage</td>
-            <td>No</td>
+            <td>Yes, but filled by hubiquitus</td>
         </tr>
     </tbody>
 </table>
-```
-(1)  Can be filled by the hAPI or any actor
-(2)  Can be filled by any actor
-(3)  Can be filled by the hAPI
-(4)  Filled when the hMessage is send
-```
 
 # Message Payload Structure
 ## hCommand
@@ -296,52 +290,6 @@ Hubiquitus use a few structure to run :
             <td>lng</td>
             <td>Number</td>
             <td>Specifies the exact longitude of the location</td>
-        </tr>
-    </tbody>
-</table>
-
-## hHeader
-* A Header object attached another structure. It is a key-value pair map
-
-### Expected attributes of a hHeader :
-
-<table>
-    <thead>
-        <tr>
-            <th>Property</th>
-            <th>Type</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>name</td>
-            <td>String</td>
-            <td>Specifies the name of the header, used as a key to identify it</td>
-        </tr>
-        <tr>
-            <td>value</td>
-            <td>Object</td>
-            <td>Specifies the value of the header</td>
-        </tr>
-    </tbody>
-</table>
-
-### List of defined hHeader
-
-<table>
-    <thead>
-        <tr>
-            <th>Property</th>
-            <th>Type</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>MAX_MSG_RETRIEVAL</td>
-            <td>Int</td>
-            <td>When retrieving messages from a channel with a hCommand, the default max quantity of messages to retrieve</td>
         </tr>
     </tbody>
 </table>

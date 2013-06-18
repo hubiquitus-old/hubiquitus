@@ -24,7 +24,7 @@
 #
 {InboundAdapter} = require "./InboundAdapter"
 url = require "url"
-validator = require "../validator.coffee"
+validator = require "../validator"
 
 #
 # Class that defines a http Inbound Adapter.

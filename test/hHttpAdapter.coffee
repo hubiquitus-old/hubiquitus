@@ -24,7 +24,7 @@
 #
 should = require("should")
 factory = require "../lib/hfactory"
-validator = require "../lib/validator.coffee"
+validator = require "../lib/validator"
 
 describe "hHttpAdapter", ->
   hActor = undefined

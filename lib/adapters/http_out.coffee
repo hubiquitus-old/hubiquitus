@@ -24,7 +24,7 @@
 #
 {OutboundAdapter} = require "./OutboundAdapter"
 url = require "url"
-validator = require "../validator.coffee"
+validator = require "../validator"
 #
 # Class that defines a http Outbound Adapter.
 # It is used to write http request on a server

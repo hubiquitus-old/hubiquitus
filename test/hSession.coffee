@@ -25,7 +25,6 @@
 should = require("should")
 config = require("./_config")
 _ = require "underscore"
-factory = require "../lib/hfactory"
 
 describe "hSession", ->
   hActor = undefined

@@ -25,18 +25,18 @@
         },
         {
             "actor": "urn:localhost:myActor",
-            "type": "myActor",
+            "type": "actors.myActor",
             "method": "inproc",
-            "adapters": [ { "type": "myInboundAdapter" } ],
+            "adapters": [ { "type": "adapters.myInboundAdapter" } ],
             "properties": {
                 "myProps": "hello"
             }
         },
         {
             "actor": "urn:localhost:myActor2",
-            "type": "myActor2",
+            "type": "actors.myActor2",
             "method": "inproc",
-            "adapters": [ { "type": "myInboundAdapter" }, { "type": "myOutboundAdapter", "targetActorAid": "urn:localhost:myActor" } ],
+            "adapters": [ { "type": "adapters.myInboundAdapter" }, { "type": "adapters.myOutboundAdapter", "targetActorAid": "urn:localhost:myActor" } ],
             "properties": {
                 "myProps": "hello"
             }

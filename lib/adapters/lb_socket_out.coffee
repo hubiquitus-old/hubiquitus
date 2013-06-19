@@ -80,8 +80,11 @@ class LBSocketOutboundAdapter extends OutboundAdapter
   #
   send: (message) ->
     @start() unless @started
-    @serializer.encode message, (buffer) =>
-      @sock.send buffer
+    @serializer.encode message, (err, buffer) =>
+      if err
+        @owner.log "error", err
+      else
+        @sock.send buffer
 
 
 module.exports = LBSocketOutboundAdapter

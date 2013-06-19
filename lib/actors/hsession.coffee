@@ -32,7 +32,7 @@ errors = require("../codes").errors
 validator = require "../validator"
 codes = require "../codes"
 hFilter = require "../hFilter"
-factory = require "../hfactory"
+factory = require "../factory"
 
 #
 # Class that defines a session actor
@@ -208,7 +208,7 @@ class Session extends Actor
   #
   initListener: (client) ->
     delete client["hClient"]
-    socketIOAdapter = factory.newAdapter("socketIO", {targetActorAid: @actor, owner: @, socket: client.socket})
+    socketIOAdapter = factory.make("socketIO", {targetActorAid: @actor, owner: @, socket: client.socket})
     @hClient = client.socket
 
     @on "hStatus", (msg) ->

@@ -25,7 +25,7 @@
 #
 
 url = require "url"
-factory = require "../hfactory"
+factory = require "../factory"
 #
 # Class that defines an Adapter
 #
@@ -56,7 +56,7 @@ class Adapter
   constructor: (properties) ->
     @started = false
     @properties = properties.properties
-    @serializer = factory.newSerializer properties.serializer or 'json'
+    @serializer = factory.make properties.serializer or 'json'
     if properties.owner
       @owner = properties.owner
     else

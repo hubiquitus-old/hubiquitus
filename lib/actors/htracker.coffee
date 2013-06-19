@@ -24,7 +24,7 @@
 #
 
 Actor = require "./hactor"
-factory = require "../hfactory"
+factory = require "../factory"
 _ = require "underscore"
 codes = require("../codes").hResultStatus
 validator = require "../validator"
@@ -134,7 +134,7 @@ class Tracker extends Actor
         , @timeoutDelay)
         outbox = @findOutbox(hMessage.publisher, true)
         if outbox
-          @outboundAdapters.push factory.newAdapter(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
+          @outboundAdapters.push factory.make(outbox.type, { targetActorAid: outbox.targetActorAid, owner: @, url: outbox.url })
 
       if @pubChannelAid
         @send @buildMessage @pubChannelAid, "peer-info", hMessage.payload.params

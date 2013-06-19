@@ -1,5 +1,3 @@
-#
-# * Copyright (c) Novedia Group 2012.
 # *
 # *    This file is part of Hubiquitus
 # *
@@ -22,21 +20,48 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-require "coffee-script"
-factory = require "./factory"
 
-main = ->
+allDot = new RegExp('\\.', 'g')
 
-  args = process.argv.slice(2)
+coreTypes =
+# ---------------------------------------- Actors
+  'hactor': './actors/hactor'
+  'hauth': './actors/hauth'
+  'hchannel': './actors/hchannel'
+  'hdispatcher': './actors/hdispatcher'
+  'hgateway': './actors/hgateway'
+  'hsession': './actors/hsession'
+  'htracker': './actors/htracker'
+# ---------------------------------------- Adapters
+  'channel_in': './adapters/channel_in'
+  'channel_out': './adapters/channel_out'
+  'fork': './adapters/fork'
+  'http_in': './adapters/http_in'
+  'http_out': './adapters/http_out'
+  'inproc': './adapters/inproc'
+  'lb_socket_in': './adapters/lb_socket_in'
+  'lb_socket_out': './adapters/lb_socket_out'
+  'socket_in': './adapters/socket_in'
+  'socket_out': './adapters/socket_out'
+  'socketIO': './adapters/socketIO'
+  'timerAdapter': './adapters/timerAdapter'
+  'twitter_in': './adapters/twitter_in'
+# ---------------------------------------- Serializers
+  'json': './serializers/json'
 
-  actorProps = JSON.parse args[1]
-  actor = factory.make args[0], actorProps
 
-  # Acknowledging parent process that the job has been done
-  process.send( {state: "ready"} )
+classes = {}
 
-  # Transmitting any message from parent actor to child actor
-  process.on "message" , (msg) ->
-    actor.emit "message", msg
+make = (type, properties) ->
+  if not classes[type]
+    if coreTypes[type]
+      classes[type] = require coreTypes[type]
+    else
+      try
+        classes[type] = require type.replace(allDot, '/')
+      catch err
+        classes[type] = require "#{process.cwd()}/#{type.replace(allDot, '/')}"
 
-main()
+  new classes[type](properties)
+
+exports.make = make

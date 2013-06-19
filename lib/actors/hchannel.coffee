@@ -29,7 +29,7 @@ _ = require "underscore"
 validator = require "../validator"
 mongo = require "mongodb"
 codes = require "../codes"
-factory = require "../hfactory"
+factory = require "../factory"
 
 #
 # Class that defines a channel actor
@@ -46,8 +46,8 @@ class Channel extends Actor
     #TODO Stop actor and send error when all mandatory attribut is not in topology
     super
     @type = "channel"
-    @inboundAdapters.push factory.newAdapter("socket_in", {url: @properties.listenOn, owner: @})
-    @outboundAdapters.push factory.newAdapter("channel_out", {url: @properties.broadcastOn, owner: @, targetActorAid: @actor})
+    @inboundAdapters.push factory.make("socket_in", {url: @properties.listenOn, owner: @})
+    @outboundAdapters.push factory.make("channel_out", {url: @properties.broadcastOn, owner: @, targetActorAid: @actor})
     @properties.subscribers = topology.properties.subscribers or []
 
   #

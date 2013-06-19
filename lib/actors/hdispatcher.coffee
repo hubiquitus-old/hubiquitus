@@ -24,7 +24,7 @@
 #
 
 Actor = require "./hactor"
-factory = require "../hfactory"
+factory = require "../factory"
 zmq = require "zmq"
 validator = require "../validator"
 
@@ -55,7 +55,7 @@ class Dispatcher extends Actor
   #
   addWorkers : (workerProps) ->
     dispatchingUrl = "tcp://127.0.0.1:#{Math.floor(Math.random() * 98)+3000}"
-    @outboundAdapters.push factory.newAdapter("lb_socket_out", { targetActorAid: @workersAlias, owner: @, url: dispatchingUrl })
+    @outboundAdapters.push factory.make("lb_socket_out", { targetActorAid: @workersAlias, owner: @, url: dispatchingUrl })
     #@inboundAdapters.push adapters.inboundAdapter("lb_socket", { owner: @, url: dispatchingUrl })
     for i in [1..workerProps.nb]
       @log "debug", "Adding a new worker #{i}"

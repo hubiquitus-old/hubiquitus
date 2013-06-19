@@ -35,7 +35,7 @@ logger = new winston.Logger
 if not process.env.ZMQ_MAX_SOCKETS or process.env.ZMQ_MAX_SOCKETS <= 0
   process.env.ZMQ_MAX_SOCKETS = 1000000
 
-factory = require "./hfactory"
+factory = require "./factory"
 
 
 to_exports = {}
@@ -71,7 +71,7 @@ to_exports.start = (topology) ->
     logger.warn "syntax error in topology : " + JSON.stringify(result.error)
   else
     logger.info "Hubiquitus is starting ...."
-    engine = factory.newActor topology.type, topology
+    engine = factory.make topology.type, topology
     engine.on "hStatus", (status) ->
       return unless status is "started"
       process.on "SIGINT", ->

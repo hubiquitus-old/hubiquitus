@@ -23,7 +23,6 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 should = require("should")
-factory = require "../lib/hfactory"
 
 describe "hTwitterAdapter", ->
   hActor = undefined

@@ -66,19 +66,22 @@ class HttpOutboundAdapter extends OutboundAdapter
       console.log 'hm', hMessage
       @owner.log "error", "hMessage not conform : " + JSON.stringify(result.error)
     else
-      @serializer.encode hMessage, (buffer) =>
-        # Setting the configuration
-        post_options =
-          url: url.format {protocol: 'http:', hostname: @server_url, port: @port, pathname: @path}
-          method: 'POST'
-          headers:
-            "Content-Type": "application/x-www-form-urlencoded"
-            "Content-Length": buffer.length
-          body: buffer
+      @serializer.encode hMessage, (err, buffer) =>
+        if err
+          @owner.log "error", err
+        else
+          # Setting the configuration
+          post_options =
+            url: url.format {protocol: 'http:', hostname: @server_url, port: @port, pathname: @path}
+            method: 'POST'
+            headers:
+              "Content-Type": "application/x-www-form-urlencoded"
+              "Content-Length": buffer.length
+            body: buffer
 
-        @reqst post_options, (err, res) =>
-          if err
-            @owner.log "warn", "problem with request: " + err
+          @reqst post_options, (err, res) =>
+            if err
+              @owner.log "warn", "problem with request: " + err
 
 
 module.exports = HttpOutboundAdapter

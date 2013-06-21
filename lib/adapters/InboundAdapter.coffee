@@ -23,12 +23,16 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-url = require "url"
+async = require 'async'
+validator = require "../validator"
 {Adapter} = require "./Adapter"
 #
 # Class that defines an Inbound adapter
 #
 class InboundAdapter extends Adapter
+
+  # @property {function} onMessage
+  onMessage: undefined
 
   #
   # Adapter's constructor
@@ -37,5 +41,26 @@ class InboundAdapter extends Adapter
   constructor: (properties) ->
     @direction = "in"
     super
+
+    args = [];
+    if @authenticator then args.push @authenticator.authorize
+    args.push @serializer.decode
+    args.push validator.validateHMessage
+    @filters.forEach (filter) ->
+      args.push filter.validate
+
+    @onMessage = async.compose.apply null, args.reverse()
+
+  #
+  # @param buffer {buffer}
+  #
+  receive: (buffer) =>
+    @onMessage buffer, (err, hMessage) =>
+      if err
+        @owner.log "error", err
+      else
+        hMessage.actor = @owner.actor
+        @owner.emit 'message', hMessage
+
 
 exports.InboundAdapter = InboundAdapter

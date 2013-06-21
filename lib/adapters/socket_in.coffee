@@ -49,12 +49,7 @@ class SocketInboundAdapter extends InboundAdapter
   initSocket: () ->
     @sock = zmq.socket "pull"
     @sock.identity = "SocketIA_of_#{@owner.actor}"
-    @sock.on "message", (data) =>
-      @serializer.decode data, (err, hMessage) =>
-        if err
-          @owner.log "error", err
-        else
-          @owner.emit "message", hMessage
+    @sock.on "message", @receive
 
   #
   # @overload start()

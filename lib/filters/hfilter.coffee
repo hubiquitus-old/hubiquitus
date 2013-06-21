@@ -23,60 +23,21 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-async = require 'async'
-validator = require "../validator"
-url = require "url"
-{Adapter} = require "./Adapter"
-
 #
-# Class that defines an Outbound adapter
+# Class that defines a Filter
 #
-class OutboundAdapter extends Adapter
-
-  # @property {string}
-  targetActorAid: undefined
-
-  # @property {function} sendMessage
-  prepareMessage: undefined
+class Filter
 
   #
-  # Adapter's constructor
-  # @param properties {object} Launch properties of the adapter
+  # Filter's constructor
   #
-  constructor: (properties) ->
-    @direction = "out"
-    if properties.targetActorAid
-      @targetActorAid = properties.targetActorAid
-    else
-      throw new Error "You must provide the AID of the targeted actor"
-    super
-
-    args = [];
-    @filters.forEach (filter) ->
-      args.push filter.validate
-    args.push validator.validateHMessage
-    args.push @serializer.encode
-    if @authenticator then args.push @authenticator.authorize
-
-    @prepareMessage = async.compose.apply null, args.reverse()
+  constructor: () ->
 
   #
-  # Method which has to be override to specify an outbound adapter
-  # @param hMessage {object}
+  # @param hMessage {object} the message to encode
+  # @param callback {function} callback
   #
-  send: (hMessage) ->
-    @prepareMessage hMessage, (err, buffer) =>
-      if err
-        @owner.log "error", err
-      else
-        @h_send buffer
-
-  #
-  # Method which has to be override to specify an outbound adapter
-  # @param buffer {buffer}
-  #
-  h_send: (buffer) ->
-    throw new Error "Send method should be overriden"
+  validate: (hMessage, callback) ->
 
 
-exports.OutboundAdapter = OutboundAdapter
+module.exports = Filter

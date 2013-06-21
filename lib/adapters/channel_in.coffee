@@ -71,12 +71,7 @@ class ChannelInboundAdapter extends InboundAdapter
       splitString = data.toString().replace(/^[^{]*\$?{/, "{")
       splitData = new Buffer(splitString)
       cleanData = data.slice(data.length - splitData.length, data.length)
-      @serializer.decode cleanData, (err, hMessage) =>
-        if err
-          @owner.log "error", err
-        else
-          hMessage.actor = @owner.actor
-          @owner.emit "message", hMessage
+      @receive cleanData
 
   #
   # Mathod called to add a quickFilter in a subscription.
@@ -103,7 +98,7 @@ class ChannelInboundAdapter extends InboundAdapter
     index = 0
     for qckFilter in @listQuickFilter
       if qckFilter is quickFilter
-        @listQuickFilter.splice(index,1)
+        @listQuickFilter.splice(index, 1)
       index++
     if @listQuickFilter.length is 0
       cb true
@@ -157,7 +152,7 @@ class ChannelInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
-      @sock.on "message",() =>
+      @sock.on "message", () =>
       @sock = null
       doUnwatch = @owner.trackers[0] and
       @owner.type isnt "tracker" and
@@ -199,7 +194,7 @@ class ChannelInboundAdapter extends InboundAdapter
   #
   # Remove adapter from his owner's adapters lists
   #
-  destroy : () ->
+  destroy: () ->
     @owner.h_removeAdapter(@)
 
 module.exports = ChannelInboundAdapter

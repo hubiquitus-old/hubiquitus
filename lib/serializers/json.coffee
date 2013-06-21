@@ -39,14 +39,20 @@ class JSONSerializer extends Serializer
   # @param callback {function} callback
   #
   encode: (hMessage, callback) ->
-    callback new Buffer(JSON.stringify(hMessage), "utf-8")
+    try
+      callback null, new Buffer(JSON.stringify(hMessage), "utf-8")
+    catch err
+      callback err, null
 
   #
   # @param buffer {Buffer} the data to decode
   # @param callback {function} callback
   #
   decode: (buffer, callback) ->
-    callback JSON.parse(buffer.toString("utf-8"))
+    try
+      callback null, JSON.parse(buffer.toString("utf-8"))
+    catch err
+      callback err, null
 
 
 module.exports = JSONSerializer

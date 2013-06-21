@@ -71,9 +71,12 @@ class ChannelInboundAdapter extends InboundAdapter
       splitString = data.toString().replace(/^[^{]*\$?{/, "{")
       splitData = new Buffer(splitString)
       cleanData = data.slice(data.length - splitData.length, data.length)
-      @serializer.decode cleanData, (hMessage) =>
-        hMessage.actor = @owner.actor
-        @owner.emit "message", hMessage
+      @serializer.decode cleanData, (err, hMessage) =>
+        if err
+          @owner.log "error", err
+        else
+          hMessage.actor = @owner.actor
+          @owner.emit "message", hMessage
 
   #
   # Mathod called to add a quickFilter in a subscription.

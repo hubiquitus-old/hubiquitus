@@ -102,17 +102,13 @@ class SocketOutboundAdapter extends OutboundAdapter
           index++
 
   #
-  # @overload send(hMessage)
+  # @overload h_send(buffer)
   #   Method which send the hMessage in the zmq push socket.
-  #   @param hMessage {object} The hMessage to send
+  #   @param buffer {Buffer} The hMessage to send
   #
-  send: (message) ->
+  h_send: (buffer) ->
     @start() unless @started
-    @serializer.encode message, (err, buffer) =>
-      if err
-        @owner.log "error", err
-      else
-        @sock.send buffer
+    @sock.send buffer
 
   #
   # Register adapter as a "watcher" for a peer

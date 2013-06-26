@@ -40,7 +40,12 @@ class JSONSerializer extends Serializer
   #
   encode: (hMessage, callback) ->
     try
-      callback null, new Buffer(JSON.stringify(hMessage), "utf-8")
+      if hMessage.headers and typeof hMessage.headers.h_quickFilter is "string"
+        message = hMessage.headers.h_quickFilter + '$' + JSON.stringify(hMessage)
+      else
+        message = JSON.stringify(hMessage)
+
+      callback null, new Buffer(message, "utf-8")
     catch err
       callback err, null
 
@@ -50,7 +55,12 @@ class JSONSerializer extends Serializer
   #
   decode: (buffer, callback) ->
     try
-      callback null, JSON.parse(buffer.toString("utf-8"))
+      message = buffer.toString("utf-8")
+      filter = message.indexOf('$');
+      start = message.indexOf('{');
+      if filter > 0 and filter < start then message = message.substr start
+
+      callback null, JSON.parse(message)
     catch err
       callback err, null
 

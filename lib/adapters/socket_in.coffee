@@ -49,12 +49,7 @@ class SocketInboundAdapter extends InboundAdapter
   initSocket: () ->
     @sock = zmq.socket "pull"
     @sock.identity = "SocketIA_of_#{@owner.actor}"
-    @sock.on "message", (data) =>
-      @serializer.decode data, (err, hMessage) =>
-        if err
-          @owner.log "error", err
-        else
-          @owner.emit "message", hMessage
+    @sock.on "message", @receive
 
   #
   # @overload start()
@@ -73,7 +68,7 @@ class SocketInboundAdapter extends InboundAdapter
           @sock = null
           @initSocket()
           @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
-          @owner.log "info", 'Change listening port to avoid collision :',err
+          @owner.log "info", 'Change listening port to avoid collision :', err
 
   #
   # @overload stop()
@@ -85,8 +80,8 @@ class SocketInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
-      @sock.on "message",()=>
-      @sock=null
+      @sock.on "message", ()=>
+      @sock = null
 
 
 module.exports = SocketInboundAdapter

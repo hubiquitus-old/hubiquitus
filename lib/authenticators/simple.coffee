@@ -23,52 +23,28 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-async = require 'async'
-validator = require "../validator"
-{Adapter} = require "./Adapter"
+Authenticator = require 'hauthenticator'
+codes = require "../codes"
+
 #
-# Class that defines an Inbound adapter
+# Class that defines a Simple Authenticator
 #
-class InboundAdapter extends Adapter
-
-  # @property {function} onMessage
-  onMessage: undefined
+class SimpleAuthenticator extends Authenticator
 
   #
-  # Adapter's constructor
-  # @param properties {object} Launch properties of the adapter
+  # Simple Authenticator's constructor
   #
-  constructor: (properties) ->
-    @direction = "in"
-    super
+  constructor: () ->
 
-    args = [];
-    if @authenticator then args.push @authenticator.authorize
-    args.push @serializer.decode
-    args.push @h_fillMessage
-    args.push validator.validateHMessage
-    @filters.forEach (filter) ->
-      args.push filter.validate
-
-    @onMessage = async.compose.apply null, args.reverse()
-
-  #
-  # @private
-  #
-  h_fillMessage: (hMessage, callback) ->
-    hMessage.actor = @owner.actor
-    hMessage.sent = new Date().getTime()
-    callback null, hMessage
-
-  #
-  # @param buffer {buffer}
-  #
-  receive: (buffer) =>
-    @onMessage buffer, (err, hMessage) =>
-      if err
-        @owner.log "error", if typeof err is 'string' then err else JSON.stringify(err)
-      else
-        @owner.emit 'message', hMessage
+    #
+    # @param hMessage {object} the message to encode
+    # @param callback {function} callback
+    #
+  auth: (hMessage, callback) ->
+    if hMessage.login is hMessage.password
+      callback null, hMessage
+    else
+      callback codes.errors.AUTH_FAILED, hMessage
 
 
-exports.InboundAdapter = InboundAdapter
+module.exports = Authenticator

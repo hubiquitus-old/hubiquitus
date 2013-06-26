@@ -45,6 +45,7 @@ class InboundAdapter extends Adapter
     args = [];
     if @authenticator then args.push @authenticator.authorize
     args.push @serializer.decode
+    args.push @h_fillMessage
     args.push validator.validateHMessage
     @filters.forEach (filter) ->
       args.push filter.validate
@@ -52,14 +53,21 @@ class InboundAdapter extends Adapter
     @onMessage = async.compose.apply null, args.reverse()
 
   #
+  # @private
+  #
+  h_fillMessage: (hMessage, callback) ->
+    hMessage.actor = @owner.actor
+    hMessage.sent = new Date().getTime()
+    callback null, hMessage
+
+  #
   # @param buffer {buffer}
   #
   receive: (buffer) =>
     @onMessage buffer, (err, hMessage) =>
       if err
-        @owner.log "error", err
+        @owner.log "error", JSON.stringify(err)
       else
-        hMessage.actor = @owner.actor
         @owner.emit 'message', hMessage
 
 

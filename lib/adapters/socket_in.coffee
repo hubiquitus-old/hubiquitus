@@ -68,7 +68,7 @@ class SocketInboundAdapter extends InboundAdapter
           @sock = null
           @initSocket()
           @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
-          @owner.log "info", 'Change listening port to avoid collision :',err
+          @owner.log "info", 'Change listening port to avoid collision :', err
 
   #
   # @overload stop()
@@ -80,8 +80,8 @@ class SocketInboundAdapter extends InboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
-      @sock.on "message",()=>
-      @sock=null
+      @sock.on "message", ()=>
+      @sock = null
 
 
 module.exports = SocketInboundAdapter

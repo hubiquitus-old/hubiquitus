@@ -67,7 +67,7 @@ class OutboundAdapter extends Adapter
   send: (hMessage) ->
     @prepareMessage hMessage, (err, buffer) =>
       if err
-        @owner.log "error", err
+        @owner.log "error", JSON.stringify(err)
       else
         @h_send buffer
 

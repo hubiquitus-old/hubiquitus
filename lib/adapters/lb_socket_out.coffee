@@ -74,13 +74,13 @@ class LBSocketOutboundAdapter extends OutboundAdapter
       @sock = null
 
   #
-  # @overload send(hMessage)
-  #   Method which send the hMessage in the zmq push load balancing socket.
-  #   @param hMessage {object} The hMessage to send
+  # @overload h_send(buffer)
+  #   Method which send the hMessage in the zmq push socket.
+  #   @param buffer {Buffer} The hMessage to send
   #
-  h_send: (message) ->
+  h_send: (buffer) ->
     @start() unless @started
-    @sock.send message
+    @sock.send buffer
 
 
 module.exports = LBSocketOutboundAdapter

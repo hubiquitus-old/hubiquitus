@@ -85,24 +85,13 @@ class ChannelOutboundAdapter extends OutboundAdapter
       @sock = null
 
   #
-  # @overload send(hMessage)
+  # @overload h_send(buffer)
   #   Method which send the hMessage in the zmq pub socket.
-  #   @param hMessage {object} The hMessage to send
+  #   @param buffer {Buffer} The hMessage to send
   #
-  send: (hMessage) ->
+  h_send: (buffer) ->
     @start() unless @started
-    if hMessage.headers and hMessage.headers.h_quickFilter and typeof hMessage.headers.h_quickFilter is "string"
-      @serializer.encode hMessage, (err, buffer) =>
-        if err
-          @owner.log "error", err
-        else
-          @sock.send hMessage.headers.h_quickFilter + "$" + buffer
-    else
-      @serializer.encode hMessage, (err, buffer) =>
-        if err
-          @owner.log "error", err
-        else
-          @sock.send buffer
+    @sock.send buffer
 
 
 module.exports = ChannelOutboundAdapter

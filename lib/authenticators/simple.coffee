@@ -22,41 +22,29 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-Serializer = require "./hserializer"
+
+Authenticator = require 'hauthenticator'
+codes = require "../codes"
 
 #
-# Class that defines a JSON Serializer
+# Class that defines a Simple Authenticator
 #
-class JSONSerializer extends Serializer
+class SimpleAuthenticator extends Authenticator
 
   #
-  # JSON Serializer's constructor
+  # Simple Authenticator's constructor
   #
   constructor: () ->
 
-  #
-  # @param hMessage {object} the message to encode
-  # @param callback {function} callback
-  #
-  encode: (hMessage, callback) ->
-    try
-      data = JSON.stringify(hMessage)
-      if hMessage.headers and typeof hMessage.headers.h_quickFilter is "string"
-        data = hMessage.headers.h_quickFilter + "$" + data
-
-      callback null, new Buffer(data, "utf-8")
-    catch err
-      callback err, hMessage
-
-  #
-  # @param buffer {Buffer} the data to decode
-  # @param callback {function} callback
-  #
-  decode: (buffer, callback) ->
-    try
-      callback null, JSON.parse(if typeof buffer is 'string' then buffer else buffer.toString("utf-8"))
-    catch err
-      callback err, buffer
+    #
+    # @param hMessage {object} the message to encode
+    # @param callback {function} callback
+    #
+  auth: (hMessage, callback) ->
+    if hMessage.login is hMessage.password
+      callback null, hMessage
+    else
+      callback codes.errors.AUTH_FAILED, hMessage
 
 
-module.exports = JSONSerializer
+module.exports = Authenticator

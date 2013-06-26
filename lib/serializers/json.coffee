@@ -40,13 +40,14 @@ class JSONSerializer extends Serializer
   #
   encode: (hMessage, callback) ->
     try
-      data = JSON.stringify(hMessage)
       if hMessage.headers and typeof hMessage.headers.h_quickFilter is "string"
-        data = hMessage.headers.h_quickFilter + "$" + data
+        message = hMessage.headers.h_quickFilter + '$' + JSON.stringify(hMessage)
+      else
+        message = JSON.stringify(hMessage)
 
-      callback null, new Buffer(data, "utf-8")
+      callback null, new Buffer(message, "utf-8")
     catch err
-      callback err, hMessage
+      callback err, null
 
   #
   # @param buffer {Buffer} the data to decode
@@ -54,9 +55,14 @@ class JSONSerializer extends Serializer
   #
   decode: (buffer, callback) ->
     try
-      callback null, JSON.parse(if typeof buffer is 'string' then buffer else buffer.toString("utf-8"))
+      message = buffer.toString("utf-8")
+      filter = message.indexOf('$');
+      start = message.indexOf('{');
+      if filter > 0 and filter < start then message = message.substr start
+
+      callback null, JSON.parse(message)
     catch err
-      callback err, buffer
+      callback err, null
 
 
 module.exports = JSONSerializer

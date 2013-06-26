@@ -66,7 +66,7 @@ class InboundAdapter extends Adapter
   receive: (buffer) =>
     @onMessage buffer, (err, hMessage) =>
       if err
-        @owner.log "error", JSON.stringify(err)
+        @owner.log "error", if typeof err is 'string' then err else JSON.stringify(err)
       else
         @owner.emit 'message', hMessage
 

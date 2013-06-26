@@ -60,18 +60,13 @@ class ChannelInboundAdapter extends InboundAdapter
     @listQuickFilter = []
     @filter = properties.filter or ""
 
-
   #
   # Initialize socket when starting
   #
   h_initSocket: () ->
     @sock = zmq.socket "sub"
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
-    @sock.on "message", (data) =>
-      splitString = data.toString().replace(/^[^{]*\$?{/, "{")
-      splitData = new Buffer(splitString)
-      cleanData = data.slice(data.length - splitData.length, data.length)
-      @receive cleanData
+    @sock.on "message", @receive
 
   #
   # Mathod called to add a quickFilter in a subscription.

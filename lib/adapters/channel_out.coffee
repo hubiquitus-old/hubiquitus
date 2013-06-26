@@ -57,7 +57,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
   #   Method which start the adapter.
   #   When this adapter is started, the channel can transmit hMessage to its subscriber
   #
-  start:->
+  start: ->
     @initSocket()
     while @started is false
       try
@@ -69,7 +69,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
           @sock = null
           @initSocket()
           @formatUrl @url.replace(/:[0-9]{4,5}$/, '')
-          @owner.log "info", 'Change streaming port to avoid collision :',err
+          @owner.log "info", 'Change streaming port to avoid collision :', err
 
   #
   # @overload stop()
@@ -81,28 +81,17 @@ class ChannelOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
-      @sock.on "message",()=>
-      @sock=null
+      @sock.on "message", ()=>
+      @sock = null
 
   #
-  # @overload send(hMessage)
+  # @overload h_send(buffer)
   #   Method which send the hMessage in the zmq pub socket.
-  #   @param hMessage {object} The hMessage to send
+  #   @param buffer {Buffer} The hMessage to send
   #
-  send: (hMessage) ->
+  h_send: (buffer) ->
     @start() unless @started
-    if hMessage.headers and hMessage.headers.h_quickFilter and typeof hMessage.headers.h_quickFilter is "string"
-      @serializer.encode hMessage, (err, buffer) =>
-        if err
-          @owner.log "error", err
-        else
-          @sock.send hMessage.headers.h_quickFilter + "$" + buffer
-    else
-      @serializer.encode hMessage, (err, buffer) =>
-        if err
-          @owner.log "error", err
-        else
-          @sock.send buffer
+    @sock.send buffer
 
 
 module.exports = ChannelOutboundAdapter

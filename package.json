@@ -25,7 +25,8 @@
       "tv4" : ">=1.0.3",
       "socket.io" : "=0.9.14",
       "mongodb" : "=1.2.14",
-      "request": "=2.21.0"
+      "request": "=2.21.0",
+      "async": "~0.2.5"
   },
   "devDependencies": {
       "should" : "=1.2.2",

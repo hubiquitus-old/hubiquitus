@@ -54,7 +54,7 @@ class LBSocketOutboundAdapter extends OutboundAdapter
   #   Method which start the adapter.
   #   When this adapter is started, the actor can transmit hMessage to few actors with load balancing
   #
-  start:->
+  start: ->
     @initsocket()
     @sock.bindSync @url
     @owner.log "debug", "#{@sock.identity} bound on #{@url}"
@@ -70,21 +70,17 @@ class LBSocketOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
-      @sock.on "message",()=>
-      @sock=null
+      @sock.on "message", ()=>
+      @sock = null
 
   #
-  # @overload send(hMessage)
-  #   Method which send the hMessage in the zmq push load balancing socket.
-  #   @param hMessage {object} The hMessage to send
+  # @overload h_send(buffer)
+  #   Method which send the hMessage in the zmq push socket.
+  #   @param buffer {Buffer} The hMessage to send
   #
-  send: (message) ->
+  h_send: (buffer) ->
     @start() unless @started
-    @serializer.encode message, (err, buffer) =>
-      if err
-        @owner.log "error", err
-      else
-        @sock.send buffer
+    @sock.send buffer
 
 
 module.exports = LBSocketOutboundAdapter

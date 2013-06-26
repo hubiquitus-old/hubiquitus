@@ -23,52 +23,21 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-async = require 'async'
-validator = require "../validator"
-{Adapter} = require "./Adapter"
 #
-# Class that defines an Inbound adapter
+# Class that defines a Authenticator
 #
-class InboundAdapter extends Adapter
-
-  # @property {function} onMessage
-  onMessage: undefined
+class Authenticator
 
   #
-  # Adapter's constructor
-  # @param properties {object} Launch properties of the adapter
+  # Authenticator's constructor
   #
-  constructor: (properties) ->
-    @direction = "in"
-    super
-
-    args = [];
-    if @authenticator then args.push @authenticator.authorize
-    args.push @serializer.decode
-    args.push @h_fillMessage
-    args.push validator.validateHMessage
-    @filters.forEach (filter) ->
-      args.push filter.validate
-
-    @onMessage = async.compose.apply null, args.reverse()
+  constructor: () ->
 
   #
-  # @private
+  # @param hMessage {object} the message to encode
+  # @param callback {function} callback
   #
-  h_fillMessage: (hMessage, callback) ->
-    hMessage.actor = @owner.actor
-    hMessage.sent = new Date().getTime()
-    callback null, hMessage
-
-  #
-  # @param buffer {buffer}
-  #
-  receive: (buffer) =>
-    @onMessage buffer, (err, hMessage) =>
-      if err
-        @owner.log "error", if typeof err is 'string' then err else JSON.stringify(err)
-      else
-        @owner.emit 'message', hMessage
+  auth: (hMessage, callback) ->
 
 
-exports.InboundAdapter = InboundAdapter
+module.exports = Authenticator

@@ -589,6 +589,7 @@ class Actor extends EventEmitter
           peerMemory: process.memoryUsage()
           peerUptime: process.uptime()
           peerLoadAvg: os.loadavg()
+          peerResource: validator.getResource(@actor)
         )
 
   #

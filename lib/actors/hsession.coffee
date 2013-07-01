@@ -77,6 +77,7 @@ class Session extends Actor
         peerMemory: process.memoryUsage()
         peerUptime: process.uptime()
         peerLoadAvg: os.loadavg()
+        peerResource: validator.getResource(@actor)
       )
   #
   # @overload validateFilter(hMessage)

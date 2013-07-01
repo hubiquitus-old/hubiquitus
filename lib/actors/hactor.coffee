@@ -944,6 +944,7 @@ class Actor extends EventEmitter
     hMessage.headers = options.headers  if options.headers
     hMessage.payload = payload  if payload
     hMessage.timeout = options.timeout  if options.timeout
+    hMessage.sent = new Date().getTime()
     hMessage
 
   #

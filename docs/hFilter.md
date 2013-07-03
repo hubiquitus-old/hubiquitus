@@ -14,7 +14,7 @@ There are few ways to put a filter :
 }
 ```
 
-> For more information about actor topology see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Actor/hActor)
+> For more information about actor topology see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors/hActor.md)
 
 * You can call the setFilter function of hActor if it is already started
 
@@ -22,7 +22,7 @@ There are few ways to put a filter :
 hActor.setFilter(hCondition, callback)
 ```
 
-> For more information about hActor functions see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/Actor/hActor)
+> For more information about hActor functions see [hActor](https://github.com/hubiquitus/hubiquitus/tree/master/docs/actors/hActor.md)
 
 * If you are connected to Hubiquitus with a hAPI, you can send a hCommand hSetFilter
 
@@ -44,7 +44,7 @@ hActor.setFilter(hCondition, callback)
 
 ## hCondition
 
-A [hCondition](https://github.com/hubiquitus/hubiquitus/tree/master/docs/DataStructure) is an object starting with an operand among `eq, ne, gt, gte, lt, lte, in, nin, and, or, nor, relevant, geo, boolean, domain`.
+A [hCondition](https://github.com/hubiquitus/hubiquitus/tree/master/docs/DataStructure.md) is an object starting with an operand among `eq, ne, gt, gte, lt, lte, in, nin, and, or, nor, relevant, geo, boolean, domain`.
 Then the structure depends of the operand
 
 ### Operand "eq" - "ne" - "gt" - "gte" - "lt" - "lte"

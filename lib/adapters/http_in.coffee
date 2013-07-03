@@ -32,10 +32,10 @@ validator = require "../validator"
 #
 class HttpInboundAdapter extends InboundAdapter
 
-#
-# Adapter's constructor
-# @param properties {object} Launch properties of the adapter
-#
+  #
+  # Adapter's constructor
+  # @param properties {object} Launch properties of the adapter
+  #
   constructor: (properties) ->
     super
     if properties.url
@@ -62,27 +62,12 @@ class HttpInboundAdapter extends InboundAdapter
         req.on "data", (data) ->
           body += data
         req.on "end", =>
-          my_hmessage = JSON.parse(body)
-          my_hmessage.sent = new Date().getTime()
-          result = validator.validateHMessage my_hmessage
-          unless result.valid
-            @owner.log "hMessage not conform : " + JSON.stringify(result.error)
-          else
-            @owner.emit "message", my_hmessage
-
-
+          @receive body
 
       else if req.method is 'GET'
         req.on 'end', -> res.writeHead 200, 'content-Type' : 'text/plain'
         res.end()
-        url_parts =  @qs.parse(req.url)
-        my_hMessage = JSON.parse(@qs.parse(req.url)['/hmessage'])
-        my_hMessage.sent = new Date().getTime()
-        result = validator.validateHMessage my_hMessage
-        unless result.valid
-          @owner.log "hMessage not conform : " + JSON.stringify(result.error)
-        else
-          @owner.emit "message", my_hMessage
+        @receive @qs.parse(req.url)['/hmessage']
 
     server.listen @port,@serverPath
 

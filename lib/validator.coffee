@@ -33,10 +33,15 @@ Checks if an hMessage is correctly formatted and has all the correct attributes
 @param hMessage - hMessage to validate
 result is an object
 ###
-exports.validateHMessage = (hMessage) ->
+exports.validateHMessage = (hMessage, callback) ->
+  result = tv4.validateResult(hMessage, schemas.hMessage)
+  if typeof callback is 'function'
+    if result.valid
+      callback null, hMessage
+    else
+      callback result.error, null
 
-  return tv4.validateResult(hMessage, schemas.hMessage)
-
+  result
 
 ###
 Checks if a topology is correctly formatted and has all the correct attributes

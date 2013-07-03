@@ -46,6 +46,12 @@ class Adapter
   # @property {string} Url use by the adapter
   url: undefined
 
+  # @property {Authenticator} Adapter's authenticator
+  authenticator: undefined
+
+  # @property {Array<Filter>} Adapter's filters
+  filters: undefined
+
   # @property {Serializer} Adapter's serializer
   serializer: undefined
 
@@ -54,13 +60,35 @@ class Adapter
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
-    @started = false
-    @properties = properties.properties
-    @serializer = factory.make properties.serializer or 'json'
     if properties.owner
       @owner = properties.owner
     else
       throw new Error "You must pass an actor as reference"
+
+    @started = false
+    @properties = properties.properties
+
+    if properties.auth
+      if typeof properties.auth is 'string'
+        @authenticator = factory.make properties.auth
+      else
+        @authenticator = factory.make properties.auth.type, properties.auth.properties
+
+    if properties.serializer
+      if typeof properties.serializer is 'string'
+        @serializer = factory.make properties.serializer
+      else
+        @serializer = factory.make properties.serializer.type, properties.serializer.properties
+    else
+      @serializer = factory.make 'json'
+
+    @filters = [];
+    if properties.filters
+      properties.filters.forEach (filter) ->
+        if typeof filter is 'string'
+          @filters.push(factory.make filter)
+        else
+          @filters.push(factory.make filter.type, filter.properties)
 
   #
   # Method which set the url variable with correct format

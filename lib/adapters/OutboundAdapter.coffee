@@ -23,6 +23,8 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
+async = require 'async'
+validator = require "../validator"
 url = require "url"
 {Adapter} = require "./Adapter"
 
@@ -33,6 +35,9 @@ class OutboundAdapter extends Adapter
 
   # @property {string}
   targetActorAid: undefined
+
+  # @property {function} sendMessage
+  prepareMessage: undefined
 
   #
   # Adapter's constructor
@@ -46,11 +51,32 @@ class OutboundAdapter extends Adapter
       throw new Error "You must provide the AID of the targeted actor"
     super
 
+    args = [];
+    @filters.forEach (filter) ->
+      args.push filter.validate
+    args.push validator.validateHMessage
+    args.push @serializer.encode
+    if @authenticator then args.push @authenticator.authorize
+
+    @prepareMessage = async.compose.apply null, args.reverse()
+
   #
   # Method which has to be override to specify an outbound adapter
   # @param hMessage {object}
   #
   send: (hMessage) ->
+    @prepareMessage hMessage, (err, buffer) =>
+      if err
+        @owner.log "error", if typeof err is 'string' then err else JSON.stringify(err)
+      else
+        @h_send buffer
+
+  #
+  # Method which has to be override to specify an outbound adapter
+  # @param buffer {buffer}
+  #
+  h_send: (buffer) ->
     throw new Error "Send method should be overriden"
+
 
 exports.OutboundAdapter = OutboundAdapter

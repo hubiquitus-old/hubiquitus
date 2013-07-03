@@ -58,5 +58,5 @@ https://mega.co.nz/#!7YoXSZ5A!SzYtMxStVxq9weEfPmt1IjCSCwtGYNVL2mnBw0Yy7JE) (This
                 Line 27:               'DelayLoadDLLs': ['libzmq-v100-mt-3_2_2.dll']
  ```
  
- ,change **libzmq-v100-mt-3_2_2** to the new lib name.
+ change **libzmq-v100-mt-3_2_2** to the new lib name.
  

@@ -120,9 +120,24 @@ exports.splitURN = (urn) ->
   else
     [`undefined`, `undefined`, `undefined`]
 
+###
+Return the bare urn of an actor
+@param urn - full URN
+###
 exports.getBareURN = (urn) ->
   urnParts = exports.splitURN(urn)
   "urn:" + urnParts[0] + ":" + urnParts[1]
+
+###
+Return the resource of an actor
+@param urn - full URN
+###
+exports.getResource = (urn) ->
+  if exports.validateFullURN(urn)
+    urnParts = exports.splitURN(urn)
+    urnParts[2]
+  else
+    "undefined"
 
 
 ###

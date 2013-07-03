@@ -90,7 +90,6 @@ class TwitterInboundAdapter extends InboundAdapter
                 hTweet.text = data.text
                 hTweet.author = hTweetAuthor
                 msg = @owner.buildMessage(@owner.actor, "hTweet", hTweet, {author: data.user.screen_name + "@twitter.com"})
-                msg.sent = new Date().getTime()
                 @owner.emit "message", msg
             else
               @owner.log "debug", "Disconnecting data"

@@ -49,7 +49,6 @@ class TimerAdapter extends InboundAdapter
   startJob: =>
     current = new Date().getTime()
     msg = @owner.buildMessage(@owner.actor, "hAlert", {alert:@properties.alert}, {published:current})
-    msg.sent = new Date().getTime()
     @owner.emit "message", msg
 
   #

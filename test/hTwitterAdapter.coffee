@@ -42,7 +42,6 @@ describe "hTwitterAdapter", ->
           type: "twitter_in",
           properties: {
             name: "twitter",
-            proxy: "http://192.168.102.84:3128",
             consumerKey: "supkCU9BZjUifb22xJYWw",
             consumerSecret: "U2zbZforgtzuBD26pmG6en946VtTD237HfcK6xho",
             twitterAccesToken: "1570147814-BK0CkD6ocLht1CdHgvxZrHhh1am3GHToWoVBQCj",

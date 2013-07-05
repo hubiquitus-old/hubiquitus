@@ -35,7 +35,10 @@ class TwitterInboundAdapter extends InboundAdapter
   stream: undefined
 
   # @property {object} twitter connexion
-  @twit: undefined
+  twit: undefined
+
+  # @property {object} twitter properties
+  twitProperties: undefined
 
   #
   # Adapter's constructor
@@ -45,6 +48,7 @@ class TwitterInboundAdapter extends InboundAdapter
     super
     @stream = undefined
     @twit = undefined
+    @twitProperties = {}
 
   #
   # @overload start()
@@ -54,6 +58,21 @@ class TwitterInboundAdapter extends InboundAdapter
   start: ->
     unless @started
       if @properties.tags and @properties.tags isnt ""
+        @twitProperties.track = @properties.tags
+      if @properties.tags is ""
+        delete @twitProperties['track']
+
+      if @properties.accounts and @properties.accounts isnt ""
+        @twitProperties.follow = @properties.accounts
+      if @properties.accounts is ""
+        delete @twitProperties['follow']
+
+      if @properties.locations and @properties.locations isnt ""
+        @twitProperties.locations = @properties.locations
+      if @properties.locations is ""
+        delete @twitProperties['locations']
+
+      if @twitProperties.track or @twitProperties.follow or @twitProperties.locations
         @twit = new twitter(
           proxy: @properties.proxy
           consumer_key: @properties.consumerKey
@@ -61,7 +80,8 @@ class TwitterInboundAdapter extends InboundAdapter
           access_token_key: @properties.twitterAccesToken
           access_token_secret: @properties.twitterAccesTokenSecret
         )
-        @twit.stream "statuses/filter", track: @properties.tags, (stream) =>
+
+        @twit.stream "statuses/filter", @twitProperties, (stream) =>
           @stream = stream
           @stream.on "error", (type, code) =>
             @owner.log "error", "Twitter stream error : #{type} #{code}"
@@ -88,6 +108,10 @@ class TwitterInboundAdapter extends InboundAdapter
                 hTweet.id = data.id_str
                 hTweet.source = data.source
                 hTweet.text = data.text
+                if data.coordinates and data.coordinates.coordinates
+                  hTweet.location = data.coordinates.coordinates
+                else if data.bounding_box and data.bounding_box.coordinates and data.bounding_box.coordinates[0]
+                  hTweet.location = data.bounding_box.coordinates[0]
                 hTweet.author = hTweetAuthor
                 msg = @owner.buildMessage(@owner.actor, "hTweet", hTweet, {author: data.user.screen_name + "@twitter.com"})
                 @owner.emit "message", msg

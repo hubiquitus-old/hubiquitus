@@ -16,11 +16,13 @@ You can add a twitter adapter to your actor by completing the specifics attribut
             "properties": {
                 "name": "twitter",
                 "proxy": "http://hostname:port",
-                "consumerKey": "cMXVWvotA5c86Nc8tPhtvA",
-                "consumerSecret": "VklYGUWU31Qh8ZnhAX1rt82nTkmfvey3U6rbuBxnAk",
-                "twitterAccesToken": "819820982-H4lPh9e0EvsivXdfaORl1lJSdzPdCpQYfHAqclsP",
-                "twitterAccesTokenSecret": "Zex6O4tEgEPIF2cE39XVcg0C5MJNxJfV7FNRqSupu0c",
-                "tags":"hubiquitus"
+                "consumerKey": "supkCU9BZjUifb22xJYWw",
+                "consumerSecret": "U2zbZforgtzuBD26pmG6en946VtTD237HfcK6xho",
+                "twitterAccesToken": "1570147814-BK0CkD6ocLht1CdHgvxZrHhh1am3GHToWoVBQCj",
+                "twitterAccesTokenSecret": "YqQnyESoiMJHgOYwO8JgdwnLCcNHmpNpuHmi5krJy4",
+                tags:"",
+                account:"",
+                locations: ""
             }
         }
     ]
@@ -107,10 +109,25 @@ In this example the adapters attributes are :
             <td>tags</td>
             <td>String</td>
             <td>The hashtag you want to fetch (separate with ',' if needed)</td>
-            <td>Yes</td>
+            <td>No<sup>(1)</td>
+        </tr>
+        <tr>
+            <td>accounts</td>
+            <td>String</td>
+            <td>The IDs<sup>(2)</sup> of the account you want to follow (separate with ',' if needed)</td>
+            <td>No<sup>(1)</td>
+        </tr>
+        <tr>
+            <td>locations</td>
+            <td>String</td>
+            <td>The location you want to focus on. Precise the left bottom corner and then the right up corner, lattitude, longitude. Ex : -2.5,43.3,7.2,50.6 for France (separate with ',' if you want to enter many zone)</td>
+            <td>No<sup>(1)</td>
         </tr>
     </tbody>
 </table>
+<sup>(1)</sup> At least one of the three
+<sup>(2)</sup> You can get the twitter ID of an account by its name on the [website](http://gettwitterid.com/)
+
 
 > To obtain the consumerKey, consumerSecret, twitterAccesToken and twitterAccesTokenSecret you need to add a new app on your twitter dev [account](https://dev.twitter.com/apps)
 

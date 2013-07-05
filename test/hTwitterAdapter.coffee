@@ -42,11 +42,14 @@ describe "hTwitterAdapter", ->
           type: "twitter_in",
           properties: {
             name: "twitter",
-            consumerKey: "cMXVWvotA5c86Nc8tPhtvA",
-            consumerSecret: "VklYGUWU31Qh8ZnhAX1rt82nTkmfvey3U6rbuBxnAk",
-            twitterAccesToken: "819820982-H4lPh9e0EvsivXdfaORl1lJSdzPdCpQYfHAqclsP",
-            twitterAccesTokenSecret: "Zex6O4tEgEPIF2cE39XVcg0C5MJNxJfV7FNRqSupu0c",
-            tags:""
+            consumerKey: "supkCU9BZjUifb22xJYWw",
+            proxy: "http://192.168.102.84:3128",
+            consumerSecret: "U2zbZforgtzuBD26pmG6en946VtTD237HfcK6xho",
+            twitterAccesToken: "1570147814-BK0CkD6ocLht1CdHgvxZrHhh1am3GHToWoVBQCj",
+            twitterAccesTokenSecret: "YqQnyESoiMJHgOYwO8JgdwnLCcNHmpNpuHmi5krJy4",
+            tags:"",
+            accounts:"",
+            locations: ""
           }
         } ]
       }
@@ -54,6 +57,9 @@ describe "hTwitterAdapter", ->
       msg = hActor.h_buildSignal(hActor.actor, "start", {})
       msg.sent = new Date().getTime()
       hActor.h_onMessageInternal(msg)
+
+    beforeEach () ->
+
 
     after () ->
       hActor.h_tearDown()
@@ -63,9 +69,22 @@ describe "hTwitterAdapter", ->
       if hActor.inboundAdapters[0].started is false
         done()
 
+    it "should update location, start and receive hTweet from France", (done) ->
+      count = 0
+      newProperties.locations = "-2.5,43.3,7.2,50.6"
+      hActor.updateAdapter("twitter", newProperties)
+
+      hActor.onMessage = (hMessage) =>
+        count++
+        hMessage.type.should.be.equal("hTweet")
+        hMessage.payload.location[0].should.be.greaterThan(-2.5) and hMessage.payload.location[0].should.be.lessThan(7.2) and hMessage.payload.location[1].should.be.greaterThan(43.3) and hMessage.payload.location[1].should.be.lessThan(50.6)
+        if count is 1
+          done()
+
     it "should update tag, start and receive hTweet with apple tags", (done) ->
       count = 0
       newProperties.tags = "apple"
+      newProperties.locations = ""
       hActor.updateAdapter("twitter", newProperties)
 
       hActor.onMessage = (hMessage) =>

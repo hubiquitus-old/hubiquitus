@@ -140,10 +140,10 @@ class Actor extends EventEmitter
       @log_properties =
         logLevel: "info"
       @h_initLogger()
-    unless topology.type == "hsession"
-      result = validator.validateTopology topology
-      unless result.valid
-        @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.error)
+    result = validator.validateTopology topology
+    unless result.valid
+      @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.error)
+
 
     # setting up instance attributes
     if(validator.validateFullURN(topology.actor))

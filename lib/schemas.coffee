@@ -127,14 +127,14 @@ exports.topology = {
       "items" : [
         {
           "$ref" : "#",
-          "additionalProperties" : false
+          "additionalProperties" : true
         }
       ],
       "additionalItems" : true
     }
   },
   "required" : ["actor", "type"],
-  "additionalProperties" : false
+  "additionalProperties" : true
 };
 
 exports.hMessage = {

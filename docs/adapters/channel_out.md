@@ -5,7 +5,7 @@ The channel_out adapter is a broadcast adapter.
 ## Topology
 
 The channel_out adapter is used by a hChannel to publish hMessage.
-If you want more details about our hChannel see [here](https://github.com/hubiquitus/hubiquitus/blob/master/docs/actors/hDispatcher.md)
+If you want more details about our hChannel see [here](https://github.com/hubiquitus/hubiquitus/blob/master/docs/actors/hChannel.md)
 
 
 ## API documentation

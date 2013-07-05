@@ -296,7 +296,7 @@ Hubiquitus use a few structure to run :
 
 # Filters Structure
 ## hCondition
-* For more details about hCondition see [Filter](https://github.com/hubiquitus/hubiquitus/tree/master/docs/hFilter)
+* For more details about hCondition see [Filter](https://github.com/hubiquitus/hubiquitus/tree/master/docs/hFilter.md)
 
 ## hValue
 * This structure defines a simple condition value for the available operand

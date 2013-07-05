@@ -42,6 +42,7 @@ describe "hTwitterAdapter", ->
           type: "twitter_in",
           properties: {
             name: "twitter",
+            proxy: "http://192.168.102.84:3128",
             consumerKey: "supkCU9BZjUifb22xJYWw",
             consumerSecret: "U2zbZforgtzuBD26pmG6en946VtTD237HfcK6xho",
             twitterAccesToken: "1570147814-BK0CkD6ocLht1CdHgvxZrHhh1am3GHToWoVBQCj",
@@ -72,18 +73,19 @@ describe "hTwitterAdapter", ->
       count = 0
       newProperties.locations = "-2.5,43.3,7.2,50.6"
       hActor.updateAdapter("twitter", newProperties)
-
+      @timeout 5000
       hActor.onMessage = (hMessage) =>
         count++
         hMessage.type.should.be.equal("hTweet")
-        hMessage.payload.location[0].should.be.greaterThan(-2.5) and hMessage.payload.location[0].should.be.lessThan(7.2) and hMessage.payload.location[1].should.be.greaterThan(43.3) and hMessage.payload.location[1].should.be.lessThan(50.6)
-        if count is 1
-          done()
+        if hMessage.payload.location[0] > -2.5 and hMessage.payload.location[0] < 7.2 and hMessage.payload.location[1] > 43.3 and hMessage.payload.location[1] < 50.6
+          if count is 1
+            done()
 
     it "should update tag, start and receive hTweet with apple tags", (done) ->
       count = 0
       newProperties.tags = "apple"
       newProperties.locations = ""
+      @timeout 5000
       hActor.updateAdapter("twitter", newProperties)
 
       hActor.onMessage = (hMessage) =>
@@ -96,6 +98,7 @@ describe "hTwitterAdapter", ->
     it "should update adapter properties and receive hTweet with google tags", (done) ->
       count = 0
       newProperties.tags = "google"
+      @timeout 5000
       hActor.updateAdapter("twitter", newProperties)
 
       hActor.onMessage = (hMessage) =>

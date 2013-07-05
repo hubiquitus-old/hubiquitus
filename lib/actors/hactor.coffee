@@ -250,8 +250,6 @@ class Actor extends EventEmitter
       result = validator.validateHMessage hMessage
       unless result.valid
         @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
-        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.INVALID_ATTR, JSON.stringify(result.error))
-        @send hMessageResult
       else
         #Complete missing values
         hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)

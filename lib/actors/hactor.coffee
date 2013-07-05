@@ -221,13 +221,9 @@ class Actor extends EventEmitter
       @listenersInited = true
       @on "message", (hMessage) =>
         #complete msgid
-        if hMessage.msgid
-          hMessage.msgid = hMessage.msgid + "#" + @h_makeMsgId()
-        else
+        unless hMessage.msgid
           hMessage.msgid = @h_makeMsgId()
-        ref = undefined
-        if hMessage and hMessage.ref and typeof hMessage.ref is "string"
-          ref = hMessage.ref.split("#")[0]
+        ref = hMessage.ref
         if ref
           cb = @msgToBeAnswered[ref]
         if cb
@@ -402,7 +398,7 @@ class Actor extends EventEmitter
       #Add it to the open message to call cb later
       if cb
         if hMessage.timeout > 0
-          msgid = hMessage.msgid.split("#")[0]
+          msgid = hMessage.msgid
           @msgToBeAnswered[msgid] = cb
           timeout = hMessage.timeout
           self = this

@@ -50,7 +50,6 @@ describe "schemas", ->
     hubiquitus.start topology
 
   it "should return a INVALID_ATTR message during the reception of a hMessage if this one contains a syntax error (type not present)", (done) ->
-
     hMsg =
       msgid : UUID.generate()
       actor: "urn:domain:u1"
@@ -61,9 +60,9 @@ describe "schemas", ->
 
     hActor = new Actor topology
 
-    hActor.send = (hMessage) ->
-      hMessage.payload.status.should.be.equal(codes.hResultStatus.INVALID_ATTR)
-      done()
+    hActor.log = (level, msg) ->
+      if level is "debug" and /^syntax error in hMessage : /.test(msg)
+        done()
 
     hActor.h_onMessageInternal hMsg
 

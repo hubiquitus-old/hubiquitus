@@ -152,11 +152,11 @@ exports.hMessage = {
       "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
     },
     "convid" : {
-      "type" : "string",
+      "type" : ["string","null"],
       "description": "The ID of the conversation to which the message belongs."
     },
     "ref" : {
-      "type" : "string",
+      "type" : ["string","null"],
       "description": "Refers to another hMessage msgid. Provide a mechanism to do correlation between messages."
     },
     "type" : {
@@ -164,23 +164,23 @@ exports.hMessage = {
       "description": "The type of the message payload."
     },
     "priority" : {
-      "type" : "integer",
+      "type" : ["integer","null"],
       "description": "The priority the hMessage."
     },
     "relevance" : {
-      "type" : "integer",
+      "type" : ["integer","null"],
       "description": "Defines the date (timestamp in milliseconds) until which the message is considered as relevant."
     },
     "persistent" : {
-      "type" : "boolean",
+      "type" : ["boolean","null"],
       "description": "Indicates if the message MUST/MUST NOT be persisted by the middleware."
     },
     "location" : {
-      "type" : "object",
+      "type" : ["object","null"],
       "description": "The geographical location to which the message refer."
     },
     "author" : {
-      "type" : "string",
+      "type" : ["string","null"],
       "description": "The URN of the author (the object or device at the origin of the message)."
     },
     "publisher" : {
@@ -189,19 +189,19 @@ exports.hMessage = {
       "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
     },
     "published" : {
-      "type" : "integer",
+      "type" : ["integer","null"],
       "description": "The date (timestamp in milliseconds) at which the message has been published."
     },
     "headers" : {
-      "type" : "object",
+      "type" : ["object","null"],
       "description": "A Headers object attached to this hMessage. It is a key-value pair map."
     },
     "payload" : {
-      "type" : ["object","string","boolean","number","array"],
+      "type" : ["object","string","boolean","number","array","null"],
       "description": "The content of the message. It can be plain text or more structured data (HTML, XML, JSON, etc.)."
     },
     "timeout" : {
-      "type" : "integer",
+      "type" : ["integer","null"],
       "description": "Define the timeout (ms) to get an answer to the hMessage."
     },
     "sent" : {

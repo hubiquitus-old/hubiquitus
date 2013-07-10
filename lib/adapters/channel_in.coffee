@@ -69,6 +69,13 @@ class ChannelInboundAdapter extends InboundAdapter
     @sock.on "message", @receive
 
   #
+  # @overload h_fillMessage()
+  #
+  h_fillMessage: (hMessage, callback) ->
+    hMessage.actor = @owner.actor
+    super
+
+  #
   # Mathod called to add a quickFilter in a subscription.
   # Add a quickFilter is like follow a specific topic in a channel
   # @param quickFilter {string} QuickFilter to add

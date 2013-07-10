@@ -56,7 +56,6 @@ class InboundAdapter extends Adapter
   # @private
   #
   h_fillMessage: (hMessage, callback) ->
-    hMessage.actor = @owner.actor
     hMessage.sent = new Date().getTime()
     callback null, hMessage
 

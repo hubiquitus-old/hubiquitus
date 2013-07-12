@@ -10,13 +10,16 @@
             "type": "hchannel",
             "properties": {
                 "subscribers": [],
-                "db":{
-                    "host": "localhost",
-                    "port": 27017,
-                    "name": "admin"
-                },
-                "collection": "pubChannel"
-            }
+                "persistentAid": "urn:localhost:mongo"
+            },
+            "adapters": [{
+                "type": "mongo_out",
+                "targetActorAid": "urn:localhost:mongo",
+                "properties": {
+                    "name": "hubiquitus",
+                    "collection": "pubChannel"
+                }
+            }]
         },
         {
             "actor": "urn:localhost:gateway",
@@ -46,13 +49,7 @@
             "actor": "urn:localhost:channel",
             "type": "hchannel",
             "properties": {
-                "subscribers": [],
-                "db":{
-                    "host": "localhost",
-                    "port": 27017,
-                    "name": "admin"
-                },
-                "collection": "channel"
+                "subscribers": []
             }
         }
     ],
@@ -61,13 +58,7 @@
             "actor": "urn:localhost:trackChannel",
             "type": "hchannel",
             "properties": {
-                "subscribers": [],
-                "db":{
-                    "host": "localhost",
-                    "port": 27017,
-                    "name": "admin"
-                },
-                "collection": "trackChannel"
+                "subscribers": []
             }
         },
         "pubChannel": "urn:localhost:pubChannel"

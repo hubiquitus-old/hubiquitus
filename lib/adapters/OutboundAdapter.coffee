@@ -55,7 +55,7 @@ class OutboundAdapter extends Adapter
     @filters.forEach (filter) ->
       args.push filter.validate
     args.push validator.validateHMessage
-    args.push @serializer.encode
+    if @serializer then args.push @serializer.encode
     if @authenticator then args.push @authenticator.authorize
 
     @prepareMessage = async.compose.apply null, args.reverse()

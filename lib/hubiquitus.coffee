@@ -49,11 +49,20 @@ builtinAdapterNames = require("./hbuiltin").builtinAdapterNames
 _.pairs(builtinAdapterNames).forEach (pair) ->
   to_exports[pair[0]] = require "./adapters/#{pair[1]}"
 
+builtinAuthenticatorNames = require("./hbuiltin").builtinAuthenticatorNames
+_.pairs(builtinAuthenticatorNames).forEach (pair) ->
+  to_exports[pair[0]] = require "./authenticators/#{pair[1]}"
+
+builtinFilterNames = require("./hbuiltin").builtinFilterNames
+_.pairs(builtinFilterNames).forEach (pair) ->
+  to_exports[pair[0]] = require "./filters/#{pair[1]}"
+
+builtinSerializerNames = require("./hbuiltin").builtinSerializerNames
+_.pairs(builtinSerializerNames).forEach (pair) ->
+  to_exports[pair[0]] = require "./serializers/#{pair[1]}"
+
 validator = require "./validator"
 to_exports.validator = validator
-
-filter = require "./hFilter"
-to_exports.filter = filter
 
 codes = require "./codes"
 to_exports.codes = codes

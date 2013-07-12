@@ -26,6 +26,7 @@
 
 url = require "url"
 factory = require "../factory"
+
 #
 # Class that defines an Adapter
 #
@@ -76,7 +77,8 @@ class Adapter
 
     if properties.serializer
       if typeof properties.serializer is 'string'
-        @serializer = factory.make properties.serializer
+        if properties.serializer isnt 'none'
+          @serializer = factory.make properties.serializer
       else
         @serializer = factory.make properties.serializer.type, properties.serializer.properties
     else

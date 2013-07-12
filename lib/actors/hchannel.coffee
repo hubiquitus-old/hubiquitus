@@ -22,12 +22,10 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-
 Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "../validator"
-mongo = require "mongodb"
 codes = require "../codes"
 factory = require "../factory"
 
@@ -36,8 +34,6 @@ factory = require "../factory"
 #
 class Channel extends Actor
 
-  # @property {object} MongoDB instance
-  @dbInstance : undefined
   #
   # Actor's constructor
   # @param topology {object} Launch topology of the actor
@@ -49,6 +45,8 @@ class Channel extends Actor
     @inboundAdapters.push factory.make("socket_in", {url: @properties.listenOn, owner: @})
     @outboundAdapters.push factory.make("channel_out", {url: @properties.broadcastOn, owner: @, targetActorAid: @actor})
     @properties.subscribers = topology.properties.subscribers or []
+    if topology.properties.persistentAid
+      @persistentAid = topology.properties.persistentAid
 
   #
   # @overload onMessage(hMessage)
@@ -68,23 +66,10 @@ class Channel extends Actor
           @send hMessageResult
     # If other type, publish
     else
-      if hMessage.persistent is true
-        timeout = hMessage.timeout
-        hMessage._id = hMessage.msgid
-
-        delete hMessage.persistent
-        delete hMessage.msgid
-        delete hMessage.timeout
-
-        @dbInstance.collection(@properties.collection).save hMessage, {safe:true}, (err, res) =>
-          if err
-            @log "error", "Error while save hMessage in database"
-
-
-        hMessage.persistent = true
-        hMessage.msgid = hMessage._id
-        hMessage.timeout = timeout
-        delete hMessage._id
+      if hMessage.persistent is true and @persistentAid isnt undefined
+        persistMsg = _.omit hMessage, 'persistent', 'timeout'
+        persistMsg.actor = @persistentAid
+        @send persistMsg
 
       #sends to all subscribers the message received
       hMessage.actor = @actor
@@ -164,35 +149,6 @@ class Channel extends Actor
   h_fillAttribut: (hMessage, cb) ->
     #Override with empty function to not altering hMessage
     hMessage.sent = new Date().getTime()
-
-  # @overload initialize(done)
-  #   Method called after starting the actor's adapters to connect the channel to the database.
-  #   When the connection is opened the actor's status is set to ready
-  #   @param done {function}
-  #
-  initialize: (done) ->
-    @h_connectToDatabase @properties.db, () =>
-      done()
-
-  #
-  # Method called to connect the hChannel to the mongoDB database.
-  # @private
-  # @param dbProperties {object} The properties of the database (port, host and name)
-  # @param done {function} Function called when the actor can be set his status to ready
-  #
-  h_connectToDatabase: (dbProperties, done) ->
-    host = dbProperties.host or "localhost"
-    port = dbProperties.port or 27017
-
-    #Create the Server and the DB to access mongo
-    new mongo.Db(dbProperties.name, new mongo.Server(host, port), {safe:false}).open (err, dbOpen) =>
-      unless err
-        @log "debug", "Correctly connect to mongo"
-        @dbInstance = dbOpen
-        done()
-      #Error opening database
-      else
-        @log "error", "Could not open database"
 
 
 module.exports = Channel

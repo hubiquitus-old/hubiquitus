@@ -64,6 +64,9 @@ _.pairs(builtinSerializerNames).forEach (pair) ->
 validator = require "./validator"
 to_exports.validator = validator
 
+filter = require "./hFilter"
+to_exports.filter = filter
+
 codes = require "./codes"
 to_exports.codes = codes
 

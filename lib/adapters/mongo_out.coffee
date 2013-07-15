@@ -35,6 +35,9 @@ class MongoOutboundAdapter extends OutboundAdapter
   # @property {object} MongoDB instance
   @dbInstance: undefined
 
+  # @property {object} MongoDB client handle
+  @mongoclient: undefined
+
   #
   # Adapter's constructor
   # @param properties {object} Launch properties of the adapter
@@ -49,20 +52,23 @@ class MongoOutboundAdapter extends OutboundAdapter
   # @private
   #
   h_connectToDatabase: () ->
-    #Create the Server and the DB to access mongo
-    new mongo.Db(@properties.name, new mongo.Server(@properties.host or 'localhost', @properties.port or 27017), {safe: false}).open (err, dbOpen) =>
-      unless err
-        @owner.log "debug", "Correctly connect to mongo"
-        @dbInstance = dbOpen
+    mongo_host = @properties.host || "127.0.0.1"
+    mongo_port = @properties.port || mongo.Connection.DEFAULT_PORT
+    mongo_server_options = {auto_reconnect: true}
+    mongo_dbname = @properties.name
+    mongoserver = new mongo.Server(mongo_host, mongo_port, mongo_server_options)
+    @mongoclient = new mongo.MongoClient(mongoserver);
 
-        if @properties.user and @properties.password
-          @dbInstance.authenticate @properties.user, @properties.password, (err, success) =>
-            if err
-              @owner.log "error", err
+    @mongoclient.open (err, mongoclient) =>
+      @owner.log "debug", "Opened mongodb link"
+      if err
+        @owner.log "error", "Couldn't connect to mongodb. If connection infos are valid, pool should connect as soon as the server is available. Error : " + err
+      @dbInstance = mongoclient.db mongo_dbname
 
-        #Error opening database
-      else
-        @owner.log "error", "Could not open database"
+      if @properties.user and @properties.password
+        @dbInstance.authenticate @properties.user, @properties.password, (err, success) =>
+          if err
+            @owner.log "Error authenticating to mongodb. If authentication infos are valid, it should authenticate when server is available : " + err
 
   #
   # @overload start()
@@ -80,7 +86,11 @@ class MongoOutboundAdapter extends OutboundAdapter
   #
   stop: ->
     if @started
-      @dbInstance.close()
+      @mongoclient.close (err, result) =>
+        if err
+          @owner.log "Closed mongo link with errors : ", err
+        else
+          @owner.log "Closed mongo link"
 
   #
   # @overload h_send(buffer)
@@ -91,12 +101,11 @@ class MongoOutboundAdapter extends OutboundAdapter
     @start() unless @started
 
     if @dbInstance isnt undefined
-      doc = _.omit buffer, 'msgid'
-      doc._id = buffer.msgid
+      doc = buffer
 
-      @dbInstance.collection(@properties.collection).save doc, {safe:true}, (err, res) =>
+      @dbInstance.collection(@properties.collection).save doc, {w:1}, (err, savedDoc) =>
         if err
-          @owner.log "error", "Error while save hMessage in database"
+          @owner.log "error", "Error while saving hMessage in database" + err
     else
       @owner.log "warn", "MongoDB not yet started"
 

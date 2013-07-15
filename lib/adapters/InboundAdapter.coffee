@@ -25,7 +25,7 @@
 
 async = require 'async'
 validator = require "../validator"
-{Adapter} = require "./Adapter"
+Adapter = require "./Adapter"
 
 #
 # Class that defines an Inbound adapter
@@ -71,4 +71,4 @@ class InboundAdapter extends Adapter
         @owner.emit 'message', hMessage
 
 
-exports.InboundAdapter = InboundAdapter
+module.exports = InboundAdapter

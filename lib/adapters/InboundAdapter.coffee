@@ -26,6 +26,7 @@
 async = require 'async'
 validator = require "../validator"
 {Adapter} = require "./Adapter"
+
 #
 # Class that defines an Inbound adapter
 #
@@ -44,7 +45,7 @@ class InboundAdapter extends Adapter
 
     args = [];
     if @authenticator then args.push @authenticator.authorize
-    args.push @serializer.decode
+    if @serializer then args.push @serializer.decode
     args.push @h_fillMessage
     args.push validator.validateHMessage
     @filters.forEach (filter) ->

@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-Authenticator = require 'hauthenticator'
+Authenticator = require './hauthenticator'
 codes = require "../codes"
 
 #

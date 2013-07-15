@@ -51,13 +51,7 @@
             "properties": {
                 "listenOn": "tcp://127.0.0.1",
                 "broadcastOn": "tcp://127.0.0.1",
-                "subscribers": [],
-                "db":{
-                    "host": "localhost",
-                    "port": 27017,
-                    "name": "admin"
-                },
-                "collection": "trackChannel"
+                "subscribers": []
             }
         }
     },

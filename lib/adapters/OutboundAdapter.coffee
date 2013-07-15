@@ -26,7 +26,7 @@
 async = require 'async'
 validator = require "../validator"
 url = require "url"
-{Adapter} = require "./Adapter"
+Adapter = require "./Adapter"
 
 #
 # Class that defines an Outbound adapter
@@ -79,4 +79,4 @@ class OutboundAdapter extends Adapter
     throw new Error "Send method should be overriden"
 
 
-exports.OutboundAdapter = OutboundAdapter
+module.exports = OutboundAdapter

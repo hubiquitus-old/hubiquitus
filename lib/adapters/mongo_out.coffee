@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{OutboundAdapter} = require "./OutboundAdapter"
+OutboundAdapter = require "./OutboundAdapter"
 mongo = require "mongodb"
 _ = require "underscore"
 

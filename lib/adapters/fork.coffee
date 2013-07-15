@@ -22,7 +22,7 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-{OutboundAdapter} = require "./OutboundAdapter"
+OutboundAdapter = require "./OutboundAdapter"
 
 #
 # Class that defines a fork Adapter.

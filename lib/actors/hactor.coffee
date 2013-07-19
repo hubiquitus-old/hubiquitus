@@ -36,6 +36,7 @@ validator = require "../validator"
 codes = require "../codes"
 hFilter = require "./../hFilter"
 factory = require "../factory"
+UUID = require "../UUID"
 
 _.mixin toDict: (arr, key) ->
   throw new Error('_.toDict takes an Array') unless _.isArray arr
@@ -216,7 +217,7 @@ class Actor extends EventEmitter
   # Init Listeners for node.js events
   # @private
   #
-  h_initListeners : () ->
+  h_initListeners: () ->
     unless @listenersInited
       @listenersInited = true
       @on "message", (hMessage) =>
@@ -434,9 +435,9 @@ class Actor extends EventEmitter
     #Complete hMessage
     hMessage.publisher = @actor
     if cb
-      hMessage.msgid = @h_makeMsgId()
+      hMessage.msgid = UUID.generate()
     else
-      hMessage.msgid = hMessage.msgid or @h_makeMsgId()
+      hMessage.msgid = hMessage.msgid or UUID.generate()
     hMessage.sent = new Date().getTime()
 
   #
@@ -998,14 +999,6 @@ class Actor extends EventEmitter
     @buildMessage actor, "hResult", hResult, options
 
   #
-  # Create a unique message id
-  # @private
-  #
-  h_makeMsgId: () ->
-    msgId = UUID.generate()
-    msgId
-
-  #
   # Called by an adapter that wants to register as a "watcher" for a peer
   # @private
   # @param actor {string} URN of the peer watched
@@ -1105,31 +1098,6 @@ class Actor extends EventEmitter
               return
     else
       @ip = "127.0.0.1"
-
-
-
-
-
-
-UUID = ->
-UUID.generate = ->
-  a = UUID._gri
-  b = UUID._ha
-  b(a(32), 8) + "-" + b(a(16), 4) + "-" + b(16384 | a(12), 4) + "-" + b(32768 | a(14), 4) + "-" + b(a(48), 12)
-
-UUID._gri = (a) ->
-  (if 0 > a then NaN else (if 30 >= a then 0 | Math.random() * (1 << a) else (if 53 >= a then (0 | 1073741824 * Math.random()) + 1073741824 * (0 | Math.random() * (1 << a - 30)) else NaN)))
-
-UUID._ha = (a, b) ->
-  c = a.toString(16)
-  d = b - c.length
-  e = "0"
-
-  while 0 < d
-    d & 1 and (c = e + c)
-    d >>>= 1
-    e += e
-  c
 
 
 module.exports = Actor

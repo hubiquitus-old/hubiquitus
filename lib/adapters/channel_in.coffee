@@ -26,6 +26,7 @@ InboundAdapter = require "./InboundAdapter"
 zmq = require "zmq"
 validator = require "../validator"
 codes = require "../codes"
+UUID = require "../UUID"
 
 #
 # Class that defines a Channel Inbound Adapter.
@@ -136,8 +137,7 @@ class ChannelInboundAdapter extends InboundAdapter
             @owner.subscribe adapterProps.channel, (status, result) =>
               unless status is codes.hResultStatus.OK
                 @owner.log "debug", "Resubscription to #{adapterProps.channel} failed cause #{result}"
-                ## TODO Call UUID.generate
-                errorID = @owner.h_makeMsgId()
+                errorID = UUID.generate()
                 @owner.raiseError(errorID, "Resubscription to #{adapterProps.channel} failed")
                 @owner.h_autoSubscribe(adapterProps, 500, errorID)
           @destroy()

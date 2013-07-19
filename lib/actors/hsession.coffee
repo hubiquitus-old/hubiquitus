@@ -33,6 +33,7 @@ validator = require "../validator"
 codes = require "../codes"
 hFilter = require "../hFilter"
 factory = require "../factory"
+UUID = require "../UUID"
 
 #
 # Class that defines a session actor
@@ -243,7 +244,7 @@ class Session extends Actor
   h_fillAttribut: (hMessage, cb) ->
     #Complete hMessage
     hMessage.publisher = @actor
-    hMessage.msgid = hMessage.msgid or @h_makeMsgId()
+    hMessage.msgid = hMessage.msgid or UUID.generate()
     hMessage.sent = new Date().getTime()
 
 

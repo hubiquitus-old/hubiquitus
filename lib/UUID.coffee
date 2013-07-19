@@ -11,7 +11,7 @@
 # *    subject to the following conditions:
 # *
 # *    The above copyright notice and this permission notice shall be included in all copies
-# *    or substantial portions of the Software.
+# *    or substantilal portions of the Software.
 # *
 # *    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 # *    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -23,56 +23,24 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-async = require 'async'
-validator = require "../validator"
-Adapter = require "./Adapter"
-UUID = require "../UUID"
+generate = ->
+  a = _gri
+  b = _ha
+  b(a(32), 8) + "-" + b(a(16), 4) + "-" + b(16384 | a(12), 4) + "-" + b(32768 | a(14), 4) + "-" + b(a(48), 12)
 
-#
-# Class that defines an Inbound adapter
-#
-class InboundAdapter extends Adapter
+_gri = (a) ->
+  (if 0 > a then NaN else (if 30 >= a then 0 | Math.random() * (1 << a) else (if 53 >= a then (0 | 1073741824 * Math.random()) + 1073741824 * (0 | Math.random() * (1 << a - 30)) else NaN)))
 
-  # @property {function} onMessage
-  onMessage: undefined
+_ha = (a, b) ->
+  c = a.toString(16)
+  d = b - c.length
+  e = "0"
 
-  #
-  # Adapter's constructor
-  # @param properties {object} Launch properties of the adapter
-  #
-  constructor: (properties) ->
-    @direction = "in"
-    super
-
-    args = [];
-    if @authenticator then args.push @authenticator.authorize
-    if @serializer then args.push @serializer.decode
-    args.push @h_fillMessage
-    args.push validator.validateHMessage
-    @filters.forEach (filter) ->
-      args.push filter.validate
-
-    @onMessage = async.compose.apply null, args.reverse()
-
-  #
-  # @private
-  #
-  h_fillMessage: (hMessage, callback) ->
-    unless hMessage.sent
-      hMessage.sent = new Date().getTime()
-    unless hMessage.msgid
-      hMessage.msgid = UUID.generate()
-    callback null, hMessage
-
-  #
-  # @param buffer {buffer}
-  #
-  receive: (buffer) =>
-    @onMessage buffer, (err, hMessage) =>
-      if err
-        @owner.log "error", if typeof err is 'string' then err else JSON.stringify(err)
-      else
-        @owner.emit 'message', hMessage
+  while 0 < d
+    d & 1 and (c = e + c)
+    d >>>= 1
+    e += e
+  c
 
 
-module.exports = InboundAdapter
+exports.generate = generate

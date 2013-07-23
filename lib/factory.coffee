@@ -35,7 +35,6 @@ coreTypes =
 # ---------------------------------------- Adapters
   'channel_in': './adapters/channel_in'
   'channel_out': './adapters/channel_out'
-  'InboundAdapter':"/adapters/InboundAdapter"
   'fork': './adapters/fork'
   'http_in': './adapters/http_in'
   'http_out': './adapters/http_out'

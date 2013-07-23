@@ -44,7 +44,7 @@ In this example the adapter attribute is :
             <td>serializer</td>
             <td>String</td>
             <td>
-                The serializer to use here, jsonPayload. For more information about serializers see <a href="https://github.com/hubiquitus/hubiquitus/blob/master/docs/serializers/">here</a>
+                The serializer to use here, jsonPayload. For more information about serializers see <a href="https://github.com/hubiquitus/hubiquitus/tree/master/docs/serializers">here</a>
             </td>
             <td>Yes</td>
         </tr>

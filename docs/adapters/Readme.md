@@ -11,3 +11,4 @@
 * [channel_out](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/channel_out.md)
 * [timer](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/timer.md)
 * [twitter](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/twitter_in.md)
+* [filewatcher](https://github.com/hubiquitus/hubiquitus/blob/master/docs/adapters/filewatcher.md)

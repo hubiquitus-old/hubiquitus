@@ -35,22 +35,24 @@ coreTypes =
 # ---------------------------------------- Adapters
   'channel_in': './adapters/channel_in'
   'channel_out': './adapters/channel_out'
-  'fork': './adapters/fork'
   'InboundAdapter':"/adapters/InboundAdapter"
+  'fork': './adapters/fork'
   'http_in': './adapters/http_in'
   'http_out': './adapters/http_out'
   'inproc': './adapters/inproc'
   'lb_socket_in': './adapters/lb_socket_in'
   'lb_socket_out': './adapters/lb_socket_out'
+  'mongo_out': './adapters/mongo_out'
   'socket_in': './adapters/socket_in'
   'socket_out': './adapters/socket_out'
   'socketIO': './adapters/socketIO'
   'timerAdapter': './adapters/timerAdapter'
   'twitter_in': './adapters/twitter_in'
-  'filewatcherAdapter':'./adapters/filewatcherAdapter'
+# ---------------------------------------- Authenticators
+  'simple': './authenticators/simple'
+# ---------------------------------------- Filters
 # ---------------------------------------- Serializers
   'json': './serializers/json'
-  'jsonpayload':'./serializers/jsonpayload'
 
 
 classes = {}

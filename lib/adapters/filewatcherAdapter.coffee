@@ -43,7 +43,7 @@ class FilewatcherAdapter extends InboundAdapter
         if exists is false
           @owner.log "debug", "FilewatcherAdapter : The File doesnt exist")
     else
-      @owner.log "debug", "FilewatcherAdapter : Waiting for a path"
+      @owner.log "error", "FilewatcherAdapter : Waiting for a path"
     @type = "Filewatcher"
 
 
@@ -66,7 +66,7 @@ class FilewatcherAdapter extends InboundAdapter
   start: () ->
     while @started is false
       super
-      @owner.log "info","Watching : " + @path
+      @owner.log "debug","Watching : " + @path
       @watch()
 
   #
@@ -86,7 +86,7 @@ class FilewatcherAdapter extends InboundAdapter
   #
   stop: ->
     if @started
-      fs.unwatchFile "@path"
+      fs.unwatchFile @path
 
 
 module.exports = FilewatcherAdapter

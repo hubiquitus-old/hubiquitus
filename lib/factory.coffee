@@ -35,6 +35,7 @@ coreTypes =
 # ---------------------------------------- Adapters
   'channel_in': './adapters/channel_in'
   'channel_out': './adapters/channel_out'
+  'InboundAdapter':"/adapters/InboundAdapter"
   'fork': './adapters/fork'
   'http_in': './adapters/http_in'
   'http_out': './adapters/http_out'
@@ -47,11 +48,13 @@ coreTypes =
   'socketIO': './adapters/socketIO'
   'timerAdapter': './adapters/timerAdapter'
   'twitter_in': './adapters/twitter_in'
+  'filewatcherAdapter': './adapters/filewatcherAdapter'
 # ---------------------------------------- Authenticators
   'simple': './authenticators/simple'
 # ---------------------------------------- Filters
 # ---------------------------------------- Serializers
   'json': './serializers/json'
+  'jsonpayload': './serializers/jsonpayload'
 
 
 classes = {}

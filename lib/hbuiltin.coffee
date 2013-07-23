@@ -48,6 +48,7 @@ exports.builtinAdapterNames =
   SocketIOAdapter: "socketIO"
   TimerAdapter: "timerAdapter"
   TwitterInboundAdapter: "twitter_in"
+  FilewatcherAdapter: "filewatcherAdapter"
 
 exports.builtinAuthenticatorNames =
   Authenticator: "hauthenticator"
@@ -59,4 +60,5 @@ exports.builtinFilterNames =
 exports.builtinSerializerNames =
   Serializer: "hserializer"
   JSONSerializer: "json"
+  JSONPayload: "jsonpayload"
 

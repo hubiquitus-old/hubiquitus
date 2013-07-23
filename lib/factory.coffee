@@ -48,11 +48,13 @@ coreTypes =
   'socketIO': './adapters/socketIO'
   'timerAdapter': './adapters/timerAdapter'
   'twitter_in': './adapters/twitter_in'
+  'filewatcherAdapter': './adapters/filewatcherAdapter'
 # ---------------------------------------- Authenticators
   'simple': './authenticators/simple'
 # ---------------------------------------- Filters
 # ---------------------------------------- Serializers
   'json': './serializers/json'
+  'jsonpayload': './serializers/jsonpayload'
 
 
 classes = {}

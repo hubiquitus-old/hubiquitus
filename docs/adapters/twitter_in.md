@@ -108,13 +108,13 @@ In this example the adapters attributes are :
         <tr>
             <td>tags</td>
             <td>String</td>
-            <td>The hashtag you want to fetch (separate with ',' if needed)</td>
+            <td>Hashtags you want to fetch (separated by ',')</td>
             <td>No<sup>(1)</td>
         </tr>
         <tr>
             <td>accounts</td>
             <td>String</td>
-            <td>The IDs<sup>(2)</sup> of the account you want to follow (separate with ',' if needed)</td>
+            <td>Screen names or userIDs<sup>(2)</sup> you want to follow (separated by ',') <br>Screen names & userIDs can be mixed.</td>
             <td>No<sup>(1)</td>
         </tr>
         <tr>
@@ -126,7 +126,8 @@ In this example the adapters attributes are :
     </tbody>
 </table>
 <sup>(1)</sup> At least one of the three
-<sup>(2)</sup> You can get the twitter ID of an account by its name on the [website](http://gettwitterid.com/)
+<sup>(2)</sup> You can get a twitter account userID from its name [here](http://gettwitterid.com/).
+Screen names
 
 
 > To obtain the consumerKey, consumerSecret, twitterAccesToken and twitterAccesTokenSecret you need to add a new app on your twitter dev [account](https://dev.twitter.com/apps)

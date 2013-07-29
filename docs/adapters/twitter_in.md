@@ -126,7 +126,7 @@ In this example the adapters attributes are :
     </tbody>
 </table>
 <sup>(1)</sup> At least one of the three
-<sup>(2)</sup> You can get a twitter account userID from its name [here](http://gettwitterid.com/).
+<sup>(2)</sup> You can get a twitter account userID from its screen name [here](http://gettwitterid.com/).
 Screen names
 
 

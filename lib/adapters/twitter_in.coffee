@@ -74,7 +74,9 @@ class TwitterInboundAdapter extends InboundAdapter
         @applyConfig =>
           super
 
-
+  #
+  # @param cb {function} Callback after config is applied
+  #
   applyConfig: (cb) ->
     if @properties.tags and @properties.tags isnt ""
       @twitProperties.track = @properties.tags
@@ -161,6 +163,12 @@ class TwitterInboundAdapter extends InboundAdapter
       @properties[props] = properties[props]
     @start()
 
+  #
+  #   getIdForScreenName(properties)
+  #   Gets twitter user ID for every screen name specified
+  #   @param userIdTab {array} array of user IDs
+  #   @param cb {function} callback to apply once function is done
+  #
   getIdForScreenName: (userIdTab, cb) ->
     unless @twit
       @twit = new twitter(

@@ -38,31 +38,23 @@ class JSONSerializer extends Serializer
   # @param hMessage {object} the message to encode
   # @param callback {function} callback
   #
-  encode: (hMessage, callback) ->
+  encode: (hMessage, metadata, callback) ->
     try
-      if hMessage.headers and typeof hMessage.headers.h_quickFilter is "string"
-        message = hMessage.headers.h_quickFilter + '$' + JSON.stringify(hMessage)
-      else
-        message = JSON.stringify(hMessage)
-
-      callback null, new Buffer(message, "utf-8")
+      message = JSON.stringify(hMessage)
+      callback null, new Buffer(message, "utf-8"), metadata
     catch err
-      callback err, null
+      callback err, null, null
 
   #
   # @param buffer {Buffer} the data to decode
   # @param callback {function} callback
   #
-  decode: (buffer, callback) ->
+  decode: (buffer, metadata, callback) ->
     try
       message = buffer.toString("utf-8")
-      filter = message.indexOf('$');
-      start = message.indexOf('{');
-      if filter > 0 and filter < start then message = message.substr start
-
-      callback null, JSON.parse(message)
+      callback null, JSON.parse(message), metadata
     catch err
-      callback err, null
+      callback null, err, null
 
 
 module.exports = JSONSerializer

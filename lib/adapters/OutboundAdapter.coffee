@@ -55,27 +55,40 @@ class OutboundAdapter extends Adapter
     @filters.forEach (filter) ->
       args.push filter.validate
     args.push validator.validateHMessage
+    if @makeData then args.push @makeData
     if @serializer then args.push @serializer.encode
     if @authenticator then args.push @authenticator.authorize
 
     @prepareMessage = async.compose.apply null, args.reverse()
 
   #
+  # Convert an hMessage to a data and metadata that can be sent by the adapter
+  # @param hMessage {object} hMessage to send
+  # @params callback {function} called once lock is acquire or an error occured
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback data {object, string, number, boolean} data extracted from hMessage
+  # @options callback metadata {object} data metadata extracted from the hMessage
+  #
+  makeData: (hMessage, callback) ->
+    callback null, hMessage, null
+
+  #
   # Method which has to be override to specify an outbound adapter
   # @param hMessage {object}
   #
   send: (hMessage) ->
-    @prepareMessage hMessage, (err, buffer) =>
+    @prepareMessage hMessage, (err, buffer, metadata) =>
       if err
         @owner.log "error", err
       else
-        @h_send buffer
+        @h_send buffer, metadata
 
   #
   # Method which has to be override to specify an outbound adapter
   # @param buffer {buffer}
+  # @param metadata {object} metadata extracted from hMessage
   #
-  h_send: (buffer) ->
+  h_send: (buffer, metadata) ->
     throw new Error "Send method should be overriden"
 
 

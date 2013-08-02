@@ -85,13 +85,35 @@ class ChannelOutboundAdapter extends OutboundAdapter
       @sock = null
 
   #
-  # @overload h_send(buffer)
+  # @overload makeData(hMessage, callback)
+  #
+  makeData: (hMessage, callback) ->
+    metadata = null
+    if hMessage and typeof hMessage is "object" and hMessage.headers and typeof hMessage.headers is "object" and hMessage.headers.h_quickFilter
+      metadata = {zmqFilter: hMessage.headers.h_quickFilter}
+
+    callback null, hMessage, metadata
+
+  #
+  # @overload h_send(buffer, metadata)
   #   Method which send the hMessage in the zmq pub socket.
   #   @param buffer {Buffer} The hMessage to send
   #
-  h_send: (buffer) ->
+  h_send: (buffer, metadata) ->
     @start() unless @started
-    @sock.send buffer
+
+    try
+      zmqFilterEndBuf = new Buffer(1)
+      zmqFilterEndBuf[0] = 7
+      outBuffer = Buffer.concat([zmqFilterEndBuf, buffer], zmqFilterEndBuf.length + buffer.length)
+
+      if metadata and typeof metadata is "object" and metadata.zmqFilter
+        zmqFilterBuf = new Buffer(metadata.zmqFilter, "utf-8")
+        outBuffer = Buffer.concat([zmqFilterBuf, outBuffer], zmqFilterBuf.length + outBuffer.length)
+
+      @sock.send outBuffer
+    catch err
+      @owner.log "error", "channel_out couldn't send a message : " + err
 
 
 module.exports = ChannelOutboundAdapter

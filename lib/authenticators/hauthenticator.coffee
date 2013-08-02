@@ -36,8 +36,11 @@ class Authenticator
   #
   # @param hMessage {object} the message to encode
   # @param callback {function} callback
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback buffer {object, string, number, boolean}
+  # @options callback metadata {object} data metadata
   #
-  auth: (hMessage, callback) ->
+  auth: (buffer, metadata, callback) ->
 
 
 module.exports = Authenticator

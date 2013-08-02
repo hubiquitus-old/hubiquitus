@@ -40,11 +40,11 @@ class SimpleAuthenticator extends Authenticator
     # @param hMessage {object} the message to encode
     # @param callback {function} callback
     #
-  auth: (hMessage, callback) ->
+  auth: (hMessage, metadata, callback) ->
     if hMessage.login is hMessage.password
-      callback null, hMessage
+      callback null, hMessage, metadata
     else
-      callback codes.errors.AUTH_FAILED, hMessage
+      callback codes.errors.AUTH_FAILED, hMessage, metadata
 
 
 module.exports = Authenticator

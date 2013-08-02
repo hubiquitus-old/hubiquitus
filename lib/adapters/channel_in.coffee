@@ -67,7 +67,24 @@ class ChannelInboundAdapter extends InboundAdapter
   h_initSocket: () ->
     @sock = zmq.socket "sub"
     @sock.identity = "ChannelIA_of_#{@owner.actor}"
-    @sock.on "message", @receive
+    @sock.on "message", (buffer) =>
+      resultBuffer = buffer
+      try
+        #get quickfilter end sequence (it should be bell char in ascii)
+        quickFilterLength = -1
+        i = 0
+        while quickFilterLength < 0 and i < buffer.length - 1
+          if buffer[i] is 7
+            quickFilterLength = i
+          else
+            i++
+
+        if quickFilterLength >= 0
+          resultBuffer = buffer.slice(quickFilterLength + 1)
+
+        @receive resultBuffer, null
+      catch err
+        @owner.log "debug", "Channel_in couldn't read input : " + err
 
   #
   # @overload h_fillMessage()
@@ -87,7 +104,7 @@ class ChannelInboundAdapter extends InboundAdapter
     @listQuickFilter.push quickFilter
 
   #
-  # Mathod called to remove a quickFilter in a subscription.
+  # Method called to remove a quickFilter in a subscription.
   # Remove a quickFilter is like unfollow a specific topic in a channel.
   # If you remove all the quickFilter of a channel, you will be unsubscribe from it
   # @param quickFilter {string} QuickFilter to add

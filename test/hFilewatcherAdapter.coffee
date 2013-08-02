@@ -17,19 +17,14 @@ describe "hFilewatchAdapter", ->
         actor: "urn:localhost:actor",
         type: "hactor",
         properties: {},
-        adapters: [ { type: "filewatcherAdapter", properties: {path:"./test.json"}, "serializer":"jsonpayload"} ]
+        adapters: [ { type: "filewatcherAdapter", properties: {path:"./test.json"}} ]
       }
       fs.writeFile("./test.json",'"111"')
-
-
 
       hActor = new Actor topology
       hMessage = hActor.h_buildSignal(hActor.actor, "start", {})
       hMessage.sent = new Date().getTime()
       hActor.h_onMessageInternal(hMessage)
-
-
-
 
     after () ->
       hActor.h_tearDown()
@@ -65,7 +60,7 @@ describe "hFilewatchAdapter", ->
         actor: "urn:localhost:actor",
         type: "hactor",
         properties: {},
-        adapters: [ { type: "filewatcherAdapter", properties: {path:"./test2.json"}, "serializer":"jsonpayload"} ]
+        adapters: [ { type: "filewatcherAdapter", properties: {path:"./test2.json"}} ]
       }
       valid = 0
 

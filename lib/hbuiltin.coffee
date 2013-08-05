@@ -60,5 +60,4 @@ exports.builtinFilterNames =
 exports.builtinSerializerNames =
   Serializer: "hserializer"
   JSONSerializer: "json"
-  JSONPayload: "jsonpayload"
 

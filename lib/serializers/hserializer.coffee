@@ -34,16 +34,24 @@ class Serializer
   constructor: () ->
 
   #
-  # @param hMessage {object} the message to encode
+  # @param data {object, string, number, boolean} to encode
+  # @param metadata {object} data metadata
   # @param callback {function} callback
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback data {object, string, number, boolean} data extracted from message
+  # @options callback metadata {object} metadata extracted from message
   #
-  encode: (hMessage, callback) ->
+  encode: (data, metadata, callback) ->
 
   #
   # @param buffer {Buffer} the data to decode
+  # @param metadata {object} buffer metadata
   # @param callback {Function} callback
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback data {object, string, number, boolean} data converted from buffer
+  # @options callback metadata {object} metadata extracted by the adapter
   #
-  decode: (buffer, callback) ->
+  decode: (buffer, metadata, callback) ->
 
 
 module.exports = Serializer

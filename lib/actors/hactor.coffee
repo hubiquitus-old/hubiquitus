@@ -278,6 +278,7 @@ class Actor extends EventEmitter
     catch error
       @log "warn", "An error occured while processing incoming message: " + error
 
+
   #
   # Method that processes the incoming message.
   # This method could be override to specified an actor

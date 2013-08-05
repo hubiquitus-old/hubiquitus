@@ -24,6 +24,7 @@
 #
 InboundAdapter = require "./InboundAdapter"
 fs = require "fs"
+UUID = require "../UUID"
 
 #
 # Class that definefilewatchs a Filwatch Inbound Adapter
@@ -31,12 +32,17 @@ fs = require "fs"
 #
 class FilewatcherAdapter extends InboundAdapter
 
+  # @property {object} publisher urn. By default actor's urn
+  publisher: undefined
+
   #
   # Adapter's constructor
   # @param properties {object} Launch properties of the adapter, The file Path to watch
   #
   constructor: (properties) ->
     super
+    @publisher = @properties.publisher or @owner.actor
+
     if @properties.path
       @path = @properties.path
       fs.exists(@path, (exists) =>
@@ -70,16 +76,6 @@ class FilewatcherAdapter extends InboundAdapter
       @watch()
 
   #
-  # @overload h_fillMessage()
-  # Method which fills a hMessage.
-  #
-  h_fillMessage: (hMessage, callback) ->
-    hMessage.actor = hMessage.actor or @owner.actor
-    hMessage.publisher = hMessage.publisher or @owner.actor
-    hMessage.type = hMessage.type or "filePayload"
-    super
-
-  #
   # @overload stop()
   # Method which stop the adapter.
   # When the adapter is stoped, the actor can not receive a hMessage anymore
@@ -88,5 +84,11 @@ class FilewatcherAdapter extends InboundAdapter
     if @started
       fs.unwatchFile @path
 
+  # @overload makeHMessage(data, metadata, callback)
+  makeHMessage: (data, metadata, callback) ->
+    hMessage = {msgid: UUID.generate(), type:"filePayload", payload:data, actor:@owner.actor}
+    hMessage.publisher = @publisher
+
+    callback null, hMessage
 
 module.exports = FilewatcherAdapter

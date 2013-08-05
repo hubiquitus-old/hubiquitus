@@ -47,6 +47,7 @@ class InboundAdapter extends Adapter
     args = [];
     if @authenticator then args.push @authenticator.authorize
     if @serializer then args.push @serializer.decode
+    if @makeHMessage then args.push @makeHMessage
     args.push @h_fillMessage
     args.push validator.validateHMessage
     @filters.forEach (filter) ->
@@ -64,11 +65,23 @@ class InboundAdapter extends Adapter
       hMessage.msgid = UUID.generate()
     callback null, hMessage
 
+
+  #
+  # Make an hMessage from decoded data and provided metadata
+  # @param data {object, string, number, boolean} decoded data given by the adapter
+  # @param metadata {object} data metadata provided by the adapter
+  # @params callback {function} called once lock is acquire or an error occured
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback hMessage {object} Hmessage created from given data
+  #
+  makeHMessage: (data, metadata, callback) ->
+    callback null, data
+
   #
   # @param buffer {buffer}
   #
-  receive: (buffer) =>
-    @onMessage buffer, (err, hMessage) =>
+  receive: (buffer, metadata) =>
+    @onMessage buffer, metadata, (err, hMessage) =>
       if err
         @owner.log "error", if typeof err is 'string' then err else JSON.stringify(err)
       else

@@ -41,7 +41,6 @@ class HttpInboundAdapter extends InboundAdapter
     if properties.url
       url_props = url.parse(properties.url)
       if url_props.port then @port = url_props.port else @port = 8888
-      if url_props.hostname then @serverPath = url_props.hostname else @serverPath = "127.0.0.1"
     else
       throw new Error "You must provide a listening url"
 
@@ -69,7 +68,7 @@ class HttpInboundAdapter extends InboundAdapter
         res.end()
         @receive @qs.parse(req.url)['/hmessage']
 
-    server.listen @port,@serverPath
+    server.listen @port
 
 
 module.exports = HttpInboundAdapter

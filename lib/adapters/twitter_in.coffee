@@ -57,22 +57,39 @@ class TwitterInboundAdapter extends InboundAdapter
   #
   start: ->
     unless @started
-      if @properties.tags and @properties.tags isnt ""
-        @twitProperties.track = @properties.tags
-      if @properties.tags is ""
-        delete @twitProperties['track']
-
       if @properties.accounts and @properties.accounts isnt ""
-        @twitProperties.follow = @properties.accounts
-      if @properties.accounts is ""
-        delete @twitProperties['follow']
+        scrNamesTab = []
+        @twitProperties.follow = []
+        for elem in @properties.accounts.split(",")
+          if isNaN(elem)
+            scrNamesTab.push(elem)
+          else @twitProperties.follow.push(elem)
+        @getIdForScreenName scrNamesTab.join(","), =>
+          @twitProperties.follow = @twitProperties.follow.join(",")
+          @applyConfig =>
+            super
+      else
+        if @properties.accounts is ""
+          delete @twitProperties.follow
+        @applyConfig =>
+          super
 
-      if @properties.locations and @properties.locations isnt ""
-        @twitProperties.locations = @properties.locations
-      if @properties.locations is ""
-        delete @twitProperties['locations']
+  #
+  # @param cb {function} Callback after config is applied
+  #
+  applyConfig: (cb) ->
+    if @properties.tags and @properties.tags isnt ""
+      @twitProperties.track = @properties.tags
+    if @properties.tags is ""
+      delete @twitProperties.track
 
-      if @twitProperties.track or @twitProperties.follow or @twitProperties.locations
+    if @properties.locations and @properties.locations isnt ""
+      @twitProperties.locations = @properties.locations
+    if @properties.locations is ""
+      delete @twitProperties.locations
+
+    if @twitProperties.track or @twitProperties.follow or @twitProperties.locations
+      unless @twit
         @twit = new twitter(
           proxy: @properties.proxy
           consumer_key: @properties.consumerKey
@@ -80,47 +97,46 @@ class TwitterInboundAdapter extends InboundAdapter
           access_token_key: @properties.twitterAccesToken
           access_token_secret: @properties.twitterAccesTokenSecret
         )
+      @twit.stream "statuses/filter", @twitProperties, (stream) =>
+        @stream = stream
+        @stream.on "error", (type, code) =>
+          @owner.log "error", "Twitter stream error : #{type} #{code}"
 
-        @twit.stream "statuses/filter", @twitProperties, (stream) =>
-          @stream = stream
-          @stream.on "error", (type, code) =>
-            @owner.log "error", "Twitter stream error : #{type} #{code}"
+        @stream.on "data", (data) =>
+          unless data.disconnect
+            if @properties.langFilter is undefined or data.user.lang is @properties.langFilter
+              hTweet = {}
+              hTweetAuthor = {}
+              hTweetAuthor.listed = data.user.listed_count
+              hTweetAuthor.geo = data.user.geo_enabled
+              hTweetAuthor.verified = data.user.verified
+              hTweetAuthor.status = data.user.statuses_count
+              hTweetAuthor.location = data.user.location
+              hTweetAuthor.lang = data.user.lang
+              hTweetAuthor.url = data.user.url
+              hTweetAuthor.scrName = data.user.screen_name
+              hTweetAuthor.followers = data.user.followers_count
+              hTweetAuthor.profileImg = data.user.profile_image_url
+              hTweetAuthor.friends = data.user.friends_count
+              hTweetAuthor.description = data.user.description
+              hTweetAuthor.createdAt = new Date(data.user.created_at)
+              hTweetAuthor.name = data.user.name
+              hTweet.id = data.id_str
+              hTweet.source = data.source
+              hTweet.text = data.text
+              if data.coordinates and data.coordinates.coordinates
+                hTweet.location = data.coordinates.coordinates
+              else if data.bounding_box and data.bounding_box.coordinates and data.bounding_box.coordinates[0]
+                hTweet.location = data.bounding_box.coordinates[0]
+              hTweet.author = hTweetAuthor
+              msg = @owner.buildMessage(@owner.actor, "hTweet", hTweet, {author: data.user.screen_name + "@twitter.com"})
+              @owner.emit "message", msg
+          else
+            @owner.log "debug", "Disconnecting data"
 
-          @stream.on "data", (data) =>
-            unless data.disconnect
-              if @properties.langFilter is undefined or data.user.lang is @properties.langFilter
-                hTweet = {}
-                hTweetAuthor = {}
-                hTweetAuthor.listed = data.user.listed_count
-                hTweetAuthor.geo = data.user.geo_enabled
-                hTweetAuthor.verified = data.user.verified
-                hTweetAuthor.status = data.user.statuses_count
-                hTweetAuthor.location = data.user.location
-                hTweetAuthor.lang = data.user.lang
-                hTweetAuthor.url = data.user.url
-                hTweetAuthor.scrName = data.user.screen_name
-                hTweetAuthor.followers = data.user.followers_count
-                hTweetAuthor.profileImg = data.user.profile_image_url
-                hTweetAuthor.friends = data.user.friends_count
-                hTweetAuthor.description = data.user.description
-                hTweetAuthor.createdAt = new Date(data.user.created_at)
-                hTweetAuthor.name = data.user.name
-                hTweet.id = data.id_str
-                hTweet.source = data.source
-                hTweet.text = data.text
-                if data.coordinates and data.coordinates.coordinates
-                  hTweet.location = data.coordinates.coordinates
-                else if data.bounding_box and data.bounding_box.coordinates and data.bounding_box.coordinates[0]
-                  hTweet.location = data.bounding_box.coordinates[0]
-                hTweet.author = hTweetAuthor
-                msg = @owner.buildMessage(@owner.actor, "hTweet", hTweet, {author: data.user.screen_name + "@twitter.com"})
-                @owner.emit "message", msg
-            else
-              @owner.log "debug", "Disconnecting data"
-
-          @stream.on "destroy", (data) =>
-            @owner.log "debug", "twitter stream close"
-        super
+        @stream.on "destroy", (data) =>
+          @owner.log "debug", "twitter stream close"
+      cb()
 
   #
   # @overload stop()
@@ -146,6 +162,32 @@ class TwitterInboundAdapter extends InboundAdapter
     for props of properties
       @properties[props] = properties[props]
     @start()
+
+  #
+  #   getIdForScreenName(properties)
+  #   Gets twitter user ID for every screen name specified
+  #   @param userIdTab {array} array of user IDs
+  #   @param cb {function} callback to apply once function is done
+  #
+  getIdForScreenName: (userIdTab, cb) ->
+    unless @twit
+      @twit = new twitter(
+        proxy: @properties.proxy
+        consumer_key: @properties.consumerKey
+        consumer_secret: @properties.consumerSecret
+        access_token_key: @properties.twitterAccesToken
+        access_token_secret: @properties.twitterAccesTokenSecret
+      )
+    self = @
+    @twit.showUser userIdTab, (err, data) ->
+      if err
+        self.owner.log "error", "Twitter REST API error : #{err}"
+        cb()
+      else
+        for elem in data
+          self.twitProperties.follow.push(elem.id)
+        cb()
+
 
 
 module.exports = TwitterInboundAdapter

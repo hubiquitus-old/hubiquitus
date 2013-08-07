@@ -54,11 +54,11 @@ class LBSocketOutboundAdapter extends OutboundAdapter
   #   Method which start the adapter.
   #   When this adapter is started, the actor can transmit hMessage to few actors with load balancing
   #
-  start: ->
+  start: (callback)->
     @initsocket()
     @sock.bindSync @url
     @owner.log "debug", "#{@sock.identity} bound on #{@url}"
-    super
+    if callback then callback() else @started = true
 
   #
   # @overload stop()

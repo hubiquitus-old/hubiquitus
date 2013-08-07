@@ -59,21 +59,21 @@ class SocketOutboundAdapter extends OutboundAdapter
   #   Method which start the adapter.
   #   When this adapter is started, the channel can transmit hMessage
   #
-  start:->
+  start: (callback)->
     @h_initSocket()
-    super
     @sock.connect @url
     @owner.log "debug", "#{@sock.identity} writing on #{@url}"
     dontWatch = not @owner.trackers[0] or
     @owner.type is "tracker" or # is tracker
     validator.getBareURN(@owner.actor) is @owner.trackers[0].trackerChannel or # is trackChannel
     @targetActorAid is @owner.trackers[0].trackerId or # target is tracker
-    validator.getBareURN(@targetActorAid)is @owner.trackers[0].trackerChannel # target is trackChannel
+    validator.getBareURN(@targetActorAid) is @owner.trackers[0].trackerChannel # target is trackChannel
     unless dontWatch
       cb = () ->
         delete @owner.timerOutAdapter[@targetActorAid]
         @destroy()
       @h_watchPeer(@targetActorAid, cb)
+    if callback then callback() else @started = true
 
   #
   # @overload stop()
@@ -85,8 +85,8 @@ class SocketOutboundAdapter extends OutboundAdapter
       if @sock._zmq.state is 0
         @sock.close()
       super
-      @sock.on "message",()=>
-      @sock=null
+      @sock.on "message", ()=>
+      @sock = null
       doUnwatch = @owner.trackers[0] and
       @owner.type isnt "tracker" and
       @owner.actor isnt @owner.trackers[0].trackerChannel and
@@ -116,7 +116,7 @@ class SocketOutboundAdapter extends OutboundAdapter
   # @param actor {string} URN of the peer watched
   # @param cb {function} Function to call when unwatching
   #
-  h_watchPeer : (actor, cb) ->
+  h_watchPeer: (actor, cb) ->
     @owner.h_watchPeer(actor, @, cb)
 
   #
@@ -124,13 +124,13 @@ class SocketOutboundAdapter extends OutboundAdapter
   # @private
   # @param actor {string} URN of the peer watched
   #
-  h_unwatchPeer : (actor) ->
+  h_unwatchPeer: (actor) ->
     @owner.h_unwatchPeer(actor, @)
 
   #
   # Remove adapter from his owner's adapters lists
   #
-  destroy : () ->
+  destroy: () ->
     @owner.h_removeAdapter(@)
 
 

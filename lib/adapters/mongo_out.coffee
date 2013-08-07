@@ -48,10 +48,11 @@ class MongoOutboundAdapter extends OutboundAdapter
     @type = "mongo_out"
 
   #
-  # Method called to connect to the mongoDB database.
-  # @private
+  # @overload start()
+  #   Method which start the adapter.
+  #   When this adapter is started, the adapter can transmit hMessage
   #
-  h_connectToDatabase: () ->
+  start: (callback)->
     mongo_host = @properties.host || "127.0.0.1"
     mongo_port = @properties.port || mongo.Connection.DEFAULT_PORT
     mongo_server_options = {auto_reconnect: true}
@@ -67,17 +68,12 @@ class MongoOutboundAdapter extends OutboundAdapter
 
       if @properties.user and @properties.password
         @dbInstance.authenticate @properties.user, @properties.password, (err, success) =>
-          if err
+          unless err
+            if callback then callback() else @started = true
+          else
             @owner.log "Error authenticating to mongodb. If authentication infos are valid, it should authenticate when server is available : " + err
-
-  #
-  # @overload start()
-  #   Method which start the adapter.
-  #   When this adapter is started, the adapter can transmit hMessage
-  #
-  start: ->
-    @h_connectToDatabase()
-    super
+      else
+        if callback then callback() else @started = true
 
   #
   # @overload stop()
@@ -103,7 +99,7 @@ class MongoOutboundAdapter extends OutboundAdapter
     if @dbInstance isnt undefined
       doc = buffer
 
-      @dbInstance.collection(@properties.collection).save doc, {w:1}, (err, savedDoc) =>
+      @dbInstance.collection(@properties.collection).save doc, {w: 1}, (err, savedDoc) =>
         if err
           @owner.log "error", "Error while saving hMessage in database" + err
     else

@@ -39,11 +39,19 @@ class OutboundAdapter extends Adapter
   # @property {function} sendMessage
   prepareMessage: undefined
 
+  # @property {boolean} Adapter's status
+  starting: undefined
+
+  # @property {Array} Waiting queue
+  queue: undefined
+
   #
   # Adapter's constructor
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
+    @starting = false
+    @queue = []
     @direction = "out"
     if properties.targetActorAid
       @targetActorAid = properties.targetActorAid
@@ -77,11 +85,21 @@ class OutboundAdapter extends Adapter
   # @param hMessage {object}
   #
   send: (hMessage) ->
-    @prepareMessage hMessage, (err, buffer, metadata) =>
-      if err
-        @owner.log "error", err
-      else
-        @h_send buffer, metadata
+    unless @started
+      @queue.push hMessage
+      unless @starting
+        @starting = true
+        @start () =>
+          @started = true
+          @starting = false
+          while hMessage = @queue.pop()
+            @send hMessage
+    else
+      @prepareMessage hMessage, (err, buffer, metadata) =>
+        unless err
+          @h_send buffer, metadata
+        else
+          @owner.log "error", err
 
   #
   # Method which has to be override to specify an outbound adapter

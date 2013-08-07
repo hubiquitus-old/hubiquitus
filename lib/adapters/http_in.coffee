@@ -69,6 +69,6 @@ class HttpInboundAdapter extends InboundAdapter
         @receive @qs.parse(req.url)['/hmessage']
 
     server.listen @port
-
+    super
 
 module.exports = HttpInboundAdapter

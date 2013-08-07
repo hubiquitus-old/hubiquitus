@@ -53,7 +53,6 @@ coreTypes =
 # ---------------------------------------- Filters
 # ---------------------------------------- Serializers
   'json': './serializers/json'
-  'jsonpayload': './serializers/jsonpayload'
 
 
 classes = {}

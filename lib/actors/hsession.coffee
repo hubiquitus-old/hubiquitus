@@ -200,7 +200,6 @@ class Session extends Actor
       module.exec hMessage, @, onResult
     catch err
       clearTimeout timerObject
-      console.log hMessage
       @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
       @send(self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 

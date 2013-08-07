@@ -57,13 +57,13 @@ class ChannelOutboundAdapter extends OutboundAdapter
   #   Method which start the adapter.
   #   When this adapter is started, the channel can transmit hMessage to its subscriber
   #
-  start: ->
+  start: (callback)=>
     @initSocket()
     while @started is false
       try
         @sock.bindSync @url
         @owner.log "debug", "#{@sock.identity} streaming on #{@url}"
-        super
+        if callback then callback() else @started = true
       catch err
         if err.message is "Address already in use"
           @sock = null
@@ -100,8 +100,6 @@ class ChannelOutboundAdapter extends OutboundAdapter
   #   @param buffer {Buffer} The hMessage to send
   #
   h_send: (buffer, metadata) ->
-    @start() unless @started
-
     try
       zmqFilterEndBuf = new Buffer(1)
       zmqFilterEndBuf[0] = 7

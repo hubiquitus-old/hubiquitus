@@ -47,6 +47,7 @@ class HttpOutboundAdapter extends OutboundAdapter
 
     if properties.path then @path = properties.path else @path = "/"
 
+    @started = true
     @owner.log "debug", "HttpOutboundAdapter used -> [ url: #{@server_url} port : #{@port} path: #{@path} ]"
 
   #
@@ -55,8 +56,6 @@ class HttpOutboundAdapter extends OutboundAdapter
   #   @param buffer {Buffer} The hMessage to send
   #
   h_send: (buffer) ->
-    @start() unless @started
-
     @querystring = require 'querystring'
     @http = require 'http'
     @reqst = require 'request'

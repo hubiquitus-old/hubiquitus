@@ -44,6 +44,7 @@ class SocketIOAdapter extends OutboundAdapter
     @sock.identity = "socketIO_of_#{@owner.actor}"
     @sock.on "hMessage", (hMessage) =>
       @owner.emit "message", hMessage
+    @started = true
 
   #
   # @overload send(hMessage)
@@ -51,7 +52,6 @@ class SocketIOAdapter extends OutboundAdapter
   #   @param hMessage {object} The hMessage to send
   #
   send: (hMessage) ->
-    @start() unless @started
     @sock.emit "hMessage", hMessage
 
 

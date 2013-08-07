@@ -72,7 +72,7 @@ describe "hTwitterAdapter", ->
       count = 0
       newProperties.locations = "-2.5,43.3,7.2,50.6"
       hActor.updateAdapter("twitter", newProperties)
-      @timeout 5000
+      @timeout 60000
       hActor.onMessage = (hMessage) =>
         count++
         hMessage.type.should.be.equal("hTweet")

@@ -42,6 +42,7 @@ coreTypes =
   'lb_socket_in': './adapters/lb_socket_in'
   'lb_socket_out': './adapters/lb_socket_out'
   'mongo_out': './adapters/mongo_out'
+  'couchbase_out': './adapters/couchbase_out'
   'socket_in': './adapters/socket_in'
   'socket_out': './adapters/socket_out'
   'socketIO': './adapters/socketIO'

@@ -43,6 +43,7 @@ exports.builtinAdapterNames =
   LBSocketInboundAdapter: "lb_socket_in"
   LBSocketOutboundAdapter: "lb_socket_out"
   MongoOutboundAdapter: "mongo_out"
+  CouchbaseOutboundAdapter: "couchbase_out"
   SocketInboundAdapter: "socket_in"
   SocketOutboundAdapter: "socket_out"
   SocketIOAdapter: "socketIO"

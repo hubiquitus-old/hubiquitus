@@ -35,6 +35,9 @@ class InboundAdapter extends Adapter
   # @property {function} onMessage
   onMessage: undefined
 
+  # @property {function} onMessage
+  reply: undefined
+
   #
   # Adapter's constructor
   # @param properties {object} Launch properties of the adapter
@@ -46,7 +49,7 @@ class InboundAdapter extends Adapter
     args = [];
     if @authenticator then args.push @authenticator.authorize
     if @serializer then args.push @serializer.decode
-    if @makeHMessage then args.push @makeHMessage
+    args.push @makeHMessage
     args.push @h_fillMessage
     args.push validator.validateHMessage
     @filters.forEach (filter) ->
@@ -54,15 +57,32 @@ class InboundAdapter extends Adapter
 
     @onMessage = async.compose.apply null, args.reverse()
 
+    args = [];
+    args.push @h_fillMessage
+    args.push validator.validateHMessage
+    args.push @makeData
+    if @serializer then args.push @serializer.encode
+
+    @reply = async.compose.apply null, args.reverse()
+
   #
   # @param buffer {buffer}
   #
-  receive: (buffer, metadata) =>
+  #
+  # @param buffer {buffer}
+  #
+  receive: (buffer, metadata, callback) =>
     @onMessage buffer, metadata, (err, hMessage) =>
       if err
-        @owner.log "error", if typeof err is 'string' then err else JSON.stringify(err)
+        @owner.log "error", err
       else
-        @owner.emit 'message', hMessage
-
+        @owner.onHMessage hMessage, !callback ? undefined : (hMessageResult) =>
+          if hMessageResult
+            hMessageResult.ref = hMessage.msgid
+            @reply hMessageResult, (err, buffer, metadata) ->
+              if err
+                @owner.log "error", err
+              else
+                callback buffer, metadata
 
 module.exports = InboundAdapter

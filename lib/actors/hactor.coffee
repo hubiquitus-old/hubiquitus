@@ -232,7 +232,7 @@ class Actor extends EventEmitter
   # @param hMessage {object} the hMessage receive
   # @param callback {function} callback to call
   #
-  onHMessage: (hMessage) =>
+  onHMessage: (hMessage, callback) =>
     #complete msgid
     unless hMessage.msgid
       hMessage.msgid = @h_makeMsgId()
@@ -243,7 +243,7 @@ class Actor extends EventEmitter
       delete @msgToBeAnswered[ref]
       cb hMessage
     else
-      @h_onMessageInternal hMessage, (hMessageResult) =>
+      @h_onMessageInternal hMessage, callback || (hMessageResult) =>
         @send hMessageResult
 
   #
@@ -251,8 +251,9 @@ class Actor extends EventEmitter
   # Check hMessage format, catch hSignal, Apply filter then call onMessage
   # @private
   # @param hMessage {object} the hMessage receive
+  # @param callback {function} callback to call
   #
-  h_onMessageInternal: (hMessage) ->
+  h_onMessageInternal: (hMessage, callback) ->
     @log "debug", "onMessage :" + JSON.stringify(hMessage)
     try
       result = validator.validateHMessage hMessage
@@ -278,7 +279,7 @@ class Actor extends EventEmitter
           #Check if hMessage respect filter
           checkValidity = @validateFilter(hMessage)
           if checkValidity.result is true
-            @onMessage hMessage
+            @onMessage hMessage, callback
           else
             @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
 
@@ -290,12 +291,16 @@ class Actor extends EventEmitter
   # Method that processes the incoming message.
   # This method could be override to specified an actor
   # @param hMessage {Object} the hMessage receive
+  # @param callback {function} callback to call
   #
-  onMessage: (hMessage) ->
+  onMessage: (hMessage, callback) ->
     @log "debug", "Message reveived: #{JSON.stringify(hMessage)}"
     if hMessage.timeout > 0
-        hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
+      hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
+      unless callback
         @send hMessageResult
+      else
+        callback hMessageResult
 
   #
   # Private method that processes hSignal message.

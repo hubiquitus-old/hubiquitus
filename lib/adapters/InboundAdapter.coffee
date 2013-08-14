@@ -26,7 +26,6 @@
 async = require 'async'
 validator = require "../validator"
 Adapter = require "./Adapter"
-UUID = require "../UUID"
 
 #
 # Class that defines an Inbound adapter
@@ -35,6 +34,9 @@ class InboundAdapter extends Adapter
 
   # @property {function} onMessage
   onMessage: undefined
+
+  # @property {function} onMessage
+  reply: undefined
 
   #
   # Adapter's constructor
@@ -47,7 +49,7 @@ class InboundAdapter extends Adapter
     args = [];
     if @authenticator then args.push @authenticator.authorize
     if @serializer then args.push @serializer.decode
-    if @makeHMessage then args.push @makeHMessage
+    args.push @makeHMessage
     args.push @h_fillMessage
     args.push validator.validateHMessage
     @filters.forEach (filter) ->
@@ -55,37 +57,32 @@ class InboundAdapter extends Adapter
 
     @onMessage = async.compose.apply null, args.reverse()
 
-  #
-  # @private
-  #
-  h_fillMessage: (hMessage, callback) ->
-    unless hMessage.sent
-      hMessage.sent = new Date().getTime()
-    unless hMessage.msgid
-      hMessage.msgid = UUID.generate()
-    callback null, hMessage
+    args = [];
+    args.push @h_fillMessage
+    args.push validator.validateHMessage
+    args.push @makeData
+    if @serializer then args.push @serializer.encode
 
-
-  #
-  # Make an hMessage from decoded data and provided metadata
-  # @param data {object, string, number, boolean} decoded data given by the adapter
-  # @param metadata {object} data metadata provided by the adapter
-  # @params callback {function} called once lock is acquire or an error occured
-  # @options callback err {object, string} only defined if an error occcured
-  # @options callback hMessage {object} Hmessage created from given data
-  #
-  makeHMessage: (data, metadata, callback) ->
-    callback null, data
+    @reply = async.compose.apply null, args.reverse()
 
   #
   # @param buffer {buffer}
   #
-  receive: (buffer, metadata) =>
+  #
+  # @param buffer {buffer}
+  #
+  receive: (buffer, metadata, callback) =>
     @onMessage buffer, metadata, (err, hMessage) =>
       if err
-        @owner.log "error", if typeof err is 'string' then err else JSON.stringify(err)
+        @owner.log "error", err
       else
-        @owner.emit 'message', hMessage
-
+        @owner.onHMessage hMessage, !callback ? undefined : (hMessageResult) =>
+          if hMessageResult
+            hMessageResult.ref = hMessage.msgid
+            @reply hMessageResult, (err, buffer, metadata) ->
+              if err
+                @owner.log "error", err
+              else
+                callback buffer, metadata
 
 module.exports = InboundAdapter

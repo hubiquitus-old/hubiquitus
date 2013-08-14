@@ -28,8 +28,8 @@ describe "hCouchbase_out", ->
           "type": "couchbase_out",
           "targetActorAid": "urn:localhost:couchbase",
           "properties": {
-            "user": user,
-            "password": password,
+            "user": "Administrator",
+            "password": "password",
             "bucket": bucket
           }
         }]
@@ -54,10 +54,10 @@ describe "hCouchbase_out", ->
       setTimeout(=>
         config =
           "debug" : false
-          "user" : user
-          "password" : password
+          "user" : "Administrator"
+          "password" : "password"
           "hosts" : [ "localhost:8091" ]
-          "bucket" : bucket
+          "bucket" : "test"
         couchbase.connect config, (err, cb) =>
           if (err)
             console.log "error", "Failed to connect to the cluster : " + err

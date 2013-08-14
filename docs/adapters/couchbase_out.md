@@ -113,5 +113,5 @@ In this example the adapter attribute are :
 If you want to go deeper in Hubiquitus couchbase_out Adapter, see the complete [API documentation](http://coffeedoc.info/github/hubiquitus/hubiquitus/master/) which describe class variables and methods
 
 
-        
+
 

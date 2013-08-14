@@ -30,7 +30,7 @@ describe "hCouchbase_out", ->
           "properties": {
             "user": "Administrator",
             "password": "password",
-            "bucket": bucket
+            "bucket": "test"
           }
         }]
       }

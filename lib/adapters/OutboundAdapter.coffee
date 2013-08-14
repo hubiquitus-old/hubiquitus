@@ -70,17 +70,6 @@ class OutboundAdapter extends Adapter
     @prepareMessage = async.compose.apply null, args.reverse()
 
   #
-  # Convert an hMessage to a data and metadata that can be sent by the adapter
-  # @param hMessage {object} hMessage to send
-  # @params callback {function} called once lock is acquire or an error occured
-  # @options callback err {object, string} only defined if an error occcured
-  # @options callback data {object, string, number, boolean} data extracted from hMessage
-  # @options callback metadata {object} data metadata extracted from the hMessage
-  #
-  makeData: (hMessage, callback) ->
-    callback null, hMessage, null
-
-  #
   # Method which has to be override to specify an outbound adapter
   # @param hMessage {object}
   #

@@ -24,6 +24,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
+UUID = require "../UUID"
 url = require "url"
 factory = require "../factory"
 
@@ -136,6 +137,42 @@ class Adapter
   #
   update: (properties) ->
     # Function to overide if you need to update adapter's properties
+
+  #
+  # Method called to override some hMessage's attributs before sending
+  # @private
+  # @param hMessage {object} the hMessage update
+  # @param callback {function} callback
+  #
+  h_fillMessage: (hMessage, callback) ->
+    unless hMessage.sent
+      hMessage.sent = new Date().getTime()
+    unless hMessage.msgid
+      hMessage.msgid = UUID.generate()
+    callback null, hMessage
+
+  #
+  # Make an hMessage from decoded data and provided metadata
+  # @param data {object, string, number, boolean} decoded data given by the adapter
+  # @param metadata {object} data metadata provided by the adapter
+  # @params callback {function} called once lock is acquire or an error occured
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback hMessage {object} Hmessage created from given data
+  #
+  makeHMessage: (data, metadata, callback) ->
+    callback null, data
+
+  #
+  # Convert an hMessage to a data and metadata that can be sent by the adapter
+  # @param hMessage {object} hMessage to send
+  # @params callback {function} called once lock is acquire or an error occured
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback data {object, string, number, boolean} data extracted from hMessage
+  # @options callback metadata {object} data metadata extracted from the hMessage
+  #
+  makeData: (hMessage, callback) ->
+    callback null, hMessage, null
+
 
 
 

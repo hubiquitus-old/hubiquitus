@@ -26,7 +26,6 @@
 async = require 'async'
 validator = require "../validator"
 Adapter = require "./Adapter"
-UUID = require "../UUID"
 
 #
 # Class that defines an Inbound adapter
@@ -54,28 +53,6 @@ class InboundAdapter extends Adapter
       args.push filter.validate
 
     @onMessage = async.compose.apply null, args.reverse()
-
-  #
-  # @private
-  #
-  h_fillMessage: (hMessage, callback) ->
-    unless hMessage.sent
-      hMessage.sent = new Date().getTime()
-    unless hMessage.msgid
-      hMessage.msgid = UUID.generate()
-    callback null, hMessage
-
-
-  #
-  # Make an hMessage from decoded data and provided metadata
-  # @param data {object, string, number, boolean} decoded data given by the adapter
-  # @param metadata {object} data metadata provided by the adapter
-  # @params callback {function} called once lock is acquire or an error occured
-  # @options callback err {object, string} only defined if an error occcured
-  # @options callback hMessage {object} Hmessage created from given data
-  #
-  makeHMessage: (data, metadata, callback) ->
-    callback null, data
 
   #
   # @param buffer {buffer}

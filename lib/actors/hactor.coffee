@@ -220,24 +220,31 @@ class Actor extends EventEmitter
   h_initListeners: () ->
     unless @listenersInited
       @listenersInited = true
-      @on "message", (hMessage) =>
-        #complete msgid
-        unless hMessage.msgid
-          hMessage.msgid = @h_makeMsgId()
-        ref = hMessage.ref
-        if ref
-          cb = @msgToBeAnswered[ref]
-        if cb
-          delete @msgToBeAnswered[ref]
-          cb hMessage
-        else
-          @h_onMessageInternal hMessage, (hMessageResult) =>
-            @send hMessageResult
+      @on "message", @onHMessage
 
       # Adding children once started
       @on "hStatus", (status) ->
         if status is "started"
           @initChildren(@topology.children)
+
+  #
+  # Method called when  hMessage is received by an adapter.
+  # @param hMessage {object} the hMessage receive
+  # @param callback {function} callback to call
+  #
+  onHMessage: (hMessage) =>
+    #complete msgid
+    unless hMessage.msgid
+      hMessage.msgid = @h_makeMsgId()
+    ref = hMessage.ref
+    if ref
+      cb = @msgToBeAnswered[ref]
+    if cb
+      delete @msgToBeAnswered[ref]
+      cb hMessage
+    else
+      @h_onMessageInternal hMessage, (hMessageResult) =>
+        @send hMessageResult
 
   #
   # Private method called when the actor receive a hMessage.

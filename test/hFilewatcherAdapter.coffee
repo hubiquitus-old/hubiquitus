@@ -44,14 +44,12 @@ describe "hFilewatchAdapter", ->
       @timeout 1500
       fs.unlink("./test.json")
       setTimeout(=>
+        hActor.onMessage = (hMessage) ->
+          hMessage.payload.should.be.equal("333")
+          done()
+
         fs.writeFile("./test.json",'"333"')
       , 500)
-
-      hActor.onMessage = (hMessage) ->
-        hMessage.payload.should.be.equal("333")
-        done()
-
-
 
     it "Should do nothing if the file is not present when it start ", (done) ->
       @timeout 2000

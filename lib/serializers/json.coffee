@@ -54,7 +54,7 @@ class JSONSerializer extends Serializer
       message = buffer.toString("utf-8")
       callback null, JSON.parse(message), metadata
     catch err
-      callback null, err, null
+      callback err, null, null
 
 
 module.exports = JSONSerializer

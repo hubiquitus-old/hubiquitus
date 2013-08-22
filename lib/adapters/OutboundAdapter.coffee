@@ -45,6 +45,9 @@ class OutboundAdapter extends Adapter
   # @property {Array} Waiting queue
   queue: undefined
 
+  # @property {function} onMessage
+  onMessage: undefined
+
   #
   # Adapter's constructor
   # @param properties {object} Launch properties of the adapter
@@ -63,22 +66,22 @@ class OutboundAdapter extends Adapter
     @filters.forEach (filter) ->
       args.push filter.validate
     args.push validator.validateHMessage
-    if @makeData then args.push @makeData
+    args.push @makeData
     if @serializer then args.push @serializer.encode
     if @authenticator then args.push @authenticator.authorize
 
     @prepareMessage = async.compose.apply null, args.reverse()
 
-  #
-  # Convert an hMessage to a data and metadata that can be sent by the adapter
-  # @param hMessage {object} hMessage to send
-  # @params callback {function} called once lock is acquire or an error occured
-  # @options callback err {object, string} only defined if an error occcured
-  # @options callback data {object, string, number, boolean} data extracted from hMessage
-  # @options callback metadata {object} data metadata extracted from the hMessage
-  #
-  makeData: (hMessage, callback) ->
-    callback null, hMessage, null
+    args = [];
+    if @authenticator then args.push @authenticator.authorize
+    if @serializer then args.push @serializer.decode
+    args.push @makeHMessage
+    args.push @h_fillMessage
+    args.push validator.validateHMessage
+    @filters.forEach (filter) ->
+      args.push filter.validate
+
+    @onMessage = async.compose.apply null, args.reverse()
 
   #
   # Method which has to be override to specify an outbound adapter
@@ -100,6 +103,16 @@ class OutboundAdapter extends Adapter
           @h_send buffer, metadata
         else
           @owner.log "error", err
+
+  #
+  # @param buffer {buffer}
+  #
+  receive: (buffer, metadata) =>
+    @onMessage buffer, metadata, (err, hMessage) =>
+      if err
+        @owner.log "error", err
+      else
+        @owner.emit "message", hMessage
 
   #
   # Method which has to be override to specify an outbound adapter

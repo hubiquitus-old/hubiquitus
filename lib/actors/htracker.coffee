@@ -121,7 +121,7 @@ class Tracker extends Actor
             , @timeoutDelay)
         index++
       if existPeer isnt true
-        @peers.push {peerType:hMessage.payload.params.peerType, peerFullId:hMessage.publisher, peerId:hMessage.payload.params.peerId, peerStatus:hMessage.payload.params.peerStatus, peerInbox:hMessage.payload.params.peerInbox}
+        @peers.push _.extend({peerFullId: hMessage.publisher}, _.pick(hMessage.payload.params, ['peerType', 'peerId', 'peerStatus', 'peerInbox', 'peerIP']))
         @timerPeers[hMessage.publisher] = setTimeout(=>
           delete @timerPeers[hMessage.publisher]
           @stopAlert(hMessage.publisher)

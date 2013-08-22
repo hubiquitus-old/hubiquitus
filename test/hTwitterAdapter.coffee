@@ -76,7 +76,7 @@ describe "hTwitterAdapter", ->
       hActor.onMessage = (hMessage) =>
         count++
         hMessage.type.should.be.equal("hTweet")
-        if hMessage.payload.location[0] > -2.5 and hMessage.payload.location[0] < 7.2 and hMessage.payload.location[1] > 43.3 and hMessage.payload.location[1] < 50.6
+        if hMessage.payload.location and hMessage.payload.location[0] > -2.5 and hMessage.payload.location[0] < 7.2 and hMessage.payload.location[1] > 43.3 and hMessage.payload.location[1] < 50.6
           if count is 1
             done()
 

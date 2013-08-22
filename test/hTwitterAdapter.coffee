@@ -70,11 +70,14 @@ describe "hTwitterAdapter", ->
 
     it "should update location, start and receive hTweet from France", (done) ->
       count = 0
+      newProperties = {}
       newProperties.locations = "-2.5,43.3,7.2,50.6"
       hActor.updateAdapter("twitter", newProperties)
-      @timeout 60000
+      @timeout 5000
       hActor.onMessage = (hMessage) =>
-        count++
+        if hMessage.payload.location
+          count++
+
         hMessage.type.should.be.equal("hTweet")
         if hMessage.payload.location and hMessage.payload.location[0] > -2.5 and hMessage.payload.location[0] < 7.2 and hMessage.payload.location[1] > 43.3 and hMessage.payload.location[1] < 50.6
           if count is 1

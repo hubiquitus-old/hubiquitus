@@ -57,6 +57,7 @@ class TwitterInboundAdapter extends InboundAdapter
   #
   start: ->
     unless @started
+      @twitProperties = {}
       if @properties.accounts and @properties.accounts isnt ""
         scrNamesTab = []
         @twitProperties.follow = []
@@ -97,6 +98,7 @@ class TwitterInboundAdapter extends InboundAdapter
           access_token_key: @properties.twitterAccesToken
           access_token_secret: @properties.twitterAccesTokenSecret
         )
+
       @twit.stream "statuses/filter", @twitProperties, (stream) =>
         @stream = stream
         @stream.on "error", (type, code) =>

@@ -54,6 +54,10 @@ class SocketIO_Connector
     else
       io = require("socket.io").listen(properties.port) #Creates the HTTP server
 
+    io.set "close timeout", 21
+    io.set "heartbeat timeout", 15
+    io.set  "heartbeat interval", 10
+
     logLevels =
       DEBUG: 3
       INFO: 2

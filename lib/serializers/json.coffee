@@ -35,13 +35,16 @@ class JSONSerializer extends Serializer
   constructor: () ->
 
   #
-  # @param hMessage {object} the message to encode
+  # @param data {object} the message to encode
   # @param callback {function} callback
   #
-  encode: (hMessage, metadata, callback) ->
+  encode: (data, metadata, callback) ->
     try
-      message = JSON.stringify(hMessage)
-      callback null, new Buffer(message, "utf-8"), metadata
+      buffer = undefined
+      if data
+        message = JSON.stringify(data)
+        buffer = new Buffer(message, "utf-8")
+      callback null, buffer, metadata
     catch err
       callback err, null, null
 
@@ -51,8 +54,10 @@ class JSONSerializer extends Serializer
   #
   decode: (buffer, metadata, callback) ->
     try
-      message = buffer.toString("utf-8")
-      callback null, JSON.parse(message), metadata
+      if buffer
+        message = buffer.toString("utf-8")
+        parsedMsg = JSON.parse(message)
+      callback null, parsedMsg, metadata
     catch err
       callback err, null, null
 

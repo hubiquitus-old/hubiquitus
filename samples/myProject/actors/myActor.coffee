@@ -1,4 +1,4 @@
-{Actor} = require "hubiquitus"
+{Actor} = require "../../../lib/hubiquitus"
 
 class myActor extends Actor
 
@@ -6,7 +6,7 @@ class myActor extends Actor
     super #This instruction is mandatory to correctly start your actor
     @type = 'myActor'
 
-  onMessage: (hMessage) ->
+  onMessage: (hMessage, callback) ->
     console.log "myActor receive a hMessage", hMessage
 
 module.exports = myActor

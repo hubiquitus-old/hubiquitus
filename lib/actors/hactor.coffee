@@ -235,7 +235,7 @@ class Actor extends EventEmitter
   onHMessage: (hMessage, callback) =>
     #complete msgid
     unless hMessage.msgid
-      hMessage.msgid = @h_makeMsgId()
+      hMessage.msgid = UUID.generate()
     ref = hMessage.ref
     if ref
       cb = @msgToBeAnswered[ref]

@@ -1,4 +1,4 @@
-{OutboundAdapter} = require "hubiquitus"
+{OutboundAdapter} = require "../../../lib/hubiquitus"
 
 class myOutboundAdapter extends OutboundAdapter
 
@@ -6,17 +6,21 @@ class myOutboundAdapter extends OutboundAdapter
     super
   # Add your initializing instructions
 
-  start: ->
+  start: (done) ->
     unless @started
       # Add your starting instructions
       super
+      if done then done()
 
   stop: ->
     if @started
       # Add your stopping instructions
       super
 
-  send: (message) ->
+  #
+  # @overload h_send(buffer)
+  #
+  h_send: (buffer) ->
     # Add your sending instruction
 
 module.exports = myOutboundAdapter

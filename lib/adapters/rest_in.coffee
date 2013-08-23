@@ -36,7 +36,7 @@ _ = require 'lodash'
 
 #
 # Class that defines a rest Inbound Adapter.
-# It is used to listen rest requests)
+# It is used to listen rest requests
 #
 class RestInboundAdapter extends InboundAdapter
 
@@ -58,13 +58,13 @@ class RestInboundAdapter extends InboundAdapter
   # @property {object} server object. Should be a nodejs http or https object
   server : undefined
 
-  # @property {number} max content size in bytes
+  # @property {number} max content size in bytes. If <0 than unlimited. By default : -1.
   maxContentSize : undefined
 
   # @property {number} maximum amount a time that can be taken by a query before receiving a timeout (including call + answer). Default 30s
   queryTimeout : undefined
 
-  # @property {object} link a result status to a response code
+  # @property {object} link a result status to an http response code
   respCode : undefined
 
   #
@@ -104,9 +104,6 @@ class RestInboundAdapter extends InboundAdapter
       @ssl.key = properties.ssl.key
       @ssl.cert = properties.ssl.cert
 
-    if @https and not @ssl
-      @owner.log "warn", "Couldn't start rest adapter in https mode. Missing ssl key and certificate"
-
   #
   # @overload start()
   # Method which start the adapter.
@@ -121,11 +118,12 @@ class RestInboundAdapter extends InboundAdapter
     options = {}
 
     if @https
+      unless @ssl
+        @owner.log "warn", "Tryed to start rest adapter in https mode, but no ssl certificate provided. Stopping adapter"
+        return
+
       options.key = fs.readFileSync(@ssl.key)
       options.cert = fs.readFileSync(@ssl.cert)
-
-    if @https
-      unless @ssl then return
 
       @server = https.createServer(options)
     else

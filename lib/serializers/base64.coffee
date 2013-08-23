@@ -25,12 +25,12 @@
 Serializer = require "./hserializer"
 
 #
-# Class that defines a JSON Serializer
+# Class that defines a Base64 Serializer
 #
 class Base64Serializer extends Serializer
 
   #
-  # JSON Serializer's constructor
+  # Base64 Serializer's constructor
   #
   constructor: () ->
 

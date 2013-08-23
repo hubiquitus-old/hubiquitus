@@ -145,11 +145,14 @@ class Adapter
   # @param callback {function} callback
   #
   h_fillMessage: (hMessage, callback) ->
-    unless hMessage.sent
-      hMessage.sent = new Date().getTime()
-    unless hMessage.msgid
-      hMessage.msgid = UUID.generate()
-    callback null, hMessage
+    if hMessage
+      unless hMessage.sent
+        hMessage.sent = new Date().getTime()
+      unless hMessage.msgid
+        hMessage.msgid = UUID.generate()
+      callback null, hMessage
+    else
+      callback "Undefined hMessage", hMessage
 
   #
   # Make an hMessage from decoded data and provided metadata

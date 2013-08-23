@@ -68,21 +68,21 @@ class InboundAdapter extends Adapter
   #
   # @param buffer {buffer}
   #
-  #
-  # @param buffer {buffer}
-  #
   receive: (buffer, metadata, callback) =>
     @onMessage buffer, metadata, (err, hMessage) =>
       if err
-        @owner.log "error", if typeof err is 'string' then "JSON codec error : " + err else "JSON codec error : " + err.toString()
+        @owner.log "error", if typeof err is 'string' then "JSON codec error : " + err else "JSON codec error : " + err.toString() + "   " + JSON.stringify(err)
       else
-        @owner.onHMessage hMessage, !callback ? undefined : (hMessageResult) =>
-          if hMessageResult
-            hMessageResult.ref = hMessage.msgid
-            @reply hMessageResult, (err, buffer, metadata) ->
-              if err
-                @owner.log "error", err
-              else
-                callback buffer, metadata
+        if callback
+          @owner.onHMessage hMessage, (hMessageResult) =>
+            if hMessageResult
+              hMessageResult.ref = hMessage.msgid
+              @reply hMessageResult, (err, buffer, metadata) ->
+                if err
+                  @owner.log "error", err
+                else
+                  callback buffer, metadata
+        else
+          @owner.onHMessage hMessage
 
 module.exports = InboundAdapter

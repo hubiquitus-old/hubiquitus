@@ -1,4 +1,4 @@
-{InboundAdapter} = require "hubiquitus"
+{InboundAdapter} = require "../../../lib/hubiquitus"
 
 class myInboundAdapter extends InboundAdapter
 
@@ -14,7 +14,7 @@ class myInboundAdapter extends InboundAdapter
   start: ->
     unless @started
       # Add your starting instructions
-      @owner.emit "message", @hMessage # To send the hMessage to the actor
+      @receive @hMessage # To send the hMessage to the actor
       super
 
   stop: ->

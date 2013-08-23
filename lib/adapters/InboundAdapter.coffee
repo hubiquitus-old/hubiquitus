@@ -74,7 +74,7 @@ class InboundAdapter extends Adapter
   receive: (buffer, metadata, callback) =>
     @onMessage buffer, metadata, (err, hMessage) =>
       if err
-        @owner.log "error", err
+        @owner.log "error", if typeof err is 'string' then "JSON codec error : " + err else "JSON codec error : " + err.toString()
       else
         @owner.onHMessage hMessage, !callback ? undefined : (hMessageResult) =>
           if hMessageResult

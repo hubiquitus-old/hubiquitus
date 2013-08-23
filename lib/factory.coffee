@@ -48,11 +48,13 @@ coreTypes =
   'timerAdapter': './adapters/timerAdapter'
   'twitter_in': './adapters/twitter_in'
   'filewatcherAdapter': './adapters/filewatcherAdapter'
+  'rest_in': './adapters/rest_in'
 # ---------------------------------------- Authenticators
   'simple': './authenticators/simple'
 # ---------------------------------------- Filters
 # ---------------------------------------- Serializers
   'json': './serializers/json'
+  'base64': './serializers/base64'
 
 
 classes = {}

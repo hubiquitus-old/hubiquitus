@@ -134,10 +134,10 @@ class TwitterInboundAdapter extends InboundAdapter
               msg = @owner.buildMessage(@owner.actor, "hTweet", hTweet, {author: data.user.screen_name + "@twitter.com"})
               @owner.emit "message", msg
           else
-            @owner.log "debug", "Disconnecting data"
+            @owner.log "trace", "Disconnecting data"
 
         @stream.on "destroy", (data) =>
-          @owner.log "debug", "twitter stream close"
+          @owner.log "trace", "twitter stream close"
       cb()
 
   #

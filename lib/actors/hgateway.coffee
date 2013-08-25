@@ -52,7 +52,7 @@ class Gateway extends Actor
   #
   onMessage: (hMessage) ->
     if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
-      @log "debug", "Gateway received a message to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
+      @log "trace", "Gateway received a message to send to #{hMessage.actor}:", hMessage
       @send hMessage
 
   #

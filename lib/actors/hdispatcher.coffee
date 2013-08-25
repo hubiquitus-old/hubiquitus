@@ -67,7 +67,7 @@ class Dispatcher extends Actor
   #   @param hMessage {Object} the hMessage receive
   #
   onMessage: (hMessage) ->
-    @log "Dispatcher received a hMessage to send to workers: #{JSON.stringify(hMessage)}"
+    @log "trace", "Dispatcher received a hMessage to send to workers:", hMessage
     loadBalancing = Math.floor(Math.random() * @nbWorkers) + 1
     sender = hMessage.publisher
     msg = @buildMessage("#{@actor}/worker#{loadBalancing}", hMessage.type, hMessage.payload)

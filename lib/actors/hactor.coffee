@@ -140,7 +140,7 @@ class Actor extends EventEmitter
 
     result = validator.validateTopology topology
     unless result.valid
-      @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.error)
+      @log "warn", "syntax error in topology during actor initialization : ", result.error
 
 
     # setting up instance attributes
@@ -157,7 +157,7 @@ class Actor extends EventEmitter
       @setFilter topology.filter, (status, result) =>
         unless status is codes.hResultStatus.OK
           # TODO arreter l'acteur
-          @log "debug", "Invalid filter stopping actor"
+          @log "error", "Invalid filter stopping actor"
 
     # Initializing class variables
     @msgToBeAnswered = {}
@@ -190,11 +190,11 @@ class Actor extends EventEmitter
     # Registering trackers
     if _.isArray(topology.trackers) and topology.trackers.length > 0
       _.forEach topology.trackers, (trackerProps) =>
-        @log "debug", "registering tracker #{trackerProps.trackerId}"
+        @log "trace", "registering tracker #{trackerProps.trackerId}"
         @trackers.push trackerProps
         @outboundAdapters.push factory.make("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
     else
-      @log "debug", "no tracker was provided"
+      @log "warn", "no tracker was provided"
 
     @h_initListeners()
 
@@ -251,11 +251,11 @@ class Actor extends EventEmitter
   # @param callback {function} callback to call
   #
   h_onMessageInternal: (hMessage, callback) ->
-    @log "debug", "onMessage :" + JSON.stringify(hMessage)
+    @log "trace", "onMessage :", hMessage
     try
       result = validator.validateHMessage hMessage
       unless result.valid
-        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
+        @log "debug", "syntax error in hMessage : ", result.error
       else
         #Complete missing values
         hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
@@ -278,10 +278,10 @@ class Actor extends EventEmitter
           if checkValidity.result is true
             @onMessage hMessage, callback
           else
-            @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
+            @log "trace", "#{@actor} Rejecting a message because its filtered :", hMessage
 
     catch error
-      @log "warn", "An error occured while processing incoming message: " + error
+      @log "warn", "An error occured while processing incoming message: ", error
 
 
   #
@@ -291,7 +291,7 @@ class Actor extends EventEmitter
   # @param callback {function} callback to call
   #
   onMessage: (hMessage, callback) ->
-    @log "debug", "Message reveived: #{JSON.stringify(hMessage)}"
+    @log "trace", "Message reveived:", hMessage
     if hMessage.timeout > 0
       hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
       unless callback
@@ -306,7 +306,7 @@ class Actor extends EventEmitter
   # @param hMessage {object} the hSignal receive
   #
   h_onSignal: (hMessage) ->
-    @log "debug", "Actor received a hSignal: #{JSON.stringify(hMessage)}"
+    @log "trace", "Actor received a hSignal:", hMessage
     if hMessage.payload.name is "hStopAlert"
       @removePeer hMessage.payload.params
       index = -1
@@ -374,7 +374,7 @@ class Actor extends EventEmitter
             if cb
               cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : " + hResult.payload.result)
             else
-              @log "debug", "Can't send hMessage : " + hResult.payload.result
+              @log "debug", "Can't send hMessage : ", hResult.payload.result
       else if @type isnt "htracker"
         if cb
           cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't find actor")
@@ -425,10 +425,10 @@ class Actor extends EventEmitter
           hMessage.timeout = 0
 
       #Send it to transport
-      @log "debug", "Sending message: #{JSON.stringify(hMessage)}"
+      @log "trace", "Sending message:", hMessage
       result = validator.validateHMessage hMessage
       unless result.valid
-        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
+        @log "debug", "syntax error in hMessage : ", result.error
       outboundAdapter.send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"
@@ -539,7 +539,7 @@ class Actor extends EventEmitter
   h_touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
       if trackerProps.trackerId isnt @actor
-        @log "debug", "touching tracker #{trackerProps.trackerId}"
+        @log "trace", "touching tracker #{trackerProps.trackerId}"
         inboundAdapters = []
         if @status isnt STATUS_STOPPED
           for inbound in @inboundAdapters
@@ -866,7 +866,7 @@ class Actor extends EventEmitter
   # @param actor  {string} URN of the actor to remove
   #
   removePeer: (actor) ->
-    @log "debug", "Removing peer #{actor}"
+    @log "trace", "Removing peer #{actor}"
     index = 0
     _.forEach @outboundAdapters, (outbound) =>
       if outbound.targetActorAid is actor

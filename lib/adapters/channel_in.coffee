@@ -84,7 +84,7 @@ class ChannelInboundAdapter extends InboundAdapter
 
         @receive resultBuffer, null
       catch err
-        @owner.log "debug", "Channel_in couldn't read input : " + err
+        @owner.log "debug", "Channel_in couldn't read input : ", err
 
   #
   # @overload h_fillMessage()
@@ -99,7 +99,7 @@ class ChannelInboundAdapter extends InboundAdapter
   # @param quickFilter {string} QuickFilter to add
   #
   addFilter: (quickFilter) ->
-    @owner.log "debug", "Add quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
+    @owner.log "trace", "Add quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
     @sock.subscribe quickFilter
     @listQuickFilter.push quickFilter
 
@@ -112,7 +112,7 @@ class ChannelInboundAdapter extends InboundAdapter
   # @option cb result {boolean} True if there are not a quickFilter anymore, False if there are still one or more
   #
   removeFilter: (quickFilter, cb) ->
-    @owner.log "debug", "Remove quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
+    @owner.log "trace", "Remove quickFilter #{quickFilter} on #{@owner.actor} ChannelIA for #{@channel}"
     if @sock._zmq.state is 0
       @sock.unsubscribe quickFilter
     index = 0

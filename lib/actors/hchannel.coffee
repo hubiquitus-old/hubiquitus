@@ -86,7 +86,7 @@ class Channel extends Actor
   #   @param hMessage {object} the hSignal receive
   #
   h_onSignal: (hMessage) ->
-    @log "debug", "Channel received a hSignal: #{JSON.stringify(hMessage)}"
+    @log "trace", "Channel received a hSignal:", hMessage
     if hMessage.payload.name is "hStopAlert"
       hMessage.actor = @actor
       @send hMessage
@@ -120,7 +120,7 @@ class Channel extends Actor
       return  unless timerObject?
       clearTimeout timerObject
       hMessageResult = self.buildResult(hMessage.publisher, hMessage.msgid, status, result)
-      @log "debug", "hCommand sent hMessage with hResult #{JSON.stringify(hMessageResult)}"
+      @log "trace", "hCommand sent hMessage with hResult", hMessageResult
       @send hMessageResult
 
     #Add a timeout for the execution
@@ -137,7 +137,7 @@ class Channel extends Actor
       module.exec hMessage, @, onResult
     catch err
       clearTimeout timerObject
-      @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
+      @log "error", "Error in hCommand processing, hMessage = ", hMessage, " with error : ", err
       @send(@buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 
   #

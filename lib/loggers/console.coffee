@@ -40,8 +40,8 @@ class ConsoleLogger extends Logger
   constructor: (properties) ->
     super
     unless logger
-      logger = new (winston.Logger) {transports: [new (winston.transports.Console)({"level": "trace", "colorize": true})]}
-      logger.setLevels({trace: 0, debug: 1, info: 2, warn: 3, error: 4})
+      loggerLevels = {"levels":{trace: 0, debug: 1, info: 2, warn: 3, error: 4}, colors: {trace: 'grey', debug: 'blue', info: 'green', warn: 'yellow', error:'red'}}
+      logger = new (winston.Logger) {transports: [new (winston.transports.Console)({"level": "trace", "colorize": true})], levels: loggerLevels.levels, colors: loggerLevels.colors}
       logger.exitOnError = false
 
   #

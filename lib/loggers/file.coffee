@@ -52,8 +52,8 @@ class FileLogger extends Logger
     else
       maxsize = @properties.maxsize or 1000000
       maxfiles = @properties.maxfiles or 20
-      @logger = new (winston.Logger) {transports: [new (winston.transports.File)({ "filename": path, "level": "trace", "maxsize": maxsize, "maxFiles": maxfiles})]}
-      @logger.setLevels({trace: 0, debug: 1, info: 2, warn: 3, error: 4})
+      loggerLevels = {"levels":{trace: 0, debug: 1, info: 2, warn: 3, error: 4}, colors: {trace: 'grey', debug: 'blue', info: 'green', warn: 'yellow', error:'red'}}
+      @logger = new (winston.Logger) {transports: [new (winston.transports.File)({ "filename": path, "level": "trace", "maxsize": maxsize, "maxFiles": maxfiles})], levels: loggerLevels.levels, colors: loggerLevels.colors}
       @logger.exitOnError = false
 
   #

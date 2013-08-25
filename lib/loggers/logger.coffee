@@ -1,3 +1,5 @@
+#
+# * Copyright (c) Novedia Group 2012.
 # *
 # *    This file is part of Hubiquitus
 # *
@@ -21,50 +23,41 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-exports.builtinActorNames =
-  Actor: "hactor"
-  Auth: "hauth"
-  Channel: "hchannel"
-  Dispatcher: "hdispatcher"
-  Gateway: "hgateway"
-  Session: "hsession"
-  Tracker: "htracker"
+#
+# Class that defines a Logger
+#
+class Logger
 
-exports.builtinAdapterNames =
-  Adapter: "Adapter"
-  InboundAdapter: "InboundAdapter"
-  OutboundAdapter: "OutboundAdapter"
-  ChannelInboundAdapter: "channel_in"
-  ChannelOutboundAdapter: "channel_out"
-  ChildprocessOutboundAdapter: "fork"
-  HttpInboundAdapter: "http_in"
-  HttpOutboundAdapter: "http_out"
-  LocalOutboundAdapter: "inproc"
-  LBSocketInboundAdapter: "lb_socket_in"
-  LBSocketOutboundAdapter: "lb_socket_out"
-  MongoOutboundAdapter: "mongo_out"
-  SocketInboundAdapter: "socket_in"
-  SocketOutboundAdapter: "socket_out"
-  SocketIOAdapter: "socketIO"
-  TimerAdapter: "timerAdapter"
-  TwitterInboundAdapter: "twitter_in"
-  FilewatcherAdapter: "filewatcherAdapter"
-  RestInboundAdapter: "rest_in"
+  # @property {object} Logger's properties
+  properties: undefined
 
-exports.builtinAuthenticatorNames =
-  Authenticator: "hauthenticator"
-  SimpleAuthenticator: "simple"
+  # @property {string} Logger's log level
+  logLevel: undefined
 
-exports.builtinFilterNames =
-  Filter: "hfilter"
+  # @property {number} Logger's log level as a numerical value.
+  level: undefined
 
-exports.builtinSerializerNames =
-  Serializer: "hserializer"
-  JSONSerializer: "json"
-  Base64Serializer: "base64"
+  # @property {Actor} Logger's owner
+  owner: undefined
 
-exports.builtinLoggerNames =
-  Logger: "logger"
-  ConsoleLogger: "console"
-  FileLogger: "file"
+  #
+  # Logger's constructor
+  # @param properties {object} logger properties provide by actor. Expect two key : properties, logLevel.
+  #
+  constructor: (properties) ->
+    @properties = properties.properties or {}
+    @logLevel = properties.logLevel or "info"
 
+    if properties.owner
+      @owner = properties.owner
+    else
+      throw new Error "You must pass an actor as reference"
+
+  #
+  # @param level {string} log level of the message. Available levels are : trace, debug, info, warn, error
+  # @param urn {string} urn of the logger's owner.
+  # @param msgs {function} messages to log (stringify should be done at logger level if needed)
+  #
+  log: (level, urn, msgs) ->
+
+module.exports = Logger

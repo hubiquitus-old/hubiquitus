@@ -61,6 +61,10 @@ builtinSerializerNames = require("./hbuiltin").builtinSerializerNames
 _.pairs(builtinSerializerNames).forEach (pair) ->
   to_exports[pair[0]] = require "./serializers/#{pair[1]}"
 
+builtinLoggerNames = require("./hbuiltin").builtinLoggerNames
+_.pairs(builtinLoggerNames).forEach (pair) ->
+  to_exports[pair[0]] = require "./loggers/#{pair[1]}"
+
 validator = require "./validator"
 to_exports.validator = validator
 

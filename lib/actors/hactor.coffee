@@ -70,10 +70,10 @@ class Actor extends EventEmitter
     htracker: true
     hactor: true
 
-  # @property {object} Contains the log properties object. It will be transfer to every children
-  log_properties: undefined
-  # @property {object} The instance of the logger use to display logs
-  logger: undefined
+  # @property {array} loggers instances. Loggers should inherit Logger.
+  loggers: undefined
+  # @property {array} loggersProps loggers property from topology.
+  loggersProps: undefined
   # @property {string} Actor's ID in URN format (with resource)
   actor: undefined
   # @property {string} Resource of the actor's URN
@@ -121,26 +121,23 @@ class Actor extends EventEmitter
   # @property {boolean} Wether listeners are already inited
   listenersInited: undefined
 
-  winston.loggers.add 'default', {
-    console:
-      level: "debug"
-      handleExceptions: true
-      colorize: true
-  }
-
   #
   # Actor's constructor
   # @param topology {object} Launch topology of the actor
   #
   constructor: (topology) ->
-    # init logger
-    if topology.log
-      @log_properties = topology.log
-      @h_initLogger(topology.log.logFile)
-    else
-      @log_properties =
-        logLevel: "info"
-      @h_initLogger()
+    # init loggers.
+    @loggersProps = topology.loggers or [{"type": "console", "logLevel": "info"}]
+    @loggers = []
+    for loggerProps in @loggersProps
+      try
+        loggerProps.owner = @
+        logger = factory.make loggerProps.type, loggerProps
+        @loggers.push logger
+      catch e
+        winston.log "error", e
+
+
     result = validator.validateTopology topology
     unless result.valid
       @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.error)
@@ -473,7 +470,7 @@ class Actor extends EventEmitter
       topology.sharedProperties[prop] = childSharedProps[prop]
 
     unless topology.trackers then topology.trackers = @trackers
-    unless topology.log then topology.log = @log_properties
+    unless topology.loggers then topology.loggers = @loggersProps
     unless topology.ip then topology.ip = @ip
 
     # prefixing actor's id automatically
@@ -505,62 +502,23 @@ class Actor extends EventEmitter
     topology.actor
 
   #
-  # Method called by constructor to initializing logger
-  # @private
-  # @param logLevel {string} the log level use by the actor
-  # @param logFile {string} the file where the log will be write
-  #
-  h_initLogger: (logFile) ->
-    if logFile
-      try
-        winston.loggers.add logFile, {
-          console:
-            level: "debug"
-            handleExceptions: true
-            colorize: true
-          file:
-            filename: logFile
-            level: "debug"
-            handleExceptions: true
-        }
-      catch err
-      @logger = winston.loggers.get(logFile)
-    else
-      @logger = winston.loggers.get('default')
-
-    @logger.setLevels({
-      debug: 0
-      info: 1
-      warn: 2
-      error: 3
-    })
-    # Don't crash on uncaught exception
-    @logger.exitOnError = false
-
-  #
-  # Method that enrich a message with actor details and logs it to the console
+  # Log a message <ith specified level. Enhance the message with actor urn.
   # @param type {string} the level of the log
   # @param message {object} the log message (with the actor which raise it)
   #
-  log: (type, message) ->
-    logPriority = ["debug", "info", "warn", "error"]
-    switch type
-      when "debug"
-        if logPriority.indexOf(@log_properties.logLevel) is 0
-          @logger.debug "#{validator.getBareURN(@actor)} | #{message}"
-        break
-      when "info"
-        if logPriority.indexOf(@log_properties.logLevel) <= 1
-          @logger.info "#{validator.getBareURN(@actor)} | #{message}"
-        break
-      when "warn"
-        if logPriority.indexOf(@log_properties.logLevel) <= 2
-          @logger.warn "#{validator.getBareURN(@actor)} | #{message}"
-        break
-      when "error"
-        if logPriority.indexOf(@log_properties.logLevel) <= 3
-          @logger.error "#{validator.getBareURN(@actor)} | #{message}"
-        break
+  log: (type) ->
+    levels = {trace: 0, debug: 1, info: 2, warn: 3, error: 4}
+    level = levels[type]
+    unless typeof level is "number" and level >= 0 then level = 2
+    msgs = undefined
+    for logger in @loggers
+      loggerLevel = levels[logger.logLevel]
+      unless typeof loggerLevel is "number" and level >= 0 then level = 2
+      if level >= loggerLevel
+        unless msgs
+          msgs = Array.prototype.slice.call(arguments);
+          msgs.shift()
+        logger.log type, @actor, msgs
 
   #
   # Method called by constructor to initializing actor's children

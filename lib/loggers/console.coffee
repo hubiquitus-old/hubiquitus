@@ -1,3 +1,5 @@
+#
+# * Copyright (c) Novedia Group 2012.
 # *
 # *    This file is part of Hubiquitus
 # *
@@ -20,51 +22,40 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+Logger = require "./logger"
+winston = require "winston"
 
-exports.builtinActorNames =
-  Actor: "hactor"
-  Auth: "hauth"
-  Channel: "hchannel"
-  Dispatcher: "hdispatcher"
-  Gateway: "hgateway"
-  Session: "hsession"
-  Tracker: "htracker"
+# winston console logger singleton
+logger = undefined
 
-exports.builtinAdapterNames =
-  Adapter: "Adapter"
-  InboundAdapter: "InboundAdapter"
-  OutboundAdapter: "OutboundAdapter"
-  ChannelInboundAdapter: "channel_in"
-  ChannelOutboundAdapter: "channel_out"
-  ChildprocessOutboundAdapter: "fork"
-  HttpInboundAdapter: "http_in"
-  HttpOutboundAdapter: "http_out"
-  LocalOutboundAdapter: "inproc"
-  LBSocketInboundAdapter: "lb_socket_in"
-  LBSocketOutboundAdapter: "lb_socket_out"
-  MongoOutboundAdapter: "mongo_out"
-  SocketInboundAdapter: "socket_in"
-  SocketOutboundAdapter: "socket_out"
-  SocketIOAdapter: "socketIO"
-  TimerAdapter: "timerAdapter"
-  TwitterInboundAdapter: "twitter_in"
-  FilewatcherAdapter: "filewatcherAdapter"
-  RestInboundAdapter: "rest_in"
+#
+# Class that defines a console logger
+# Console logger is uniq for a process
+#
+class ConsoleLogger extends Logger
 
-exports.builtinAuthenticatorNames =
-  Authenticator: "hauthenticator"
-  SimpleAuthenticator: "simple"
+  #
+  # Console logger's constructor
+  #
+  constructor: (properties) ->
+    super
+    unless logger
+      logger = new (winston.Logger) {transports: [new (winston.transports.Console)({"level": "trace", "colorize": true})]}
+      logger.setLevels({trace: 0, debug: 1, info: 2, warn: 3, error: 4})
+      logger.exitOnError = false
 
-exports.builtinFilterNames =
-  Filter: "hfilter"
+  #
+  # @param level {string} log level of the message. Available levels are : trace, debug, info, warn, error
+  # @param urn {string} urn of the logger's owner.
+  # @param msgs {function} message to log
+  #
+  log: (level, urn, msgs) ->
+    logMsg = ""
+    for msg in msgs
+      if typeof msg is "string"
+        logMsg += msg
+      else
+        logMsg += JSON.stringify(msg)
+    logger[level] "#{urn} | #{logMsg}"
 
-exports.builtinSerializerNames =
-  Serializer: "hserializer"
-  JSONSerializer: "json"
-  Base64Serializer: "base64"
-
-exports.builtinLoggerNames =
-  Logger: "logger"
-  ConsoleLogger: "console"
-  FileLogger: "file"
-
+module.exports = ConsoleLogger

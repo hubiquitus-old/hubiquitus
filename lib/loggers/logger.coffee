@@ -23,6 +23,8 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
+util = require 'util'
+
 #
 # Class that defines a Logger
 #
@@ -52,6 +54,20 @@ class Logger
       @owner = properties.owner
     else
       throw new Error "You must pass an actor as reference"
+
+  #
+  # Make a log message from urn and several elements to log
+  # @param urn {string} urn of the logger's owner.
+  # @param msgs {function} messages to log (stringify should be done at logger level if needed)
+  #
+  makeLogMsg: (urn, msgs) ->
+    logMsg = ""
+    for msg in msgs
+      if typeof msg is "string"
+        logMsg += msg + " "
+      else
+        logMsg += util.inspect msg
+    return "#{urn} | #{logMsg}"
 
   #
   # @param level {string} log level of the message. Available levels are : trace, debug, info, warn, error

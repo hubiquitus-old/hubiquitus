@@ -50,12 +50,6 @@ class ConsoleLogger extends Logger
   # @param msgs {function} message to log
   #
   log: (level, urn, msgs) ->
-    logMsg = ""
-    for msg in msgs
-      if typeof msg is "string"
-        logMsg += msg
-      else
-        logMsg += JSON.stringify(msg)
-    logger[level] "#{urn} | #{logMsg}"
+    logger[level] @makeLogMsg urn, msgs
 
 module.exports = ConsoleLogger

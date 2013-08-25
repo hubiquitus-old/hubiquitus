@@ -14,7 +14,7 @@ class myInboundAdapter extends InboundAdapter
   start: ->
     unless @started
       # Add your starting instructions
-      @receive @hMessage # To send the hMessage to the actor
+      @receive (new Buffer(JSON.stringify(@hMessage), "utf-8")) # To send the hMessage to the actor
       super
 
   stop: ->

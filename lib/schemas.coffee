@@ -88,7 +88,7 @@ exports.topology = {
           "properties": {
             "type" : {
               "type" : "string",
-              "description": "Type of the adapter."
+              "description": "Type of logger."
             },
             "logLevel" : {
               "type" : "string",

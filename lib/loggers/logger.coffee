@@ -67,7 +67,7 @@ class Logger
         logMsg += msg + " "
       else
         logMsg += util.inspect msg
-    return "#{urn} | #{logMsg}"
+    return (new Date()) + " | #{urn} | #{logMsg}"
 
   #
   # @param level {string} log level of the message. Available levels are : trace, debug, info, warn, error

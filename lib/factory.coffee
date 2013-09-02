@@ -55,6 +55,9 @@ coreTypes =
 # ---------------------------------------- Serializers
   'json': './serializers/json'
   'base64': './serializers/base64'
+# ---------------------------------------- Loggers
+  'console': './loggers/console'
+  'file': './loggers/file'
 
 
 classes = {}

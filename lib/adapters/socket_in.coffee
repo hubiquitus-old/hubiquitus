@@ -61,7 +61,7 @@ class SocketInboundAdapter extends InboundAdapter
     while @started is false
       try
         @sock.bindSync @url
-        @owner.log "debug", "#{@sock.identity} listening on #{@url}"
+        @owner.log "trace", "#{@sock.identity} listening on #{@url}"
         super
       catch err
         if err.message is "Address already in use"

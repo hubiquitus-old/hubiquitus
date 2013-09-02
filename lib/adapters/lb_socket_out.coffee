@@ -57,7 +57,7 @@ class LBSocketOutboundAdapter extends OutboundAdapter
   start: (callback)->
     @initsocket()
     @sock.bindSync @url
-    @owner.log "debug", "#{@sock.identity} bound on #{@url}"
+    @owner.log "trace", "#{@sock.identity} bound on #{@url}"
     if callback then callback() else @started = true
 
   #

@@ -37,6 +37,7 @@ codes = require "../codes"
 hFilter = require "./../hFilter"
 factory = require "../factory"
 UUID = require "../UUID"
+lodash = require "lodash"
 
 _.mixin toDict: (arr, key) ->
   throw new Error('_.toDict takes an Array') unless _.isArray arr
@@ -70,10 +71,10 @@ class Actor extends EventEmitter
     htracker: true
     hactor: true
 
-  # @property {object} Contains the log properties object. It will be transfer to every children
-  log_properties: undefined
-  # @property {object} The instance of the logger use to display logs
-  logger: undefined
+  # @property {array} loggers instances. Loggers should inherit Logger.
+  loggers: undefined
+  # @property {array} loggersProps loggers property from topology.
+  loggersProps: undefined
   # @property {string} Actor's ID in URN format (with resource)
   actor: undefined
   # @property {string} Resource of the actor's URN
@@ -121,29 +122,27 @@ class Actor extends EventEmitter
   # @property {boolean} Wether listeners are already inited
   listenersInited: undefined
 
-  winston.loggers.add 'default', {
-    console:
-      level: "debug"
-      handleExceptions: true
-      colorize: true
-  }
-
   #
   # Actor's constructor
   # @param topology {object} Launch topology of the actor
   #
   constructor: (topology) ->
-    # init logger
-    if topology.log
-      @log_properties = topology.log
-      @h_initLogger(topology.log.logFile)
-    else
-      @log_properties =
-        logLevel: "info"
-      @h_initLogger()
+    # init loggers.
+    @loggersProps = topology.loggers or [{"type": "console", "logLevel": "info"}]
+    @loggers = []
+    for loggerProps in @loggersProps
+      try
+        loggerProps = lodash.cloneDeep loggerProps
+        loggerProps.owner = @
+        logger = factory.make loggerProps.type, loggerProps
+        @loggers.push logger
+      catch e
+        winston.log "error", e
+
+
     result = validator.validateTopology topology
     unless result.valid
-      @log "warn", "syntax error in topology during actor initialization : " + JSON.stringify(result.error)
+      @log "warn", "syntax error in topology during actor initialization : ", result.error
 
 
     # setting up instance attributes
@@ -160,7 +159,7 @@ class Actor extends EventEmitter
       @setFilter topology.filter, (status, result) =>
         unless status is codes.hResultStatus.OK
           # TODO arreter l'acteur
-          @log "debug", "Invalid filter stopping actor"
+          @log "error", "Invalid filter stopping actor"
 
     # Initializing class variables
     @msgToBeAnswered = {}
@@ -193,11 +192,11 @@ class Actor extends EventEmitter
     # Registering trackers
     if _.isArray(topology.trackers) and topology.trackers.length > 0
       _.forEach topology.trackers, (trackerProps) =>
-        @log "debug", "registering tracker #{trackerProps.trackerId}"
+        @log "trace", "registering tracker #{trackerProps.trackerId}"
         @trackers.push trackerProps
         @outboundAdapters.push factory.make("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
     else
-      @log "debug", "no tracker was provided"
+      @log "warn", "no tracker was provided"
 
     @h_initListeners()
 
@@ -254,11 +253,11 @@ class Actor extends EventEmitter
   # @param callback {function} callback to call
   #
   h_onMessageInternal: (hMessage, callback) ->
-    @log "debug", "onMessage :" + JSON.stringify(hMessage)
+    @log "trace", "onMessage :", hMessage
     try
       result = validator.validateHMessage hMessage
       unless result.valid
-        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
+        @log "debug", "syntax error in hMessage : ", result.error
       else
         #Complete missing values
         hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
@@ -281,10 +280,10 @@ class Actor extends EventEmitter
           if checkValidity.result is true
             @onMessage hMessage, callback
           else
-            @log "debug", "#{@actor} Rejecting a message because its filtered :" + JSON.stringify(hMessage)
+            @log "trace", "#{@actor} Rejecting a message because its filtered :", hMessage
 
     catch error
-      @log "warn", "An error occured while processing incoming message: " + error
+      @log "warn", "An error occured while processing incoming message: ", error, error.stack
 
 
   #
@@ -294,7 +293,7 @@ class Actor extends EventEmitter
   # @param callback {function} callback to call
   #
   onMessage: (hMessage, callback) ->
-    @log "debug", "Message reveived: #{JSON.stringify(hMessage)}"
+    @log "trace", "Message reveived:", hMessage
     if hMessage.timeout > 0
       hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
       unless callback
@@ -309,7 +308,7 @@ class Actor extends EventEmitter
   # @param hMessage {object} the hSignal receive
   #
   h_onSignal: (hMessage) ->
-    @log "debug", "Actor received a hSignal: #{JSON.stringify(hMessage)}"
+    @log "trace", "Actor received a hSignal:", hMessage
     if hMessage.payload.name is "hStopAlert"
       @removePeer hMessage.payload.params
       index = -1
@@ -377,7 +376,7 @@ class Actor extends EventEmitter
             if cb
               cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : " + hResult.payload.result)
             else
-              @log "debug", "Can't send hMessage : " + hResult.payload.result
+              @log "debug", "Can't send hMessage : ", hResult.payload.result
       else if @type isnt "htracker"
         if cb
           cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't find actor")
@@ -428,10 +427,10 @@ class Actor extends EventEmitter
           hMessage.timeout = 0
 
       #Send it to transport
-      @log "debug", "Sending message: #{JSON.stringify(hMessage)}"
+      @log "trace", "Sending message:", hMessage
       result = validator.validateHMessage hMessage
       unless result.valid
-        @log "debug", "syntax error in hMessage : " + JSON.stringify(result.error)
+        @log "debug", "syntax error in hMessage : ", result.error
       outboundAdapter.send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"
@@ -473,7 +472,7 @@ class Actor extends EventEmitter
       topology.sharedProperties[prop] = childSharedProps[prop]
 
     unless topology.trackers then topology.trackers = @trackers
-    unless topology.log then topology.log = @log_properties
+    unless topology.loggers then topology.loggers = @loggersProps
     unless topology.ip then topology.ip = @ip
 
     # prefixing actor's id automatically
@@ -505,62 +504,23 @@ class Actor extends EventEmitter
     topology.actor
 
   #
-  # Method called by constructor to initializing logger
-  # @private
-  # @param logLevel {string} the log level use by the actor
-  # @param logFile {string} the file where the log will be write
-  #
-  h_initLogger: (logFile) ->
-    if logFile
-      try
-        winston.loggers.add logFile, {
-          console:
-            level: "debug"
-            handleExceptions: true
-            colorize: true
-          file:
-            filename: logFile
-            level: "debug"
-            handleExceptions: true
-        }
-      catch err
-      @logger = winston.loggers.get(logFile)
-    else
-      @logger = winston.loggers.get('default')
-
-    @logger.setLevels({
-      debug: 0
-      info: 1
-      warn: 2
-      error: 3
-    })
-    # Don't crash on uncaught exception
-    @logger.exitOnError = false
-
-  #
-  # Method that enrich a message with actor details and logs it to the console
+  # Log a message <ith specified level. Enhance the message with actor urn.
   # @param type {string} the level of the log
   # @param message {object} the log message (with the actor which raise it)
   #
-  log: (type, message) ->
-    logPriority = ["debug", "info", "warn", "error"]
-    switch type
-      when "debug"
-        if logPriority.indexOf(@log_properties.logLevel) is 0
-          @logger.debug "#{validator.getBareURN(@actor)} | #{message}"
-        break
-      when "info"
-        if logPriority.indexOf(@log_properties.logLevel) <= 1
-          @logger.info "#{validator.getBareURN(@actor)} | #{message}"
-        break
-      when "warn"
-        if logPriority.indexOf(@log_properties.logLevel) <= 2
-          @logger.warn "#{validator.getBareURN(@actor)} | #{message}"
-        break
-      when "error"
-        if logPriority.indexOf(@log_properties.logLevel) <= 3
-          @logger.error "#{validator.getBareURN(@actor)} | #{message}"
-        break
+  log: (type) ->
+    levels = {trace: 0, debug: 1, info: 2, warn: 3, error: 4}
+    level = levels[type]
+    unless typeof level is "number" and level >= 0 then level = 2
+    msgs = undefined
+    for logger in @loggers
+      loggerLevel = levels[logger.logLevel]
+      unless typeof loggerLevel is "number" and level >= 0 then level = 2
+      if level >= loggerLevel
+        unless msgs
+          msgs = Array.prototype.slice.call(arguments);
+          msgs.shift()
+        logger.log type, @actor, msgs
 
   #
   # Method called by constructor to initializing actor's children
@@ -581,7 +541,7 @@ class Actor extends EventEmitter
   h_touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
       if trackerProps.trackerId isnt @actor
-        @log "debug", "touching tracker #{trackerProps.trackerId}"
+        @log "trace", "touching tracker #{trackerProps.trackerId}"
         inboundAdapters = []
         if @status isnt STATUS_STOPPED
           for inbound in @inboundAdapters
@@ -643,8 +603,13 @@ class Actor extends EventEmitter
           @raiseError(errorID, "Subscription to #{adapterProps.channel} failed")
           @h_autoSubscribe(adapterProps, 500, errorID)
 
-    @initialize () =>
-      @h_setStatus STATUS_READY
+    try
+      @initialize () =>
+        @h_setStatus STATUS_READY
+    catch err
+      @log "error", "An error occured on initialize ", err, err.stack
+      @h_tearDown()
+
 
   #
   # Method to override if you need a specific initialization before considering your actor ready
@@ -908,7 +873,7 @@ class Actor extends EventEmitter
   # @param actor  {string} URN of the actor to remove
   #
   removePeer: (actor) ->
-    @log "debug", "Removing peer #{actor}"
+    @log "trace", "Removing peer #{actor}"
     index = 0
     _.forEach @outboundAdapters, (outbound) =>
       if outbound.targetActorAid is actor

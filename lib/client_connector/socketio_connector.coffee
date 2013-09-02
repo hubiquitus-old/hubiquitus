@@ -45,14 +45,27 @@ class SocketIO_Connector
     then @owner = properties.owner
     else throw new Error("You must pass an actor as reference")
 
+    levels = ["error", "warn", "info", "debug"]
+    IOLogger = () ->
+    IOLogger.prototype.log = (type) =>
+      @owner.log.apply(@owner, arguments)
+    for level in levels
+      IOLogger.prototype[level] = () ->
+        argsCopy = [].slice.call(arguments)
+        argsCopy.unshift(level)
+        @log.apply(@, argsCopy)
+
+    iologger = new IOLogger()
+    ioOpts = {logger: iologger, "log level":"debug"}
+
     if properties.security
       server_options =
         key: fs.readFileSync(properties.security.key),
         cert: fs.readFileSync(properties.security.cert)
       server = require('https').createServer(server_options).listen(properties.port) #Creates the HTTPS server
-      io = require("socket.io").listen(server)
+      io = require("socket.io").listen(server, ioOpts)
     else
-      io = require("socket.io").listen(properties.port) #Creates the HTTP server
+      io = require("socket.io").listen(properties.port, ioOpts) #Creates the HTTP server
 
     io.set "close timeout", 21
     io.set "heartbeat timeout", 15
@@ -63,8 +76,6 @@ class SocketIO_Connector
       INFO: 2
       WARN: 1
       ERROR: 0
-
-    io.set "log level", logLevels[@owner.log_properties.logLevel]
 
     io.on("connection", (socket) =>
       id = socket.id

@@ -7,6 +7,11 @@ class myActor extends Actor
     @type = 'myActor'
 
   onMessage: (hMessage, callback) ->
-    console.log "myActor receive a hMessage", hMessage
+    @log "debug", "myActor receive a hMessage", hMessage
+
+    if hMessage.type is "hCommand" and hMessage.payload.cmd is "POST"
+      msg = @buildResult hMessage.publisher, hMessage.msgid, 0, {"hello":"hello"}
+      @log "debug", "sending response : ", msg
+      callback msg
 
 module.exports = myActor

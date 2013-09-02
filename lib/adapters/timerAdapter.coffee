@@ -75,9 +75,9 @@ class TimerAdapter extends InboundAdapter
           @stopJob()
         , true, "Europe/London")
       catch err
-        @owner.log "error", "Couldn't setup timer adapter : #{err}"
+        @owner.log "error", "Couldn't setup timer adapter :", err
     else
-      @owner.log "error", "Timer adapter : Unhandled mode #{@properties}"
+      @owner.log "error", "Timer adapter : Unhandled mode", @properties
 
   #
   # @overload start()
@@ -87,7 +87,7 @@ class TimerAdapter extends InboundAdapter
   start: ->
     unless @started
       @launchTimer()
-      @owner.log "debug", "#{@owner.actor} launch TimerAdapter"
+      @owner.log "trace", "#{@owner.actor} launch TimerAdapter"
       super
 
   #

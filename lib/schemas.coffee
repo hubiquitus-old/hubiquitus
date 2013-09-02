@@ -79,21 +79,28 @@ exports.topology = {
       ],
       "additionalItems" : true
     },
-    "log" : {
-      "type" : "object",
-      "description": "Configure the logger.",
-      "properties": {
-        "logLevel" : {
-          "type" : "string",
-          "description": "The log level used by the actor.",
-          "enum": [ "error", "warn", "info", "debug" ]
-        },
-        "logFile" : {
-          "type" : "string",
-          "description": "Path to a logFile where you want to save the logs."
+    "loggers" : {
+      "type" : "array",
+      "description": "List of loggers used by the actor.",
+      "items" : [
+        {
+          "type" : "object",
+          "properties": {
+            "type" : {
+              "type" : "string",
+              "description": "Type of logger."
+            },
+            "logLevel" : {
+              "type" : "string",
+              "description": "The loglevel used on the logger.",
+              "enum": [ "error", "warn", "info", "debug", "trace" ]
+            }
+          },
+          "required" : ["type"],
+          "additionalProperties" : true
         }
-      },
-      "additionalProperties" : false
+      ],
+      "additionalItems" : true
     },
     "adapters" : {
       "type" : "array",

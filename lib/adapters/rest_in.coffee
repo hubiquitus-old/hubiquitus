@@ -231,6 +231,7 @@ class RestInboundAdapter extends InboundAdapter
     hMessage.type = "hCommand"
     hMessage.payload.cmd = metadata.method
     hMessage.payload.params.service = metadata.pathname
+    hMessage.payload.params.query = metadata.query
     hMessage.payload.params.content = data
     hMessage.headers = {}
     hMessage.headers.http = metadata.headers

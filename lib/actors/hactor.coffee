@@ -37,6 +37,7 @@ codes = require "../codes"
 hFilter = require "./../hFilter"
 factory = require "../factory"
 UUID = require "../UUID"
+lodash = require "lodash"
 
 _.mixin toDict: (arr, key) ->
   throw new Error('_.toDict takes an Array') unless _.isArray arr
@@ -131,6 +132,7 @@ class Actor extends EventEmitter
     @loggers = []
     for loggerProps in @loggersProps
       try
+        loggerProps = lodash.cloneDeep loggerProps
         loggerProps.owner = @
         logger = factory.make loggerProps.type, loggerProps
         @loggers.push logger
@@ -281,7 +283,7 @@ class Actor extends EventEmitter
             @log "trace", "#{@actor} Rejecting a message because its filtered :", hMessage
 
     catch error
-      @log "warn", "An error occured while processing incoming message: ", error
+      @log "warn", "An error occured while processing incoming message: ", error, error.stack
 
 
   #
@@ -601,8 +603,13 @@ class Actor extends EventEmitter
           @raiseError(errorID, "Subscription to #{adapterProps.channel} failed")
           @h_autoSubscribe(adapterProps, 500, errorID)
 
-    @initialize () =>
-      @h_setStatus STATUS_READY
+    try
+      @initialize () =>
+        @h_setStatus STATUS_READY
+    catch err
+      @log "error", "An error occured on initialize ", err, err.stack
+      @h_tearDown()
+
 
   #
   # Method to override if you need a specific initialization before considering your actor ready

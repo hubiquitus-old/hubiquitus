@@ -26,7 +26,7 @@
 Actor = require "./hactor"
 SocketIO_Connector = require "../client_connector/socketio_connector"
 zmq = require "zmq"
-_ = require "lodash"
+_ = require "underscore"
 validator = require "../validator"
 
 #

@@ -23,6 +23,7 @@ Here are the versions of the dependencies used in Hubiquitus :
    Dependencies   |  Version
 ------------------|-----------
     **Node.js**   |   **0.8.23**
+    Underscore    |   1.4.4
        ZMQ        |  2.4.0 (modified)
        Cron       |  1.0.1
      Ntwitter     |  0.5.0 (modified)

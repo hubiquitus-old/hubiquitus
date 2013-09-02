@@ -25,7 +25,7 @@
 
 Actor = require "./hactor"
 zmq = require "zmq"
-_ = require "lodash"
+_ = require "underscore"
 statuses = require("../codes").statuses
 errors = require("../codes").errors
 validator = require "../validator"

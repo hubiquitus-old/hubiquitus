@@ -24,7 +24,7 @@
 #
 should = require("should")
 config = require("./_config")
-_ = require "lodash"
+_ = require "underscore"
 
 describe "hSession", ->
   hActor = undefined

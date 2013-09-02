@@ -25,7 +25,7 @@
 
 Actor = require "./hactor"
 factory = require "../factory"
-_ = require "lodash"
+_ = require "underscore"
 codes = require("../codes").hResultStatus
 validator = require "../validator"
 
@@ -97,41 +97,39 @@ class Tracker extends Actor
     @log "trace", "Tracker received a hSignal:", hMessage
     if hMessage.payload.name is "peer-info"
       existPeer = false
-      peers = []
-      _.forEach @peers, (peer) =>
-        if peer.peerFullId is hMessage.publisher
+      index = 0
+      _.forEach @peers, (peers) =>
+        if peers.peerFullId is hMessage.publisher
           existPeer = true
           clearTimeout(@timerPeers[hMessage.publisher])
-          peer.peerStatus = hMessage.payload.params.peerStatus
-          peer.peerInbox = hMessage.payload.params.peerInbox
-          if peer.peerStatus is "stopped"
+          peers.peerStatus = hMessage.payload.params.peerStatus
+          peers.peerInbox = hMessage.payload.params.peerInbox
+          if peers.peerStatus is "stopped"
             @stopAlert(hMessage.publisher)
+            @peers.splice(index, 1)
             @removePeer(hMessage.publisher)
           else
-            peers.push peer
             @timerPeers[hMessage.publisher] = setTimeout(=>
               delete @timerPeers[hMessage.publisher]
               @stopAlert(hMessage.publisher)
-              _peers = []
-              _.forEach @peers, (_peer) =>
-                unless _peer.peerFullId is hMessage.publisher
-                  _peers.push _peer
-              @peers = _peers
+              index2 = 0
+              _.forEach @peers, (peers) =>
+                if peers.peerFullId is hMessage.publisher
+                  @peers.splice(index2, 1)
+                index2++
               @removePeer(hMessage.publisher)
             , @timeoutDelay)
-        else
-          peers.push peer
-      @peers = peers
+        index++
       if existPeer isnt true
         @peers.push _.extend({peerFullId: hMessage.publisher}, _.pick(hMessage.payload.params, ['peerType', 'peerId', 'peerStatus', 'peerInbox', 'peerIP']))
         @timerPeers[hMessage.publisher] = setTimeout(=>
           delete @timerPeers[hMessage.publisher]
           @stopAlert(hMessage.publisher)
-          peers = []
-          _.forEach @peers, (peer) =>
-            unless peer.peerFullId is hMessage.publisher
-              peers.push peer
-          @peers = peers
+          index = 0
+          _.forEach @peers, (peers) =>
+            if peers.peerFullId is hMessage.publisher
+              @peers.splice(index, 1)
+            index++
           @removePeer(hMessage.publisher)
         , @timeoutDelay)
         outbox = @findOutbox(hMessage.publisher, true)

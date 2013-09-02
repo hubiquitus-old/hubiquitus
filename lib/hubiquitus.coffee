@@ -22,7 +22,7 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-_ = require("underscore")
+_ = require("lodash")
 
 winston = require "winston"
 logger = new winston.Logger

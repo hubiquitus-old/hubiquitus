@@ -24,7 +24,7 @@
 #
 should = require("should")
 config = require("./_config")
-_ = require "underscore"
+_ = require "lodash"
 
 describe "hChannel", ->
   hActor = undefined

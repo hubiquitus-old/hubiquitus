@@ -25,7 +25,7 @@
 log = require("winston")
 status = require("../codes").hResultStatus
 validators = require("../validator")
-_ = require "underscore"
+_ = require "lodash"
 
 
 hSubscribe = ->

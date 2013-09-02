@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 should = require("should")
-_ = require "underscore"
+_ = require "lodash"
 
 describe "hActor", ->
   hActor = undefined

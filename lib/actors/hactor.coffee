@@ -29,7 +29,7 @@ forker = require "child_process"
 # Third party modules
 zmq = require "zmq"
 winston = require "winston"
-_ = require "underscore"
+_ = require "lodash"
 os = require "os"
 # Hactor modules
 validator = require "../validator"
@@ -131,6 +131,7 @@ class Actor extends EventEmitter
     @loggers = []
     for loggerProps in @loggersProps
       try
+        loggerProps = _.cloneDeep loggerProps
         loggerProps.owner = @
         logger = factory.make loggerProps.type, loggerProps
         @loggers.push logger
@@ -281,7 +282,7 @@ class Actor extends EventEmitter
             @log "trace", "#{@actor} Rejecting a message because its filtered :", hMessage
 
     catch error
-      @log "warn", "An error occured while processing incoming message: ", error
+      @log "warn", "An error occured while processing incoming message: ", error, error.stack
 
 
   #
@@ -601,8 +602,12 @@ class Actor extends EventEmitter
           @raiseError(errorID, "Subscription to #{adapterProps.channel} failed")
           @h_autoSubscribe(adapterProps, 500, errorID)
 
-    @initialize () =>
-      @h_setStatus STATUS_READY
+    try
+      @initialize () =>
+        @h_setStatus STATUS_READY
+    catch err
+      @log "error", "An error occured on initialize ", err, err.stack
+      @h_tearDown()
 
   #
   # Method to override if you need a specific initialization before considering your actor ready
@@ -803,24 +808,27 @@ class Actor extends EventEmitter
     unless hChannel
       return cb codes.hResultStatus.MISSING_ATTR, "Missing channel"
 
-    index = 0
     subs = false
-    for channel in @subscriptions
-      if validator.getBareURN(channel) is hChannel
+    subscriptions = []
+    _.forEach @subscriptions, (subscription) =>
+      if validator.getBareURN(subscription) is hChannel
         subs = true
-        if quickFilter is undefined
-          @subscriptions.splice(index, 1)
-      index++
+        unless quickFilter is undefined
+          subscriptions.push subscription
+      else
+        subscriptions.push subscription
+    @subscriptions = subscriptions
 
     if subs is false
       if typeof cb is "function"
         return cb codes.hResultStatus.NOT_AVAILABLE, "user not subscribed to " + hChannel
     else
-      index = 0
+      inboundAdapters = []
       _.forEach @inboundAdapters, (inbound) =>
         if inbound.channel is validator.getBareURN(hChannel)
           if inbound.started
             if quickFilter
+              inboundAdapters.push inbound
               inbound.removeFilter quickFilter, (result) =>
                 if result
                   @unsubscribe hChannel, cb
@@ -831,14 +839,13 @@ class Actor extends EventEmitter
                     return
             else
               inbound.stop(true)
-              @inboundAdapters.splice(index, 1)
-              index2 = 0
-              for channel in @subscriptions
-                if channel is hChannel
-                  @subscriptions.splice(index2, 1)
-                index2++
+              subscriptions = []
+              for subscription in @subscriptions
+                unless subscription is hChannel
+                  subscriptions.push subscription
+              @subscriptions = subscriptions
               return cb codes.hResultStatus.OK, "Unsubscribe from channel"
-        index++
+      @inboundAdapters = inboundAdapters
 
   #
   # Method called to get the actor subscriptions
@@ -867,15 +874,17 @@ class Actor extends EventEmitter
   #
   removePeer: (actor) ->
     @log "trace", "Removing peer #{actor}"
-    index = 0
+    outboundAdapters = []
     _.forEach @outboundAdapters, (outbound) =>
       if outbound.targetActorAid is actor
         outbound.stop()
-        @outboundAdapters.splice(index, 1)
         if @trackers[0]
           @unsubscribe @trackers[0].trackerChannel, actor, () ->
+      else
+        outboundAdapters.push outbound
+      return true
 
-      index++
+    @outboundAdapters = outboundAdapters
 
   #
   # Method called to build correct hMessage

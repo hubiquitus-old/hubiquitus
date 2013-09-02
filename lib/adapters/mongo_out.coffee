@@ -25,7 +25,7 @@
 
 OutboundAdapter = require "./OutboundAdapter"
 mongo = require "mongodb"
-_ = require "underscore"
+_ = require "lodash"
 
 #
 # Class that defines a MongoDB Outbound Adapter.

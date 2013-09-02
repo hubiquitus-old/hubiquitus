@@ -24,7 +24,7 @@
 #
 Actor = require "./hactor"
 zmq = require "zmq"
-_ = require "underscore"
+_ = require "lodash"
 validator = require "../validator"
 codes = require "../codes"
 factory = require "../factory"

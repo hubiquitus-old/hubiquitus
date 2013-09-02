@@ -50,33 +50,6 @@ describe "hTracker", ->
       if hActor.topology.children[0].type == "hchannel"
         done()
 
-  describe "topology without channel but with db properties", ->
-    before () ->
-      topology =
-        actor: config.logins[0].urn,
-        type: "hTracker"
-        children: []
-        properties:
-          db:
-            host: "mylocalhost27017",
-            port: 27017,
-            name: "test"
-          collection: "trackChannel"
-
-      hActor = new Tracker topology
-
-    after () ->
-      #hActor.h_tearDown()
-      hActor = null
-
-    it "should automatically add the trackchannel if not set", (done) ->
-      if hActor.topology.children[0].type == "hchannel"
-        done()
-
-    it "should have the db properties specified in properties", (done) ->
-      if hActor.topology.children[0].properties.db.host == "mylocalhost27017"
-        done()
-
   describe "other", ->
     before () ->
       topology =
@@ -88,12 +61,7 @@ describe "hTracker", ->
             actor: "urn:localhost:trackChannel",
             type: "hchannel",
             method: "inproc",
-            properties:
-              db:
-                host: "localhost",
-                port: 27017,
-                name: "test"
-              collection: "trackChannel"
+            properties:{}
 
       hActor = new Tracker topology
 

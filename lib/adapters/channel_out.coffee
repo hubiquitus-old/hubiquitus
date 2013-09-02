@@ -62,7 +62,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
     while @started is false
       try
         @sock.bindSync @url
-        @owner.log "debug", "#{@sock.identity} streaming on #{@url}"
+        @owner.log "trace", "#{@sock.identity} streaming on #{@url}"
         if callback then callback() else @started = true
       catch err
         if err.message is "Address already in use"
@@ -111,7 +111,7 @@ class ChannelOutboundAdapter extends OutboundAdapter
 
       @sock.send outBuffer
     catch err
-      @owner.log "error", "channel_out couldn't send a message : " + err
+      @owner.log "error", "channel_out couldn't send a message : ", err
 
 
 module.exports = ChannelOutboundAdapter

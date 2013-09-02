@@ -1,9 +1,7 @@
 {
     "actor": "urn:localhost:tracker",
     "type": "htracker",
-    "log": {
-        "logLevel": "debug"
-    },
+    "loggers": [{"type": "console", "logLevel": "trace"}],
     "children": [
         {
             "actor": "urn:localhost:gateway",
@@ -27,7 +25,7 @@
             "actor": "urn:localhost:myActor",
             "type": "actors.myActor",
             "method": "inproc",
-            "adapters": [ { "type": "adapters.myInboundAdapter" } ],
+            "adapters": [ { "type": "adapters.myInboundAdapter" }, {"type": "rest_in", "serializer":"json", "maxContentSize":200000} ],
             "properties": {
                 "myProps": "hello"
             }

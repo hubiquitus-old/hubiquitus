@@ -63,3 +63,8 @@ exports.builtinSerializerNames =
   JSONSerializer: "json"
   Base64Serializer: "base64"
 
+exports.builtinLoggerNames =
+  Logger: "logger"
+  ConsoleLogger: "console"
+  FileLogger: "file"
+

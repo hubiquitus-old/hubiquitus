@@ -64,7 +64,7 @@ class Session extends Actor
   #
   h_touchTrackers: ->
     _.forEach @trackers, (trackerProps) =>
-      @log "debug", "touching tracker #{trackerProps.trackerId}"
+      @log "trace", "touching tracker #{trackerProps.trackerId}"
       if @status is "stopping"
         @trackInbox = []
 
@@ -139,7 +139,7 @@ class Session extends Actor
               @send hMessageResult
           else
             hMessage.publisher = @actor
-            @log "debug", "Session received a hCommand to send to #{hMessage.actor}: #{JSON.stringify(hMessage)}"
+            @log "trace", "Session received a hCommand to send to #{hMessage.actor}:", hMessage
             if hMessage.timeout > 0
               @send hMessage, (hResult) =>
                 @hClient.emit "hMessage", hResult
@@ -200,7 +200,7 @@ class Session extends Actor
       module.exec hMessage, @, onResult
     catch err
       clearTimeout timerObject
-      @log "error", "Error in hCommand processing, hMessage = " + hMessage + " with error : " + err
+      @log "error", "Error in hCommand processing, hMessage = ", hMessage, " with error : ", err
       @send(self.buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 
   #

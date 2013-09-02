@@ -7,6 +7,6 @@ class myActor2 extends Actor
     @type = 'myActor'
 
   onMessage: (hMessage, callback) ->
-    console.log "myActor2 receive a hMessage", hMessage
+    @log "debug", "myActor2 receive a hMessage", hMessage
 
 module.exports = myActor2

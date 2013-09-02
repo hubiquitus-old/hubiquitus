@@ -1,8 +1,6 @@
 {
     "actor": "urn:localhost:tracker",
-    "log": {
-        "logLevel": "debug"
-    },
+    "loggers": [{"type": "console", "logLevel": "trace"}],
     "type": "htracker",
     "children": [
         {

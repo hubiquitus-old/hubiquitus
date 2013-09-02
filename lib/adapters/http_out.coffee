@@ -70,7 +70,7 @@ class HttpOutboundAdapter extends OutboundAdapter
 
     @reqst post_options, (err, res) =>
       if err
-        @owner.log "warn", "problem with request: " + err
+        @owner.log "warn", "problem with request: ", err
 
 
 module.exports = HttpOutboundAdapter

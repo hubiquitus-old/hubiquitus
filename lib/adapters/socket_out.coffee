@@ -62,7 +62,7 @@ class SocketOutboundAdapter extends OutboundAdapter
   start: (callback)->
     @h_initSocket()
     @sock.connect @url
-    @owner.log "debug", "#{@sock.identity} writing on #{@url}"
+    @owner.log "trace", "#{@sock.identity} writing on #{@url}"
     dontWatch = not @owner.trackers[0] or
     @owner.type is "tracker" or # is tracker
     validator.getBareURN(@owner.actor) is @owner.trackers[0].trackerChannel or # is trackChannel

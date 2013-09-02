@@ -61,9 +61,9 @@ class MongoOutboundAdapter extends OutboundAdapter
     @mongoclient = new mongo.MongoClient(mongoserver);
 
     @mongoclient.open (err, mongoclient) =>
-      @owner.log "debug", "Opened mongodb link"
+      @owner.log "trace", "Opened mongodb link"
       if err
-        @owner.log "error", "Couldn't connect to mongodb. If connection infos are valid, pool should connect as soon as the server is available. Error : " + err
+        @owner.log "error", "Couldn't connect to mongodb. If connection infos are valid, pool should connect as soon as the server is available. Error : ", err
       @dbInstance = mongoclient.db mongo_dbname
 
       if @properties.user and @properties.password
@@ -71,7 +71,7 @@ class MongoOutboundAdapter extends OutboundAdapter
           unless err
             if callback then callback() else @started = true
           else
-            @owner.log "Error authenticating to mongodb. If authentication infos are valid, it should authenticate when server is available : " + err
+            @owner.log "error", "Error authenticating to mongodb. If authentication infos are valid, it should authenticate when server is available : ", err
       else
         if callback then callback() else @started = true
 
@@ -84,9 +84,9 @@ class MongoOutboundAdapter extends OutboundAdapter
     if @started
       @mongoclient.close (err, result) =>
         if err
-          @owner.log "Closed mongo link with errors : ", err
+          @owner.log "error", "Closed mongo link with errors : ", err
         else
-          @owner.log "Closed mongo link"
+          @owner.log "trace", "Closed mongo link"
 
   #
   # @overload h_send(buffer)
@@ -101,7 +101,7 @@ class MongoOutboundAdapter extends OutboundAdapter
 
       @dbInstance.collection(@properties.collection).save doc, {w: 1}, (err, savedDoc) =>
         if err
-          @owner.log "error", "Error while saving hMessage in database" + err
+          @owner.log "error", "Error while saving hMessage in database", err
     else
       @owner.log "warn", "MongoDB not yet started"
 

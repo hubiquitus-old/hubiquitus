@@ -22,48 +22,34 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+Logger = require "./logger"
+winston = require "winston"
 
-Actor = require "./hactor"
-SocketIO_Connector = require "../client_connector/socketio_connector"
-zmq = require "zmq"
-_ = require "underscore"
-validator = require "../validator"
+# winston console logger singleton
+logger = undefined
 
 #
-# Class that defines a gateway actor
+# Class that defines a console logger
+# Console logger is uniq for a process
 #
-class Gateway extends Actor
+class ConsoleLogger extends Logger
 
   #
-  # Actor's constructor
-  # @param topology {object} Launch topology of the actor
+  # Console logger's constructor
   #
-  constructor: (topology) ->
+  constructor: (properties) ->
     super
-    # Setting outbound adapters
-    @type = 'gateway'
-    if topology.properties.socketIOPort
-      new SocketIO_Connector({port: topology.properties.socketIOPort, owner: @, security: topology.properties.security})
+    unless logger
+      loggerLevels = {"levels":{trace: 0, debug: 1, info: 2, warn: 3, error: 4}, colors: {trace: 'grey', debug: 'blue', info: 'green', warn: 'yellow', error:'red'}}
+      logger = new (winston.Logger) {transports: [new (winston.transports.Console)({"level": "trace", "colorize": true})], levels: loggerLevels.levels, colors: loggerLevels.colors}
+      logger.exitOnError = false
 
   #
-  # @overload onMessage(hMessage)
-  #   Method that processes the incoming message on a hGateway.
-  #   @param hMessage {Object} the hMessage receive
+  # @param level {string} log level of the message. Available levels are : trace, debug, info, warn, error
+  # @param urn {string} urn of the logger's owner.
+  # @param msgs {function} message to log
   #
-  onMessage: (hMessage) ->
-    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
-      @log "trace", "Gateway received a message to send to #{hMessage.actor}:", hMessage
-      @send hMessage
+  log: (level, urn, msgs) ->
+    logger[level] @makeLogMsg urn, msgs
 
-  #
-  # @overload h_fillAttribut(hMessage, cb)
-  #   Method called to override some hMessage's attributs before sending.
-  #   Overload the hActor method with an empty function to not altering a hMessage publish in a channel
-  #   @private
-  #
-  h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
-    hMessage.sent = new Date().getTime()
-
-
-module.exports = Gateway
+module.exports = ConsoleLogger

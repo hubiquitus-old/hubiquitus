@@ -94,7 +94,7 @@ class Tracker extends Actor
   #   @param hMessage {object} the hSignal receive
   #
   h_onSignal: (hMessage) ->
-    @log "debug", "Tracker received a hSignal: #{JSON.stringify(hMessage)}"
+    @log "trace", "Tracker received a hSignal:", hMessage
     if hMessage.payload.name is "peer-info"
       existPeer = false
       index = 0

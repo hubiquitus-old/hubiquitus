@@ -43,7 +43,7 @@ class MongoOutboundAdapter extends OutboundAdapter
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
-    properties.serializer = 'none'
+    properties.codec = 'none'
     super
     @type = "mongo_out"
 

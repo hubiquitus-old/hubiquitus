@@ -22,15 +22,15 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-Serializer = require "./hserializer"
+Codec = require "./hcodec"
 
 #
-# Class that defines a JSON Serializer
+# Class that defines a Base64 Codec
 #
-class JSONSerializer extends Serializer
+class Base64Codec extends Codec
 
   #
-  # JSON Serializer's constructor
+  # Base64 Codec's constructor
   #
   constructor: () ->
 
@@ -41,9 +41,8 @@ class JSONSerializer extends Serializer
   encode: (data, metadata, callback) ->
     try
       buffer = undefined
-      if data
-        message = JSON.stringify(data)
-        buffer = new Buffer(message, "utf-8")
+      if data and typeof data is "string"
+        buffer = new Buffer(data, "base64")
       callback null, buffer, metadata
     catch err
       callback err, null, null
@@ -55,11 +54,10 @@ class JSONSerializer extends Serializer
   decode: (buffer, metadata, callback) ->
     try
       if buffer
-        message = buffer.toString("utf-8")
-        parsedMsg = JSON.parse(message)
-      callback null, parsedMsg, metadata
+        message = buffer.toString("base64")
+      callback null, message, metadata
     catch err
       callback err, null, null
 
 
-module.exports = JSONSerializer
+module.exports = Base64Codec

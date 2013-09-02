@@ -48,7 +48,7 @@ class InboundAdapter extends Adapter
 
     args = [];
     if @authenticator then args.push @authenticator.authorize
-    if @serializer then args.push @serializer.decode
+    if @codec then args.push @codec.decode
     args.push @makeHMessage
     args.push @h_fillMessage
     args.push validator.validateHMessage
@@ -61,7 +61,7 @@ class InboundAdapter extends Adapter
     args.push @h_fillMessage
     args.push validator.validateHMessage
     args.push @makeData
-    if @serializer then args.push @serializer.encode
+    if @codec then args.push @codec.encode
 
     @reply = async.compose.apply null, args.reverse()
 

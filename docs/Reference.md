@@ -249,15 +249,15 @@ We expect additional adapters to be included in future releases:
 
 Hubiquitus provides multiple message encoders, each one being compatible with some of the adapters Hubiquitus provides.
 
-Here is the list of serializers that Hubiquitus provides.
+Here is the list of codecs that Hubiquitus provides.
 
 Since v0.6:
 
-* `JsonSerializer`: default format / compatible with all transports / shipped with Hubiquitus v0.6
+* `JsonCodec`: default format / compatible with all transports / shipped with Hubiquitus v0.6
 
 In future releases:
 
-* `MsgPackSerializer`: uses the MessagePack format / incompatible with SocketIO
+* `MsgPackCodec`: uses the MessagePack format / incompatible with SocketIO
 
 > TO BE DESCRIBED
 

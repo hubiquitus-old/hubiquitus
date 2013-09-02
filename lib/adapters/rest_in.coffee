@@ -104,6 +104,8 @@ class RestInboundAdapter extends InboundAdapter
       @ssl.key = properties.ssl.key
       @ssl.cert = properties.ssl.cert
 
+    @url = @url or "http://*:" + @port
+
   #
   # @overload start()
   # Method which start the adapter.

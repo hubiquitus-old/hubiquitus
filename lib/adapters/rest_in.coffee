@@ -89,10 +89,10 @@ class RestInboundAdapter extends InboundAdapter
       @queryTimeout = properties.queryTimeout
 
     if properties.url
-      @url = url
+      @url = properties.url
       url_props = url.parse(properties.url)
-      if typeof url_props.port is "number"
-        @port = url_props.port
+      if url_props.port and parseInt(url_props.port) > 0
+        @port = parseInt(url_props.port)
 
       if typeof url_props.hostname is "string" and url_props.hostname isnt "*"
         @hostname = url_props.hostname

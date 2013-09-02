@@ -84,10 +84,10 @@ class OutboundAdapter extends Adapter
     @onMessage = async.compose.apply null, args.reverse()
 
   #
-  # Method which has to be override to specify an outbound adapter
+  # Internal method, used to send a message, and queue it if adapter is not ready
   # @param hMessage {object}
   #
-  send: (hMessage) ->
+  h_send: (hMessage) ->
     unless @started
       @queue.push hMessage
       unless @starting
@@ -96,11 +96,11 @@ class OutboundAdapter extends Adapter
           @started = true
           @starting = false
           while hMessage = @queue.pop()
-            @send hMessage
+            @h_send hMessage
     else
       @prepareMessage hMessage, (err, buffer, metadata) =>
         unless err
-          @h_send buffer, metadata
+          @send buffer, metadata
         else
           @owner.log "error", err
 
@@ -119,7 +119,7 @@ class OutboundAdapter extends Adapter
   # @param buffer {buffer}
   # @param metadata {object} metadata extracted from hMessage
   #
-  h_send: (buffer, metadata) ->
+  send: (buffer, metadata) ->
     throw new Error "Send method should be overriden"
 
 

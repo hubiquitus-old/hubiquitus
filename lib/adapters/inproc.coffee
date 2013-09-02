@@ -42,11 +42,11 @@ class LocalOutboundAdapter extends OutboundAdapter
       throw new Error "You must explicitely pass an actor as reference to a LocalOutboundAdapter"
 
   #
-  # @overload send(hMessage)
+  # @overload h_send(hMessage)
   #   Method which send the hMessage between parent and child
   #   @param hMessage {object} The hMessage to send
   #
-  send: (hMessage) ->
+  h_send: (hMessage) ->
     @start() unless @started
     @ref.emit "message", hMessage
 

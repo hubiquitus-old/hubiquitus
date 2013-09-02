@@ -421,7 +421,7 @@ class Actor extends EventEmitter
       result = validator.validateHMessage hMessage
       unless result.valid
         @log "debug", "syntax error in hMessage : ", result.error
-      outboundAdapter.send hMessage
+      outboundAdapter.h_send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"
       resultMsg = @buildResult(actor, hMessage.msgid, errorCode, errorMsg)

@@ -54,8 +54,8 @@ class Adapter
   # @property {Array<Filter>} Adapter's filters
   filters: undefined
 
-  # @property {Serializer} Adapter's serializer
-  serializer: undefined
+  # @property {Codec} Adapter's codec
+  codec: undefined
 
   #
   # Adapter's constructor
@@ -76,14 +76,14 @@ class Adapter
       else
         @authenticator = factory.make properties.auth.type, properties.auth.properties
 
-    if properties.serializer
-      if typeof properties.serializer is 'string'
-        if properties.serializer isnt 'none'
-          @serializer = factory.make properties.serializer
+    if properties.codec
+      if typeof properties.codec is 'string'
+        if properties.codec isnt 'none'
+          @codec = factory.make properties.codec
       else
-        @serializer = factory.make properties.serializer.type, properties.serializer.properties
+        @codec = factory.make properties.codec.type, properties.codec.properties
     else
-      @serializer = factory.make 'json'
+      @codec = factory.make 'json'
 
     @filters = [];
     if properties.filters

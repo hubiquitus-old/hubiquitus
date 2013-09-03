@@ -58,10 +58,10 @@ exports.builtinAuthenticatorNames =
 exports.builtinFilterNames =
   Filter: "hfilter"
 
-exports.builtinSerializerNames =
-  Serializer: "hserializer"
-  JSONSerializer: "json"
-  Base64Serializer: "base64"
+exports.builtinCodecNames =
+  Codec: "hcodec"
+  JSONCodec: "json"
+  Base64Codec: "base64"
 
 exports.builtinLoggerNames =
   Logger: "logger"

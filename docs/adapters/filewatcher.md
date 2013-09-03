@@ -10,7 +10,7 @@ You can add a filewatcher adapter to your actor by completing the specifics attr
 {
     "actor": "urn:domain:myActor",
     "type": "myActor",
-    adapters: [ { type: "filewatcherAdapter", properties: {path:"./test.json"}, "serializer":"jsonpayload"} ]
+    adapters: [ { type: "filewatcherAdapter", properties: {path:"./test.json"}, "codec":"jsonpayload"} ]
 }
 ```
 
@@ -41,10 +41,10 @@ In this example the adapter attribute is :
             <td>Yes</td>
         </tr>
          <tr>
-            <td>serializer</td>
+            <td>codec</td>
             <td>String</td>
             <td>
-                The serializer to use here, jsonPayload. For more information about serializers see <a href="https://github.com/hubiquitus/hubiquitus/tree/master/docs/serializers">here</a>
+                The codec to use here, jsonPayload. For more information about codecs see <a href="https://github.com/hubiquitus/hubiquitus/tree/master/docs/codecs">here</a>
             </td>
             <td>Yes</td>
         </tr>

@@ -52,9 +52,9 @@ coreTypes =
 # ---------------------------------------- Authenticators
   'simple': './authenticators/simple'
 # ---------------------------------------- Filters
-# ---------------------------------------- Serializers
-  'json': './serializers/json'
-  'base64': './serializers/base64'
+# ---------------------------------------- Codecs
+  'json': './codecs/json'
+  'base64': './codecs/base64'
 # ---------------------------------------- Loggers
   'console': './loggers/console'
   'file': './loggers/file'

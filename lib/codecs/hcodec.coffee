@@ -22,42 +22,36 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-Serializer = require "./hserializer"
 
 #
-# Class that defines a Base64 Serializer
+# Class that defines a Codec
 #
-class Base64Serializer extends Serializer
+class Codec
 
   #
-  # Base64 Serializer's constructor
+  # Codec's constructor
   #
   constructor: () ->
 
   #
-  # @param data {object} the message to encode
+  # @param data {object, string, number, boolean} to encode
+  # @param metadata {object} data metadata
   # @param callback {function} callback
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback data {object, string, number, boolean} data extracted from message
+  # @options callback metadata {object} metadata extracted from message
   #
   encode: (data, metadata, callback) ->
-    try
-      buffer = undefined
-      if data and typeof data is "string"
-        buffer = new Buffer(data, "base64")
-      callback null, buffer, metadata
-    catch err
-      callback err, null, null
 
   #
   # @param buffer {Buffer} the data to decode
-  # @param callback {function} callback
+  # @param metadata {object} buffer metadata
+  # @param callback {Function} callback
+  # @options callback err {object, string} only defined if an error occcured
+  # @options callback data {object, string, number, boolean} data converted from buffer
+  # @options callback metadata {object} metadata extracted by the adapter
   #
   decode: (buffer, metadata, callback) ->
-    try
-      if buffer
-        message = buffer.toString("base64")
-      callback null, message, metadata
-    catch err
-      callback err, null, null
 
 
-module.exports = Base64Serializer
+module.exports = Codec

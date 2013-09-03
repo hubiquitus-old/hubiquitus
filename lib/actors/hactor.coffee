@@ -61,16 +61,6 @@ class Actor extends EventEmitter
   # Possible running states of an actor : Actor is in error. It accept direct message (send with fullURN) but there are no garanty that it can treat them.
   STATUS_ERROR = "error"
 
-  # Native Actors provided by hubiquitus. If forked they will be used
-  H_ACTORS =
-    hauth: true
-    hchannel: true
-    hdispatcher: true
-    hgateway: true
-    hsession: true
-    htracker: true
-    hactor: true
-
   # @property {array} loggers instances. Loggers should inherit Logger.
   loggers: undefined
   # @property {array} loggersProps loggers property from topology.
@@ -431,7 +421,7 @@ class Actor extends EventEmitter
       result = validator.validateHMessage hMessage
       unless result.valid
         @log "debug", "syntax error in hMessage : ", result.error
-      outboundAdapter.send hMessage
+      outboundAdapter.h_send hMessage
     else if cb
       actor = hMessage.actor or "Unknown"
       resultMsg = @buildResult(actor, hMessage.msgid, errorCode, errorMsg)

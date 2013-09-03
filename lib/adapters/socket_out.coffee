@@ -102,11 +102,11 @@ class SocketOutboundAdapter extends OutboundAdapter
           index++
 
   #
-  # @overload h_send(buffer)
+  # @overload send(buffer)
   #   Method which send the hMessage in the zmq push socket.
   #   @param buffer {Buffer} The hMessage to send
   #
-  h_send: (buffer) ->
+  send: (buffer) ->
     @start() unless @started
     @sock.send buffer
 

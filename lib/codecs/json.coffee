@@ -22,36 +22,44 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+Codec = require "./hcodec"
 
 #
-# Class that defines a Serializer
+# Class that defines a JSON Codec
 #
-class Serializer
+class JSONCodec extends Codec
 
   #
-  # Serializer's constructor
+  # JSON Codec's constructor
   #
   constructor: () ->
 
   #
-  # @param data {object, string, number, boolean} to encode
-  # @param metadata {object} data metadata
+  # @param data {object} the message to encode
   # @param callback {function} callback
-  # @options callback err {object, string} only defined if an error occcured
-  # @options callback data {object, string, number, boolean} data extracted from message
-  # @options callback metadata {object} metadata extracted from message
   #
   encode: (data, metadata, callback) ->
+    try
+      buffer = undefined
+      if data
+        message = JSON.stringify(data)
+        buffer = new Buffer(message, "utf-8")
+      callback null, buffer, metadata
+    catch err
+      callback err, null, null
 
   #
   # @param buffer {Buffer} the data to decode
-  # @param metadata {object} buffer metadata
-  # @param callback {Function} callback
-  # @options callback err {object, string} only defined if an error occcured
-  # @options callback data {object, string, number, boolean} data converted from buffer
-  # @options callback metadata {object} metadata extracted by the adapter
+  # @param callback {function} callback
   #
   decode: (buffer, metadata, callback) ->
+    try
+      if buffer
+        message = buffer.toString("utf-8")
+        parsedMsg = JSON.parse(message)
+      callback null, parsedMsg, metadata
+    catch err
+      callback err, null, null
 
 
-module.exports = Serializer
+module.exports = JSONCodec

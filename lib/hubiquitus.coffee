@@ -57,9 +57,9 @@ builtinFilterNames = require("./hbuiltin").builtinFilterNames
 _.pairs(builtinFilterNames).forEach (pair) ->
   to_exports[pair[0]] = require "./filters/#{pair[1]}"
 
-builtinSerializerNames = require("./hbuiltin").builtinSerializerNames
-_.pairs(builtinSerializerNames).forEach (pair) ->
-  to_exports[pair[0]] = require "./serializers/#{pair[1]}"
+builtinCodecNames = require("./hbuiltin").builtinCodecNames
+_.pairs(builtinCodecNames).forEach (pair) ->
+  to_exports[pair[0]] = require "./codecs/#{pair[1]}"
 
 builtinLoggerNames = require("./hbuiltin").builtinLoggerNames
 _.pairs(builtinLoggerNames).forEach (pair) ->
@@ -73,6 +73,12 @@ to_exports.filter = filter
 
 codes = require "./codes"
 to_exports.codes = codes
+
+UUID = require "./UUID"
+to_exports.UUID = UUID
+
+factory = require "./factory"
+to_exports.factory = factory
 
 # Start an engine based on a topoplogy.
 # topology can be :

@@ -52,11 +52,11 @@ class ChildprocessOutboundAdapter extends OutboundAdapter
     super
 
   #
-  # @overload send(hMessage)
+  # @overload h_send(hMessage)
   #   Method which send the hMessage between parent and child
   #   @param hMessage {object} The hMessage to send
   #
-  send: (hMessage) ->
+  h_send: (hMessage) ->
     @start() unless @started
     @ref.send hMessage
 

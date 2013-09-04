@@ -43,7 +43,7 @@ class MongoOutboundAdapter extends OutboundAdapter
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
-    properties.serializer = 'none'
+    properties.codec = 'none'
     super
     @type = "mongo_out"
 
@@ -89,11 +89,11 @@ class MongoOutboundAdapter extends OutboundAdapter
           @owner.log "trace", "Closed mongo link"
 
   #
-  # @overload h_send(buffer)
+  # @overload send(buffer)
   #   Method which send the hMessage to the MongoDB collection.
   #   @param buffer {Buffer} The hMessage to send
   #
-  h_send: (buffer) ->
+  send: (buffer) ->
     @start() unless @started
 
     if @dbInstance isnt undefined

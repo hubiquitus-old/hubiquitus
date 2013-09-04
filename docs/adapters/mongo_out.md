@@ -27,7 +27,7 @@ You can add a mongo_out adapter to your channel by completing the specifics attr
 ```
 Add a property <b>"persistentAid": "urn:localhost:mongo"</b> on your channel as in the previous topology.
 
-In this example the adapter attribute are :
+mongo_out adapter properties are :
 
 <table>
     <thead>
@@ -42,27 +42,27 @@ In this example the adapter attribute are :
     <tr>
         <td>targetActorAid</td>
         <td>String</td>
-        <td>Value : <em>urn:localhost:mongo</em></td>
+        <td>Urn of the adapter. Any message send by the actor to this address will be stored in mongo</td>
         <td>Yes</td>
     </tr>
     <tr>
         <td>type</td>
         <td>String</td>
-        <td>Value : <em>mongo_out</em></td>
+        <td>mongo_out</td>
         <td>Yes</td>
     </tr>
     <tr>
         <td>properties</td>
         <td>object</td>
         <td>
-            The properties of the mongo_out adapter, depending on your mongo installation
+            Properties to connect to the mongo database
         </td>
         <td>Yes</td>
     </tr>
     </tbody>
 </table>
 
-* mongo_out properties :
+Mongo database properties :
 
 <table>
     <thead>
@@ -78,12 +78,36 @@ In this example the adapter attribute are :
         <td>name</td>
         <td>String</td>
         <td>the name of the db</td>
-        <td>No</td>
+        <td>yes</td>
     </tr>
     <tr>
         <td>collection</td>
         <td>String</td>
         <td>the name of the collection</td>
+        <td>yes</td>
+    </tr>
+    <tr>
+        <td>host</td>
+        <td>String</td>
+        <td>mongo host</td>
+        <td>No</td>
+    </tr>
+    <tr>
+        <td>port</td>
+        <td>number</td>
+        <td>mongo host port</td>
+        <td>No</td>
+    </tr>
+    <tr>
+        <td>user</td>
+        <td>string</td>
+        <td>Mongo username if password protected</td>
+        <td>No</td>
+    </tr>
+    <tr>
+        <td>password</td>
+        <td>string</td>
+        <td>Mongo password if password protected</td>
         <td>No</td>
     </tr>
     </tbody>

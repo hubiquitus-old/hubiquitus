@@ -95,11 +95,11 @@ class ChannelOutboundAdapter extends OutboundAdapter
     callback null, hMessage, metadata
 
   #
-  # @overload h_send(buffer, metadata)
+  # @overload send(buffer, metadata)
   #   Method which send the hMessage in the zmq pub socket.
   #   @param buffer {Buffer} The hMessage to send
   #
-  h_send: (buffer, metadata) ->
+  send: (buffer, metadata) ->
     try
       zmqFilterEndBuf = new Buffer(1)
       zmqFilterEndBuf[0] = 7

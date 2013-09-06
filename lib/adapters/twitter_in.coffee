@@ -65,8 +65,12 @@ class TwitterInboundAdapter extends InboundAdapter
           if isNaN(elem)
             scrNamesTab.push(elem)
           else @twitProperties.follow.push(elem)
-        @getIdForScreenName scrNamesTab.join(","), =>
-          @twitProperties.follow = @twitProperties.follow.join(",")
+        if scrNamesTab.length > 0
+          @getIdForScreenName scrNamesTab.join(","), =>
+            @twitProperties.follow = @twitProperties.follow.join(",")
+            @applyConfig =>
+              super
+        else
           @applyConfig =>
             super
       else

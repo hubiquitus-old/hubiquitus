@@ -71,7 +71,8 @@ class TwitterInboundAdapter extends InboundAdapter
             @applyConfig =>
               super
         else
-          super
+          @applyConfig =>
+            super
       else
         if @properties.accounts is ""
           delete @twitProperties.follow

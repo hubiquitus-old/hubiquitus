@@ -27,7 +27,8 @@
       "socket.io" : "=0.9.14",
       "mongodb" : "=1.2.14",
       "request": "=2.21.0",
-      "async": "~0.2.5"
+      "async": "~0.2.5",
+      "tingodb": "git://github.com/sergeyksv/tingodb.git"
   },
   "devDependencies": {
       "should" : "=1.2.2",

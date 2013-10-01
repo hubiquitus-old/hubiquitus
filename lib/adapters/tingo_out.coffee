@@ -23,7 +23,7 @@
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
 
-{OutboundAdapter} = require "hubiquitus"
+OutboundAdapter = require "./OutboundAdapter"
 tingo = require("tingodb")()
 
 #

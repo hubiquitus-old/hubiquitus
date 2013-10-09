@@ -117,53 +117,20 @@ class Actor extends EventEmitter
   # @param topology {object} Launch topology of the actor
   #
   constructor: (topology) ->
-    # init loggers.
-    @loggersProps = topology.loggers or [{"type": "console", "logLevel": "info"}]
-    @loggers = []
-    for loggerProps in @loggersProps
-      try
-        loggerProps = lodash.cloneDeep loggerProps
-        loggerProps.owner = @
-        logger = factory.make loggerProps.type, loggerProps
-        @loggers.push logger
-      catch e
-        winston.log "error", e
-
-
     result = validator.validateTopology topology
-    unless result.valid
-      @log "warn", "syntax error in topology during actor initialization : ", result.error
+    if not result.valid
+      console.warn "warn: [init] topology syntax error", result.error
 
-
-    # setting up instance attributes
-    if(validator.validateFullURN(topology.actor))
-      @actor = topology.actor
-    else if(validator.validateURN(topology.actor))
-      @actor = "#{topology.actor}/#{UUID.generate()}"
-    else
-      throw new Error "Invalid actor URN"
-    @resource = @actor.replace(/^.*\//, "")
-    @type = "actor"
-    @filter = {}
-    if topology.filter
-      @setFilter topology.filter, (status, result) =>
-        unless status is codes.hResultStatus.OK
-          # TODO arreter l'acteur
-          @log "error", "Invalid filter stopping actor"
-
-    # Initializing class variables
+    @_h_initLoggers(topology)
+    @_h_initActor(topology)
+    @type = @type or "actor"
+    @_h_initFilter(topology)
     @msgToBeAnswered = {}
     @timerOutAdapter = {}
     @error = {}
     @touchDelay = 60000
-
-    # Initializing attributs
     @status = STATUS_STOPPED
-    @sharedProperties = topology.sharedProperties or {}
-    # Deep copy JSON object (value only, no reference)
-    @properties = JSON.parse(JSON.stringify(@sharedProperties)) or {}
-    for prop of topology.properties
-      @properties[prop] = topology.properties[prop]
+    @_h_initProperties(topology)
     @children = []
     @trackers = []
     @inboundAdapters = []
@@ -173,24 +140,87 @@ class Actor extends EventEmitter
     @watchingsTab = []
     @topology = topology
     @listenersInited = false
+    @h_setIP(topology)
+    @_h_initTracker(topology)
+    @h_initListeners()
+    @_h_initAdapters(topology);
 
-    if topology.ip
-      @ip = topology.ip
+  #
+  # Init loggers
+  # @private
+  # @param topology {object} the topology
+  #
+  _h_initLoggers: (topology) ->
+    @loggersProps = topology.loggers or [{"type": "console", "logLevel": "info"}]
+    @loggers = []
+    for loggerProps in @loggersProps
+      try
+        loggerProps = lodash.cloneDeep loggerProps
+        loggerProps.owner = @
+        logger = factory.make loggerProps.type, loggerProps
+        @loggers.push logger
+      catch e
+        console.err "error: [init] loggers initiation error", e
+
+  #
+  # Init actor
+  # @private
+  # @param topology {object} the topology
+  #
+  _h_initActor: (topology) ->
+    if(validator.validateFullURN(topology.actor))
+      @actor = topology.actor
+    else if(validator.validateURN(topology.actor))
+      @actor = "#{topology.actor}/#{UUID.generate()}"
     else
-      @h_setIP()
+      throw new Error "invalid actor URN"
+    @resource = @actor.replace(/^.*\//, "")
 
-    # Registering trackers
+  #
+  # Init filter
+  # @private
+  # @param topology {object} the topology
+  #
+  _h_initFilter: (topology) ->
+    @filter = {}
+    if topology.filter
+      @setFilter topology.filter, (status, result) =>
+        if status isnt codes.hResultStatus.OK
+          # TODO arreter l'acteur
+          @log "error", "[init] invalid filter", "stopping actor"
+
+  #
+  # Init properties
+  # @private
+  # @param topology {object} the topology
+  #
+  _h_initProperties: (topology) ->
+    @sharedProperties = topology.sharedProperties or {}
+    # Deep copy JSON object (value only, no reference)
+    @properties = JSON.parse(JSON.stringify(@sharedProperties)) or {}
+    for prop of topology.properties
+      @properties[prop] = topology.properties[prop]
+
+  #
+  # Init tracker
+  # @private
+  # @param topology {object} the topology
+  #
+  _h_initTracker: (topology) ->
     if _.isArray(topology.trackers) and topology.trackers.length > 0
       _.forEach topology.trackers, (trackerProps) =>
-        @log "trace", "registering tracker #{trackerProps.trackerId}"
+        @log "trace", "[init] registering tracker #{trackerProps.trackerId}"
         @trackers.push trackerProps
         @outboundAdapters.push factory.make("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
     else
-      @log "warn", "no tracker was provided"
+      @log "warn", "[init] no tracker provided"
 
-    @h_initListeners()
-
-    # Setting adapters
+  #
+  # Init topology
+  # @private
+  # @param topology {object} the topology
+  #
+  _h_initAdapters: (topology) ->
     _.forEach topology.adapters, (adapterProps) =>
       adapterProps.owner = @
       if adapterProps.type is 'channel_in'
@@ -367,7 +397,7 @@ class Actor extends EventEmitter
               cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : " + hResult.payload.result)
             else
               @log "debug", "Can't send hMessage : ", hResult.payload.result
-      else if @type isnt "htracker"
+      else if @type isnt "tracker"
         if cb
           cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't find actor")
           return
@@ -1030,7 +1060,10 @@ class Actor extends EventEmitter
   #
   # Method called by the constructor to find the actor's IP adress
   #
-  h_setIP: () ->
+  h_setIP: (topology) ->
+    if topology.ip
+      @ip = topology.ip
+      return
     interfaces = os.networkInterfaces()
     if interfaces
       sortIntName = Object.getOwnPropertyNames(interfaces).sort (int1, int2) =>

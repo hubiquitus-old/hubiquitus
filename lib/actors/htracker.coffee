@@ -67,11 +67,11 @@ class Tracker extends Actor
       topology.children = []
 
     topology.children.unshift chan
-    
+
     @timerPeers = {}
     @timeoutDelay = 180000
-    super
     @type = "tracker"
+    super
 
   #
   # @overload h_onSignal(hMessage)

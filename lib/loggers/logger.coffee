@@ -58,22 +58,24 @@ class Logger
   #
   # Make a log message from urn and several elements to log
   # @param urn {string} urn of the logger's owner.
+  # @param errid {string} unique error id
   # @param msgs {function} messages to log (stringify should be done at logger level if needed)
   #
-  makeLogMsg: (urn, msgs) ->
+  makeLogMsg: (urn, errid, msgs) ->
     logMsg = ""
     for msg in msgs
       if typeof msg is "string"
         logMsg += msg + " "
       else
-        logMsg += util.inspect msg
-    return (new Date()) + " | #{urn} | #{logMsg}"
+        logMsg += util.inspect(msg, {colors: true, depth: 10})
+    return (new Date()) + " | #{urn} | #{errid} | #{logMsg}"
 
   #
   # @param level {string} log level of the message. Available levels are : trace, debug, info, warn, error
   # @param urn {string} urn of the logger's owner.
+  # @param errid {string} unique error id
   # @param msgs {function} messages to log (stringify should be done at logger level if needed)
   #
-  log: (level, urn, msgs) ->
+  log: (level, urn, errid, msgs) ->
 
 module.exports = Logger

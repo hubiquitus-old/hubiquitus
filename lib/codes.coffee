@@ -54,3 +54,10 @@ exports.mongoCodes =
   CONNECTED: 1
   TECH_ERROR: 4
   INVALID_URI: 5
+
+exports.logLevels =
+  trace: 0
+  debug: 1
+  info: 2
+  warn: 3
+  error: 4

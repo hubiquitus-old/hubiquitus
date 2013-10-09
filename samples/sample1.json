@@ -36,14 +36,6 @@
             }
         },
         {
-            "actor": "urn:localhost:dispatcher",
-            "type": "hdispatcher",
-            "properties": {
-                "workers": { "method": "fork", "type": "hactor", "nb": 2 }
-            },
-            "adapters": [ { "type": "socket_in"} ]
-        },
-        {
             "actor": "urn:localhost:channel",
             "type": "hchannel",
             "properties": {

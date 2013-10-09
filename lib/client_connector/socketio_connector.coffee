@@ -123,7 +123,7 @@ class SocketIO_Connector
       data.inboundAdapters
       session_type = @owner.properties.sessionType or "hsession"
       data.type = session_type
-      client.hClient.createChild session_type, "inproc", data, (child) =>
+      client.hClient.createChild session_type, "inproc", data, (err, child) =>
         #Relay all server status messages
         child.initListener(client)
         client.child = child.actor

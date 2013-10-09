@@ -28,7 +28,6 @@ coreTypes =
   'hactor': './actors/hactor'
   'hauth': './actors/hauth'
   'hchannel': './actors/hchannel'
-  'hdispatcher': './actors/hdispatcher'
   'hgateway': './actors/hgateway'
   'hsession': './actors/hsession'
   'htracker': './actors/htracker'

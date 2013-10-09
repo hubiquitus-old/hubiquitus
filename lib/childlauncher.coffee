@@ -30,10 +30,14 @@ main = ->
   args = process.argv.slice(2)
 
   actorProps = JSON.parse args[1]
-  actor = factory.make args[0], actorProps
+  try
+    actor = factory.make args[0], actorProps
+  catch e
+    process.send("status", e)
+    process.exit()
 
   # Acknowledging parent process that the job has been done
-  process.send( {state: "ready"} )
+  process.send("status")
 
   # Transmitting any message from parent actor to child actor
   process.on "message" , (msg) ->

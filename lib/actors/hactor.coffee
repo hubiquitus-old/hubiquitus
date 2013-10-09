@@ -34,6 +34,7 @@ os = require "os"
 # Hactor modules
 validator = require "../validator"
 codes = require "../codes"
+logLevels = codes.logLevels
 hFilter = require "./../hFilter"
 factory = require "../factory"
 UUID = require "../UUID"
@@ -119,7 +120,7 @@ class Actor extends EventEmitter
   constructor: (topology) ->
     result = validator.validateTopology topology
     if not result.valid
-      console.warn "warn: [init] topology syntax error", result.error
+      return console.warn "hub-1", "topology syntax error", result.error
 
     @_h_initLoggers(topology)
     @_h_initActor(topology)
@@ -143,7 +144,8 @@ class Actor extends EventEmitter
     @h_setIP(topology)
     @_h_initTracker(topology)
     @h_initListeners()
-    @_h_initAdapters(topology);
+    @_h_initAdapters(topology)
+
 
   #
   # Init loggers
@@ -160,7 +162,7 @@ class Actor extends EventEmitter
         logger = factory.make loggerProps.type, loggerProps
         @loggers.push logger
       catch e
-        console.err "error: [init] loggers initiation error", e
+        console.error "hub-2", "loggers init error", e
 
   #
   # Init actor
@@ -173,7 +175,7 @@ class Actor extends EventEmitter
     else if(validator.validateURN(topology.actor))
       @actor = "#{topology.actor}/#{UUID.generate()}"
     else
-      throw new Error "invalid actor URN"
+      throw new Error "invalid actor URN" # TODO still valid ?
     @resource = @actor.replace(/^.*\//, "")
 
   #
@@ -186,8 +188,8 @@ class Actor extends EventEmitter
     if topology.filter
       @setFilter topology.filter, (status, result) =>
         if status isnt codes.hResultStatus.OK
-          # TODO arreter l'acteur
-          @log "error", "[init] invalid filter", "stopping actor"
+          # TODO stop actor
+          @_h_makeLog "error", "hub-100", "invalid filter"
 
   #
   # Init properties
@@ -209,11 +211,11 @@ class Actor extends EventEmitter
   _h_initTracker: (topology) ->
     if _.isArray(topology.trackers) and topology.trackers.length > 0
       _.forEach topology.trackers, (trackerProps) =>
-        @log "trace", "[init] registering tracker #{trackerProps.trackerId}"
+        @_h_makeLog "trace", "hub-101", "registering tracker #{trackerProps.trackerId}"
         @trackers.push trackerProps
         @outboundAdapters.push factory.make("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
     else
-      @log "warn", "[init] no tracker provided"
+      @_h_makeLog "warn", "hub-102", "no tracker provided"
 
   #
   # Init topology
@@ -473,16 +475,23 @@ class Actor extends EventEmitter
     hMessage.sent = new Date().getTime()
 
   #
-  # Method allowing that creates and start an actor as a child of this actor
-  # @param classname {string} the type of the actor to create
-  # @param method {string} the method to use to create the actor
-  # @param topology {object} the topology of the child actor to create
-  # @param cb {function} a function call when the actor is create. It return the child instance as parameters
-  # @option cb hChild {object} The instance of the child
+  # Create and start an actor
+  # @param classname {string} actor type
+  # @param method {string} creation method (inproc or fork)
+  # @param topology {object} child topology
+  # @param cb {function} Called once create or creation failed
+  # @option cb err {string, object} err if occured
+  # @option cb childRef {object} child instance
   #
   createChild: (classname, method, topology, cb) ->
-    unless _.isString(classname) then throw new Error "'classname' parameter must be a string"
-    unless _.isString(method) then throw new Error "'method' parameter must be a string"
+    if not _.isFunction(cb)
+      return @_h_makeLog("error", "hub-106", {cb: cb}, "'cb' should be a function")
+    if not _.isString(classname)
+      return cb(@_h_makeLog("warn", "hub-103", {classname: classname}, "'classname' parameter must be a string"))
+    if not _.isString(method)
+      return cb(@_h_makeLog("warn", "hub-104", {method: method}, "'method' parameter must be a string"))
+    if not _.isObject(topology)
+      return cb(@_h_makeLog("warn", "hub-105", {topology: topology}, "'topology' parameter must be an object"))
 
     childSharedProps = {}
     for prop of topology.sharedProperties
@@ -497,50 +506,63 @@ class Actor extends EventEmitter
 
     # prefixing actor's id automatically
     topology.actor = "#{topology.actor}/#{UUID.generate()}"
-
     switch method
-      when "inproc"
-        childRef = factory.make classname, topology
-        @outboundAdapters.push factory.make(method, owner: @, targetActorAid: topology.actor, ref: childRef)
-        childRef.outboundAdapters.push factory.make(method, owner: childRef, targetActorAid: @actor, ref: @)
-        childRef.parent = @
-        # Starting the child
-        @send @h_buildSignal(topology.actor, "start", {})
-
-      when "fork"
-        childRef = forker.fork __dirname + "/../childlauncher", [classname, JSON.stringify(topology)]
-        @outboundAdapters.push factory.make(method, owner: @, targetActorAid: topology.actor, ref: childRef)
-        childRef.on "message", (msg) =>
-          if msg.state is 'ready'
-            @send @h_buildSignal(topology.actor, "start", {})
+      when "inproc" then @_h_createChildInProc(classname, topology, cb)
+      when "fork" then @_h_forkChild(classname, topology, cb)
       else
-        throw new Error "Invalid method"
-
-    if cb
-      cb childRef
-    # adding aid to referenced children
-    @children.push topology.actor
-
-    topology.actor
+        cb(@_h_makeLog("error", "hub-109", {method: method, topology: topology}, "invalid method"))
+    return
 
   #
-  # Log a message <ith specified level. Enhance the message with actor urn.
-  # @param type {string} the level of the log
-  # @param message {object} the log message (with the actor which raise it)
+  # Create and start an actor in current process
+  # @param classname {string} actor type
+  # @param method {string} creation method (inproc or fork)
+  # @param topology {object} child topology
+  # @param cb {function} Called once create or creation failed
+  # @option cb err {string, object} err if occured
+  # @option cb childRef {object} child instance
   #
-  log: (type) ->
-    levels = {trace: 0, debug: 1, info: 2, warn: 3, error: 4}
-    level = levels[type]
-    unless typeof level is "number" and level >= 0 then level = 2
-    msgs = undefined
-    for logger in @loggers
-      loggerLevel = levels[logger.logLevel]
-      unless typeof loggerLevel is "number" and level >= 0 then level = 2
-      if level >= loggerLevel
-        unless msgs
-          msgs = Array.prototype.slice.call(arguments);
-          msgs.shift()
-        logger.log type, @actor, msgs
+  _h_createChildInProc: (classname, topology, cb) ->
+    try
+      childRef = factory.make classname, topology
+      @outboundAdapters.push factory.make("inproc", owner: @, targetActorAid: topology.actor, ref: childRef)
+      childRef.outboundAdapters.push factory.make("inproc", owner: childRef, targetActorAid: @actor, ref: @)
+      childRef.parent = @
+      # Starting the child
+      @send @h_buildSignal(topology.actor, "start", {})
+    catch err
+      return cb(@_h_makeLog("error", "hub-107", {exception: err, topology: topology}, err))
+    @children.push topology.actor # adding aid to referenced children
+    cb(null, childRef)
+
+  #
+  # Fork and start a child actor
+  # @param classname {string} actor type
+  # @param method {string} creation method (inproc or fork)
+  # @param topology {object} child topology
+  # @param cb {function} Called once create or creation failed
+  # @option cb err {string, object} err if occured
+  # @option cb childRef {object} child instance
+  #
+  _h_forkChild: (classname, topology, cb) ->
+    done = false
+    singleShotCb = (err, childRef) =>
+      if done
+        return @_h_makeLog("warn", "hub-110", {topology: topology, err: err}, "createChild callback called twice")
+      done = true
+      cb(err, childRef)
+
+    childRef = forker.fork __dirname + "/../childlauncher", [classname, JSON.stringify(topology)]
+    childRef.on "status", (err, data) =>
+      if err
+        return singleShotCb(@_h_makeLog("error", "hub-108", {exception: err, topology: topology}, err))
+      @outboundAdapters.push factory.make("fork", owner: @, targetActorAid: topology.actor, ref: childRef)
+      @send @h_buildSignal(topology.actor, "start", {})
+      @children.push topology.actor # adding aid to referenced children
+      singleShotCb(null, childRef)
+
+    childRef.on "error", (err) =>
+      singleShotCb(@_h_makeLog("error", "hub-108", {exception: err, topology: topology}, err))
 
   #
   # Method called by constructor to initializing actor's children
@@ -551,7 +573,9 @@ class Actor extends EventEmitter
     _.forEach children, (childProps) =>
       unless childProps.method
         childProps.method = "inproc"
-      @createChild childProps.type, childProps.method, childProps
+      @createChild childProps.type, childProps.method, childProps, (err) =>
+        if err
+          @_h_makeLog("error", "hub-111", {err: err, childProps: childProps})
 
   #
   # Method called every minuts to inform the tracker about the actor state
@@ -1099,6 +1123,82 @@ class Actor extends EventEmitter
               return
     else
       @ip = "127.0.0.1"
+
+  #
+  # Log a message with specified data. Enhance the message with actor urn.
+  # @param type {string} the level of the log
+  # @param code {string} the code of the log
+  # @param techData {object} the technical data to log
+  # @param userData {object} the user data to return
+  # @return {object} error uuid, log code and user data
+  # @private
+  #
+  _h_makeLog: (type, code, techData, userData) ->
+    errid = @_h_log(type, [{code:code, data:techData}])
+    return {errid: errid, code: code, data: userData}
+
+  #
+  # Log a message with specified level. Enhance the message with actor urn.
+  # @param type {string} the level of the log
+  # @param msgs {object} the log messages (with the actor which raise it)
+  # @return {string} error uuid
+  # @private
+  #
+  _h_log: (type, msgs) ->
+    level = logLevels[type]
+    errid = -1
+    for logger in @loggers
+      loggerLevel = logLevels[logger.logLevel]
+      # TODO check loggerLevel type (number) in topology validation
+      if not typeof loggerLevel is "number" or not loggerLevel >= logLevels.trace then loggerLevel = logLevels.info
+      if level >= loggerLevel
+        if errid is -1 then errid = UUID.generate()
+        logger.log type, @actor, errid, msgs
+    return errid
+
+  #
+  # Log a message with specified level. Enhance the message with actor urn.
+  # @param type {string} the level of the log
+  # @param msgs {object} the log messages (with the actor which raise it)
+  # @return {string} error uuid
+  #
+  log: (type) -> # log("toto")
+    args = Array.prototype.slice.call(arguments)
+    if _.contains(['trace', 'debug', 'info', 'warn', 'error'], type)
+      args.shift()
+    else
+      type = "info"
+    @_h_log(type, args)
+
+  #
+  # Call log with trace level.
+  #
+  trace: () ->
+    @log("trace", Array.prototype.slice.call(arguments))
+
+  #
+  # Call log with debug level.
+  #
+  debug: () ->
+    @log("debug", Array.prototype.slice.call(arguments))
+
+  #
+  # Call log with info level.
+  #
+  info: () ->
+    @log("info", Array.prototype.slice.call(arguments))
+
+  #
+  # Call log with warn level.
+  #
+  warn: () ->
+    @log("warn", Array.prototype.slice.call(arguments))
+
+  #
+  # Call log with error level.
+  #
+  error: () ->
+    @log("error", Array.prototype.slice.call(arguments))
 
 
 module.exports = Actor

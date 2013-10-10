@@ -161,8 +161,8 @@ class Actor extends EventEmitter
         loggerProps.owner = @
         logger = factory.make loggerProps.type, loggerProps
         @loggers.push logger
-      catch e
-        console.error "hub-2", "loggers init error", e
+      catch err
+        console.error "hub-2", "loggers init error", err
 
   #
   # Init actor
@@ -484,24 +484,20 @@ class Actor extends EventEmitter
   # @option cb childRef {object} child instance
   #
   createChild: (classname, method, topology, cb) ->
-    if not _.isFunction(cb)
+    if not lodash.isFunction(cb)
       return @_h_makeLog("error", "hub-106", {cb: cb}, "'cb' should be a function")
-    if not _.isString(classname)
+    if not lodash.isString(classname)
       return cb(@_h_makeLog("warn", "hub-103", {classname: classname}, "'classname' parameter must be a string"))
-    if not _.isString(method)
+    if not lodash.isString(method)
       return cb(@_h_makeLog("warn", "hub-104", {method: method}, "'method' parameter must be a string"))
-    if not _.isObject(topology)
+    if not lodash.isObject(topology)
       return cb(@_h_makeLog("warn", "hub-105", {topology: topology}, "'topology' parameter must be an object"))
 
-    childSharedProps = {}
-    for prop of topology.sharedProperties
-      childSharedProps[prop] = topology.sharedProperties[prop]
-    topology.sharedProperties = @sharedProperties
-    for prop of childSharedProps
-      topology.sharedProperties[prop] = childSharedProps[prop]
-
-    unless topology.trackers then topology.trackers = @trackers
-    unless topology.loggers then topology.loggers = @loggersProps
+    # prepare child properties
+    parentSharedProperties = lodash.cloneDeep(@sharedProperties)
+    lodash.extend(topology.sharedProperties, parentSharedProperties)
+    unless topology.trackers then topology.trackers = lodash.cloneDeep(@trackers)
+    unless topology.loggers then topology.loggers = lodash.cloneDeep(@loggersProps)
     unless topology.ip then topology.ip = @ip
 
     # prefixing actor's id automatically
@@ -528,7 +524,6 @@ class Actor extends EventEmitter
       @outboundAdapters.push factory.make("inproc", owner: @, targetActorAid: topology.actor, ref: childRef)
       childRef.outboundAdapters.push factory.make("inproc", owner: childRef, targetActorAid: @actor, ref: @)
       childRef.parent = @
-      # Starting the child
       @send @h_buildSignal(topology.actor, "start", {})
     catch err
       return cb(@_h_makeLog("error", "hub-107", {exception: err, topology: topology}, err))
@@ -553,6 +548,7 @@ class Actor extends EventEmitter
       cb(err, childRef)
 
     childRef = forker.fork __dirname + "/../childlauncher", [classname, JSON.stringify(topology)]
+
     childRef.on "status", (err, data) =>
       if err
         return singleShotCb(@_h_makeLog("error", "hub-108", {exception: err, topology: topology}, err))

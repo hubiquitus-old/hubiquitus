@@ -22,6 +22,7 @@
         {
             "actor": "urn:localhost:gateway",
             "type": "hgateway",
+            "method": "fork",
             "children": [
                 {
                     "actor": "urn:localhost:auth",

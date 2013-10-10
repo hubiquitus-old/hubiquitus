@@ -2,6 +2,9 @@
     "actor": "urn:localhost:tracker",
     "loggers": [{"type": "console", "logLevel": "debug"}],
     "type": "htracker",
+    "sharedProperties": {
+      "authActor": "urn:localhost:auth"
+    },
     "children": [
         {
             "actor": "urn:localhost:pubChannel",
@@ -32,7 +35,6 @@
             "adapters": [ { "type": "socket_in"} ],
             "properties": {
                 "socketIOPort": 8080,
-                "authActor": "urn:localhost:auth",
                 "authTimeout": 3000
             }
         },

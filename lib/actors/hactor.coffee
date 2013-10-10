@@ -146,7 +146,6 @@ class Actor extends EventEmitter
     @h_initListeners()
     @_h_initAdapters(topology)
 
-
   #
   # Init loggers
   # @private
@@ -493,20 +492,24 @@ class Actor extends EventEmitter
     if not lodash.isObject(topology)
       return cb(@_h_makeLog("warn", "hub-105", {topology: topology}, "'topology' parameter must be an object"))
 
-    # prepare child properties
+    # prepare child topology
+    childTopology = lodash.cloneDeep(topology)
+    childTopology.sharedProperties = childTopology.sharedProperties or {}
     parentSharedProperties = lodash.cloneDeep(@sharedProperties)
-    lodash.extend(topology.sharedProperties, parentSharedProperties)
-    unless topology.trackers then topology.trackers = lodash.cloneDeep(@trackers)
-    unless topology.loggers then topology.loggers = lodash.cloneDeep(@loggersProps)
-    unless topology.ip then topology.ip = @ip
+    lodash.extend childTopology.sharedProperties, parentSharedProperties, (childKey, parentKey) =>
+      if childKey then return childKey else return parentKey
+    unless childTopology.trackers then childTopology.trackers = lodash.cloneDeep(@trackers)
+    unless childTopology.loggers then childTopology.loggers = lodash.cloneDeep(@loggersProps)
+    unless childTopology.ip then childTopology.ip = @ip
 
     # prefixing actor's id automatically
-    topology.actor = "#{topology.actor}/#{UUID.generate()}"
+    childTopology.actor = "#{childTopology.actor}/#{UUID.generate()}"
+
     switch method
-      when "inproc" then @_h_createChildInProc(classname, topology, cb)
-      when "fork" then @_h_forkChild(classname, topology, cb)
+      when "inproc" then @_h_createChildInProc(classname, childTopology, cb)
+      when "fork" then @_h_forkChild(classname, childTopology, cb)
       else
-        cb(@_h_makeLog("error", "hub-109", {method: method, topology: topology}, "invalid method"))
+        cb(@_h_makeLog("error", "hub-109", {method: method, childTopology: childTopology}, "invalid method"))
     return
 
   #
@@ -518,16 +521,16 @@ class Actor extends EventEmitter
   # @option cb err {string, object} err if occured
   # @option cb childRef {object} child instance
   #
-  _h_createChildInProc: (classname, topology, cb) ->
+  _h_createChildInProc: (classname, childTopology, cb) ->
     try
-      childRef = factory.make classname, topology
-      @outboundAdapters.push factory.make("inproc", owner: @, targetActorAid: topology.actor, ref: childRef)
+      childRef = factory.make classname, childTopology
+      @outboundAdapters.push factory.make("inproc", owner: @, targetActorAid: childTopology.actor, ref: childRef)
       childRef.outboundAdapters.push factory.make("inproc", owner: childRef, targetActorAid: @actor, ref: @)
       childRef.parent = @
-      @send @h_buildSignal(topology.actor, "start", {})
+      @send @h_buildSignal(childTopology.actor, "start", {})
     catch err
-      return cb(@_h_makeLog("error", "hub-107", {exception: err, topology: topology}, err))
-    @children.push topology.actor # adding aid to referenced children
+      return cb(@_h_makeLog("error", "hub-107", {exception: err, topology: childTopology}, err))
+    @children.push childTopology.actor # adding aid to referenced children
     cb(null, childRef)
 
   #
@@ -539,26 +542,27 @@ class Actor extends EventEmitter
   # @option cb err {string, object} err if occured
   # @option cb childRef {object} child instance
   #
-  _h_forkChild: (classname, topology, cb) ->
+  _h_forkChild: (classname, childTopology, cb) ->
     done = false
     singleShotCb = (err, childRef) =>
       if done
-        return @_h_makeLog("warn", "hub-110", {topology: topology, err: err}, "createChild callback called twice")
+        return @_h_makeLog("warn", "hub-110", {topology: childTopology, err: err}, "createChild callback called twice")
       done = true
       cb(err, childRef)
 
-    childRef = forker.fork __dirname + "/../childlauncher", [classname, JSON.stringify(topology)]
+    childRef = forker.fork __dirname + "/../childlauncher", [classname, JSON.stringify(childTopology)]
 
-    childRef.on "status", (err, data) =>
-      if err
-        return singleShotCb(@_h_makeLog("error", "hub-108", {exception: err, topology: topology}, err))
-      @outboundAdapters.push factory.make("fork", owner: @, targetActorAid: topology.actor, ref: childRef)
-      @send @h_buildSignal(topology.actor, "start", {})
-      @children.push topology.actor # adding aid to referenced children
+    childRef.on "message", (msg) =>
+      if msg.type isnt "status" then return
+      if msg.err
+        return singleShotCb(@_h_makeLog("error", "hub-108", {exception: msg.err, topology: childTopology}, msg.err))
+      @outboundAdapters.push factory.make("fork", owner: @, targetActorAid: childTopology.actor, ref: childRef)
+      @send @h_buildSignal(childTopology.actor, "start", {})
+      @children.push childTopology.actor # adding aid to referenced children
       singleShotCb(null, childRef)
 
     childRef.on "error", (err) =>
-      singleShotCb(@_h_makeLog("error", "hub-108", {exception: err, topology: topology}, err))
+      singleShotCb(@_h_makeLog("error", "hub-108", {exception: err, topology: childTopology}, err))
 
   #
   # Method called by constructor to initializing actor's children

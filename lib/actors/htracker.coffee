@@ -74,6 +74,16 @@ class Tracker extends Actor
     super
 
   #
+  # @overload _h_initTracker
+  #
+  _h_initTracker: -> return
+
+  #
+  # @overload _h_touchTracker
+  #
+  _h_touchTracker: -> return
+
+  #
   # @overload h_onSignal(hMessage)
   #   Private method that processes hSignal message.
   #   The hSignal are service's message
@@ -146,17 +156,16 @@ class Tracker extends Actor
   #   @param children {Array<Object>} Actor's children and their topology
   #
   initChildren: (children)->
+    tracker = {
+      trackerId: @actor
+      trackerUrl: @inboundAdapters[0].url
+      trackerChannel: @trackerChannelAid
+    }
     _.forEach children, (childProps) =>
-      childProps.trackers = [{
-        trackerId : @actor,
-        trackerUrl : @inboundAdapters[0].url,
-        trackerChannel : @trackerChannelAid
-      }]
-      unless childProps.method
-        childProps.method = "inproc"
+      childProps.tracker = tracker
+      if not childProps.method then childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps, (err) =>
-        if err
-          @_h_makeLog("error", "hub-112", {err: err, childProps: childProps})
+        if err then @_h_makeLog("error", "hub-112", {err: err, childProps: childProps})
 
   #
   # Method called to search an adress for a specific peer)

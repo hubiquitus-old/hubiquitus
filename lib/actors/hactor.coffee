@@ -83,11 +83,11 @@ class Actor extends EventEmitter
   timerOutAdapter: undefined
   # @property {object} Contains the id and message of actor's errors
   error: undefined
-  # @property {object} Interval set between 2 touchTrackers
+  # @property {object} Interval set between 2 touchTracker
   timerTouch: undefined
   # @property {Actor} The actor which create this actor
   parent: undefined
-  # @property {number} Delay between 2 touchTrackers
+  # @property {number} Delay between 2 touchTracker
   touchDelay: undefined
   # @property {object} Properties shared between an actor and his children
   sharedProperties: undefined
@@ -97,8 +97,8 @@ class Actor extends EventEmitter
   status: undefined
   # @property {Array} List of topology of the actor's children
   children: undefined
-  # @property {Array} Properties of the trackers which watch the actor
-  trackers: undefined
+  # @property {object} Properties of the tracker wich watch the actor
+  tracker: undefined
   # @property {Array} List all the actor's inbound adapter
   inboundAdapters: undefined
   # @property {Array} List all the actor's outbound adapter
@@ -134,7 +134,6 @@ class Actor extends EventEmitter
     @status = STATUS_STOPPED
     @_h_initProperties(topology)
     @children = []
-    @trackers = []
     @inboundAdapters = []
     @outboundAdapters = []
     @subscriptions = []
@@ -209,11 +208,10 @@ class Actor extends EventEmitter
   # @param topology {object} the topology
   #
   _h_initTracker: (topology) ->
-    if _.isArray(topology.trackers) and topology.trackers.length > 0
-      _.forEach topology.trackers, (trackerProps) =>
-        @_h_makeLog "trace", "hub-101", "registering tracker #{trackerProps.trackerId}"
-        @trackers.push trackerProps
-        @outboundAdapters.push factory.make("socket_out", {owner: @, targetActorAid: trackerProps.trackerId, url: trackerProps.trackerUrl})
+    if topology.tracker
+      @_h_makeLog "trace", "hub-101", "registering tracker #{topology.tracker.trackerId}"
+      @tracker = topology.tracker
+      @outboundAdapters.push factory.make("socket_out", {owner: @, targetActorAid: @tracker.trackerId, url: @tracker.trackerUrl})
     else
       @_h_makeLog "warn", "hub-102", "no tracker provided"
 
@@ -375,8 +373,8 @@ class Actor extends EventEmitter
       @h_sending(hMessage, cb, outboundAdapter)
       # if don't have cached adapter, send lookup demand to the tracker
     else
-      if @trackers[0]
-        msg = @h_buildSignal(@trackers[0].trackerId, "peer-search", {actor: hMessage.actor, pid: process.pid, ip: @ip}, {timeout: 5000})
+      if @tracker
+        msg = @h_buildSignal(@tracker.trackerId, "peer-search", {actor: hMessage.actor, pid: process.pid, ip: @ip}, {timeout: 5000})
         @send msg, (hResult) =>
           if hResult.payload.status is codes.hResultStatus.OK
             # Subscribe to trackChannel to be alerting when actor disconnect
@@ -499,9 +497,9 @@ class Actor extends EventEmitter
     parentSharedProperties = lodash.cloneDeep(@sharedProperties)
     lodash.extend childTopology.sharedProperties, parentSharedProperties, (childKey, parentKey) =>
       if childKey then return childKey else return parentKey
-    unless childTopology.trackers then childTopology.trackers = lodash.cloneDeep(@trackers)
-    unless childTopology.loggers then childTopology.loggers = lodash.cloneDeep(@loggersProps)
-    unless childTopology.ip then childTopology.ip = @ip
+    if not childTopology.tracker then childTopology.tracker = lodash.cloneDeep(@tracker)
+    if not childTopology.loggers then childTopology.loggers = lodash.cloneDeep(@loggersProps)
+    if not childTopology.ip then childTopology.ip = @ip
 
     # prefixing actor's id automatically
     childTopology.actor = "#{childTopology.actor}/#{UUID.generate()}"
@@ -572,38 +570,37 @@ class Actor extends EventEmitter
   #
   initChildren: (children)->
     _.forEach children, (childProps) =>
-      unless childProps.method
-        childProps.method = "inproc"
+      if not childProps.method then childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps, (err) =>
-        if err
-          @_h_makeLog("error", "hub-111", {err: err, childProps: childProps})
+        if err then @_h_makeLog("error", "hub-111", {err: err, childProps: childProps})
 
   #
   # Method called every minuts to inform the tracker about the actor state
   # This method could be override to specified an actor
   # @private
   #
-  h_touchTrackers: ->
-    _.forEach @trackers, (trackerProps) =>
-      if trackerProps.trackerId isnt @actor
-        @log "trace", "touching tracker #{trackerProps.trackerId}"
-        inboundAdapters = []
-        if @status isnt STATUS_STOPPED
-          for inbound in @inboundAdapters
-            inboundAdapters.push {type: inbound.type, url: inbound.url}
+  _h_touchTracker: ->
+    if not @tracker then return
 
-        @send @h_buildSignal(trackerProps.trackerId, "peer-info",
-          peerType: @type
-          peerId: validator.getBareURN(@actor)
-          peerStatus: @status
-          peerInbox: inboundAdapters
-          peerIP: @ip
-          peerPID: process.pid
-          peerMemory: process.memoryUsage()
-          peerUptime: process.uptime()
-          peerLoadAvg: os.loadavg()
-          peerResource: validator.getResource(@actor)
-        )
+    @_h_makeLog "trace", "hub-113", {actor: @actor, tracker: @tracker}, "touching tracker #{@tracker.trackerId}"
+
+    inboundAdapters = []
+    if @status isnt STATUS_STOPPED
+      for inbound in @inboundAdapters
+        inboundAdapters.push {type: inbound.type, url: inbound.url}
+
+    @send @h_buildSignal(@tracker.trackerId, "peer-info", {
+      peerType: @type
+      peerId: validator.getBareURN(@actor)
+      peerStatus: @status
+      peerInbox: inboundAdapters
+      peerIP: @ip
+      peerPID: process.pid
+      peerMemory: process.memoryUsage()
+      peerUptime: process.uptime()
+      peerLoadAvg: os.loadavg()
+      peerResource: validator.getResource(@actor)
+    })
 
   #
   # Method called when the actor status change
@@ -616,11 +613,11 @@ class Actor extends EventEmitter
       @status = status
       if @timerTouch
         clearInterval(@timerTouch)
-      @h_touchTrackers()
+      @_h_touchTracker()
 
       unless status is STATUS_STOPPED
         @timerTouch = setInterval(=>
-          @h_touchTrackers()
+          @_h_touchTracker()
         , @touchDelay)
 
       # advertise
@@ -924,8 +921,8 @@ class Actor extends EventEmitter
       if outbound.targetActorAid is actor
         outbound.stop()
         @outboundAdapters.splice(index, 1)
-        if @trackers[0]
-          @unsubscribe @trackers[0].trackerChannel, actor, () ->
+        if @tracker
+          @unsubscribe @tracker.trackerChannel, actor, () ->
 
       index++
 
@@ -1029,8 +1026,8 @@ class Actor extends EventEmitter
   # @param cb {function} Function to call when unwatching
   #
   h_watchPeer: (actor, refAdapter, cb) ->
-    if @watchingsTab.length is 0 and @trackers[0]
-      @subscribe @trackers[0].trackerChannel, actor, () ->
+    if @watchingsTab.length is 0 and @tracker
+      @subscribe @tracker.trackerChannel, actor, () ->
     watching =
       actor: actor,
       adapter: refAdapter,
@@ -1092,7 +1089,10 @@ class Actor extends EventEmitter
   # @private
   #
   _h_makeLog: (type, code, techData, userData) ->
-    errid = @_h_log(type, [{code:code, data:techData}])
+    toLog = {code: code}
+    if techData then toLog.techData = techData
+    if userData then toLog.userData = userData
+    errid = @_h_log(type, [toLog])
     return {errid: errid, code: code, data: userData}
 
   #

@@ -57,29 +57,32 @@ class Session extends Actor
     @hClient = undefined
 
   #
-  # @overload h_touchTrackers()
+  # @overload _h_touchTracker()
   #   Method called every minuts to inform the tracker about the actor state.
   #   The session give his gateway address until his own
   #   @private
   #
-  h_touchTrackers: ->
-    _.forEach @trackers, (trackerProps) =>
-      @log "trace", "touching tracker #{trackerProps.trackerId}"
-      if @status is "stopping"
-        @trackInbox = []
+  _h_touchTracker: ->
+    if not @tracker then return
 
-      @send @h_buildSignal(trackerProps.trackerId, "peer-info",
-        peerType: @type
-        peerId: validator.getBareURN(@actor)
-        peerStatus: @status
-        peerInbox: @trackInbox
-        peerIP: @ip
-        peerPID: process.pid
-        peerMemory: process.memoryUsage()
-        peerUptime: process.uptime()
-        peerLoadAvg: os.loadavg()
-        peerResource: validator.getResource(@actor)
-      )
+    @_h_makeLog "trace", "hub-114", {actor: @actor, tracker: @tracker}, "touching tracker #{@tracker.trackerId}"
+
+    if @status is "stopping"
+      @trackInbox = []
+
+    @send @h_buildSignal(@tracker.trackerId, "peer-info", {
+      peerType: @type
+      peerId: validator.getBareURN(@actor)
+      peerStatus: @status
+      peerInbox: @trackInbox
+      peerIP: @ip
+      peerPID: process.pid
+      peerMemory: process.memoryUsage()
+      peerUptime: process.uptime()
+      peerLoadAvg: os.loadavg()
+      peerResource: validator.getResource(@actor)
+    })
+
   #
   # @overload validateFilter(hMessage)
   #   Method called on incoming message to check if the hMessage respect the actor's filter

@@ -137,10 +137,10 @@ class ChannelInboundAdapter extends InboundAdapter
       @addFilter(@filter)
       @owner.log "debug", "#{@owner.actor} subscribe to #{@channel} on #{@url}"
       super
-      dontWatch = not @owner.trackers[0] or
+      dontWatch = not @owner.tracker or
       @owner.type is "tracker" or # actor is tracker
-      validator.getBareURN(@owner.actor) is @owner.trackers[0].trackerChannel or # actor is trackChannel
-      validator.getBareURN(@channel) is @owner.trackers[0].trackerChannel # links to trackChannel
+      validator.getBareURN(@owner.actor) is @owner.tracker.trackerChannel or # actor is trackChannel
+      validator.getBareURN(@channel) is @owner.tracker.trackerChannel # links to trackChannel
       unless dontWatch
         cb = () ->
           index = 0
@@ -173,10 +173,10 @@ class ChannelInboundAdapter extends InboundAdapter
       super
       @sock.on "message", () =>
       @sock = null
-      doUnwatch = @owner.trackers[0] and
+      doUnwatch = @owner.tracker and
       @owner.type isnt "tracker" and
-      validator.getBareURN(@owner.actor) isnt @owner.trackers[0].trackerChannel and
-      validator.getBareURN(@channel) isnt @owner.trackers[0].trackerChannel # is not trackChannel
+      validator.getBareURN(@owner.actor) isnt @owner.tracker.trackerChannel and
+      validator.getBareURN(@channel) isnt @owner.tracker.trackerChannel # is not trackChannel
       if doUnwatch
         @h_unwatchPeer @channel
       index = 0
@@ -185,7 +185,7 @@ class ChannelInboundAdapter extends InboundAdapter
           break
         index++
       @owner.subscriptions.splice(index, 1)
-      if @owner.trackers[0] and validator.getBareURN(@channel) is @owner.trackers[0].trackerChannel
+      if @owner.tracker and validator.getBareURN(@channel) is @owner.tracker.trackerChannel
         index = 0
         for inbound in @owner.inboundAdapters
           if inbound is @

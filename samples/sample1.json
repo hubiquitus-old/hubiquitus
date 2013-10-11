@@ -1,6 +1,6 @@
 {
     "actor": "urn:localhost:tracker",
-    "loggers": [{"type": "console", "logLevel": "debug"}],
+    "loggers": [{"type": "console", "logLevel": "trace"}],
     "type": "htracker",
     "sharedProperties": {
       "authActor": "urn:localhost:auth"

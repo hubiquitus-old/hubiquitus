@@ -65,7 +65,7 @@ class Session extends Actor
   _h_touchTracker: ->
     if not @tracker then return
 
-    @_h_makeLog "trace", "hub-114", {actor: @actor, tracker: @tracker}, "touching tracker #{@tracker.trackerId}"
+    @_h_makeLog "trace", "hub-114", {msg: "touching tracker #{@tracker.trackerId}", actor: @actor, tracker: @tracker}
 
     if @status is "stopping"
       @trackInbox = []

@@ -165,7 +165,7 @@ class Tracker extends Actor
       childProps.tracker = tracker
       if not childProps.method then childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps, (err) =>
-        if err then @_h_makeLog("error", "hub-112", {err: err, childProps: childProps})
+        if err then @_h_makeLog("error", "hub-112", {msg: "initChildren err", actor: @actor, err: err, childProps: childProps})
 
   #
   # Method called to search an adress for a specific peer)

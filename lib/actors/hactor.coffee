@@ -213,7 +213,7 @@ class Actor extends EventEmitter
       @tracker = topology.tracker
       @outboundAdapters.push factory.make("socket_out", {owner: @, targetActorAid: @tracker.trackerId, url: @tracker.trackerUrl})
     else
-      @_h_makeLog "warn", "hub-102", "no tracker provided"
+      @_h_makeLog "warn", "hub-102", {msg: "no tracker provided", topology: topology}
 
   #
   # Init topology
@@ -245,6 +245,10 @@ class Actor extends EventEmitter
       @on "hStatus", (status) ->
         if status is "started"
           @initChildren(@topology.children)
+
+  #
+  # ---------------------------------------- handlers
+  #
 
   #
   # Method called when  hMessage is received by an adapter.
@@ -473,6 +477,21 @@ class Actor extends EventEmitter
     hMessage.sent = new Date().getTime()
 
   #
+  # ---------------------------------------- children management
+  #
+
+  #
+  # Method called by constructor to initializing actor's children
+  # This method could be override to specified an actor
+  # @param children {Array<Object>} Actor's children and their topology
+  #
+  initChildren: (children)->
+    _.forEach children, (childProps) =>
+      if not childProps.method then childProps.method = "inproc"
+      @createChild childProps.type, childProps.method, childProps, (err) =>
+        if err then @_h_makeLog("error", "hub-111", {msg: "initChildren err", actor: @actor, err: err, childProps: childProps})
+
+  #
   # Create and start an actor
   # @param classname {string} actor type
   # @param method {string} creation method (inproc or fork)
@@ -483,13 +502,13 @@ class Actor extends EventEmitter
   #
   createChild: (classname, method, topology, cb) ->
     if not lodash.isFunction(cb)
-      return @_h_makeLog("error", "hub-106", {cb: cb}, "'cb' should be a function")
+      return @_h_makeLog("error", "hub-106", {msg: "createChild arg error", cb: cb}, "'cb' should be a function")
     if not lodash.isString(classname)
-      return cb(@_h_makeLog("warn", "hub-103", {classname: classname}, "'classname' parameter must be a string"))
+      return cb(@_h_makeLog("warn", "hub-103", {msg: "createChild arg error", classname: classname}, "'classname' parameter must be a string"))
     if not lodash.isString(method)
-      return cb(@_h_makeLog("warn", "hub-104", {method: method}, "'method' parameter must be a string"))
+      return cb(@_h_makeLog("warn", "hub-104", {msg: "createChild arg error", method: method}, "'method' parameter must be a string"))
     if not lodash.isObject(topology)
-      return cb(@_h_makeLog("warn", "hub-105", {topology: topology}, "'topology' parameter must be an object"))
+      return cb(@_h_makeLog("warn", "hub-105", {msg: "createChild arg error", topology: topology}, "'topology' parameter must be an object"))
 
     # prepare child topology
     childTopology = lodash.cloneDeep(topology)
@@ -508,7 +527,7 @@ class Actor extends EventEmitter
       when "inproc" then @_h_createChildInProc(classname, childTopology, cb)
       when "fork" then @_h_forkChild(classname, childTopology, cb)
       else
-        cb(@_h_makeLog("error", "hub-109", {method: method, childTopology: childTopology}, "invalid method"))
+        cb(@_h_makeLog("error", "hub-109", {msg: "createChild invalid method", method: method, childTopology: childTopology}, "invalid method"))
     return
 
   #
@@ -528,7 +547,7 @@ class Actor extends EventEmitter
       childRef.parent = @
       @send @h_buildSignal(childTopology.actor, "start", {})
     catch err
-      return cb(@_h_makeLog("error", "hub-107", {exception: err, topology: childTopology}, err))
+      return cb(@_h_makeLog("error", "hub-107", {msg: "createChildInProc err", err: err, topology: childTopology}, err))
     @children.push childTopology.actor # adding aid to referenced children
     cb(null, childRef)
 
@@ -545,7 +564,7 @@ class Actor extends EventEmitter
     done = false
     singleShotCb = (err, childRef) =>
       if done
-        return @_h_makeLog("warn", "hub-110", {topology: childTopology, err: err}, "createChild callback called twice")
+        return @_h_makeLog("warn", "hub-110", {msg: "forkChild cb called twice", topology: childTopology, err: err})
       done = true
       cb(err, childRef)
 
@@ -554,25 +573,18 @@ class Actor extends EventEmitter
     childRef.on "message", (msg) =>
       if msg.type isnt "status" then return
       if msg.err
-        return singleShotCb(@_h_makeLog("error", "hub-108", {exception: msg.err, topology: childTopology}, msg.err))
+        return singleShotCb(@_h_makeLog("error", "hub-108", {msg: "forkChild err", err: msg.err, topology: childTopology}, msg.err))
       @outboundAdapters.push factory.make("fork", owner: @, targetActorAid: childTopology.actor, ref: childRef)
       @send @h_buildSignal(childTopology.actor, "start", {})
       @children.push childTopology.actor # adding aid to referenced children
       singleShotCb(null, childRef)
 
     childRef.on "error", (err) =>
-      singleShotCb(@_h_makeLog("error", "hub-108", {exception: err, topology: childTopology}, err))
+      singleShotCb(@_h_makeLog("error", "hub-108", {msg: "forkChild err", err: err, topology: childTopology}, err))
 
   #
-  # Method called by constructor to initializing actor's children
-  # This method could be override to specified an actor
-  # @param children {Array<Object>} Actor's children and their topology
+  # ---------------------------------------- tracker management
   #
-  initChildren: (children)->
-    _.forEach children, (childProps) =>
-      if not childProps.method then childProps.method = "inproc"
-      @createChild childProps.type, childProps.method, childProps, (err) =>
-        if err then @_h_makeLog("error", "hub-111", {err: err, childProps: childProps})
 
   #
   # Method called every minuts to inform the tracker about the actor state
@@ -582,7 +594,7 @@ class Actor extends EventEmitter
   _h_touchTracker: ->
     if not @tracker then return
 
-    @_h_makeLog "trace", "hub-113", {actor: @actor, tracker: @tracker}, "touching tracker #{@tracker.trackerId}"
+    @_h_makeLog "trace", "hub-113", {msg: "touching tracker #{@tracker.trackerId}", actor: @actor, tracker: @tracker}
 
     inboundAdapters = []
     if @status isnt STATUS_STOPPED
@@ -601,6 +613,10 @@ class Actor extends EventEmitter
       peerLoadAvg: os.loadavg()
       peerResource: validator.getResource(@actor)
     })
+
+  #
+  # ---------------------------------------- lifecycle
+  #
 
   #
   # Method called when the actor status change
@@ -710,24 +726,8 @@ class Actor extends EventEmitter
     done()
 
   #
-  # Method called to auto-subscribe to a channel when have channel_in adapter in topology
-  # @param adapterProps {object} properties of the channel to subscribe
-  # @param delay {int} time to wait before retry to subscribe
-  # @param errorID {string} id of the error to close when succesfully subscribe
+  # ---------------------------------------- errors management
   #
-  h_autoSubscribe: (adapterProps, delay, errorID) ->
-    setTimeout(=>
-      @subscribe adapterProps.channel, adapterProps.quickFilter, (status2, result2) =>
-        unless status2 is codes.hResultStatus.OK
-          @log "debug", "Subscription attempt failed cause #{result2}"
-          if delay < 60000
-            delay *= 2
-          else
-            delay = 60000
-          @h_autoSubscribe(adapterProps, delay, errorID)
-        else
-          @closeError(errorID)
-    , delay)
 
   #
   # Method called to when a error occur in the actor
@@ -747,6 +747,9 @@ class Actor extends EventEmitter
     if Object.keys(@error).length is 0
       @h_setStatus STATUS_READY
 
+  #
+  # ---------------------------------------- filters management
+  #
 
   #
   # Method called to set a filter on the actor
@@ -775,6 +778,10 @@ class Actor extends EventEmitter
   #
   validateFilter: (hMessage) ->
     return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
+
+  #
+  # ---------------------------------------- channels management
+  #
 
   #
   # Method called to subscribe to a channel
@@ -897,6 +904,30 @@ class Actor extends EventEmitter
     return @subscriptions
 
   #
+  # Method called to auto-subscribe to a channel when have channel_in adapter in topology
+  # @param adapterProps {object} properties of the channel to subscribe
+  # @param delay {int} time to wait before retry to subscribe
+  # @param errorID {string} id of the error to close when succesfully subscribe
+  #
+  h_autoSubscribe: (adapterProps, delay, errorID) ->
+    setTimeout(=>
+      @subscribe adapterProps.channel, adapterProps.quickFilter, (status2, result2) =>
+        unless status2 is codes.hResultStatus.OK
+          @log "debug", "Subscription attempt failed cause #{result2}"
+          if delay < 60000
+            delay *= 2
+          else
+            delay = 60000
+          @h_autoSubscribe(adapterProps, delay, errorID)
+        else
+          @closeError(errorID)
+    , delay)
+
+  #
+  # ---------------------------------------- adapters management
+  #
+
+  #
   # Method called to update adapter
   # @param name {string} name of the adapter to update
   # @param properties {object} new properties to apply
@@ -909,6 +940,10 @@ class Actor extends EventEmitter
       adapter.update(properties)
     else
       @log "error", "Can't find adapter #{name} for update"
+
+  #
+  # ---------------------------------------- peers management
+  #
 
   #
   # Method called to remove a actor from outboundAdapter
@@ -925,6 +960,49 @@ class Actor extends EventEmitter
           @unsubscribe @tracker.trackerChannel, actor, () ->
 
       index++
+
+  #
+  # Called by an adapter that wants to register as a "watcher" for a peer
+  # @private
+  # @param actor {string} URN of the peer watched
+  # @param refAdapter {object} Adapter that wants to watch a peer
+  # @param cb {function} Function to call when unwatching
+  #
+  h_watchPeer: (actor, refAdapter, cb) ->
+    if @watchingsTab.length is 0 and @tracker
+      @subscribe @tracker.trackerChannel, actor, () ->
+    watching =
+      actor: actor,
+      adapter: refAdapter,
+      cb: cb
+    @watchingsTab.push(watching)
+
+  #
+  # Called by an adapter that wants to unregister as a "watcher" for a peer
+  # @private
+  # @param actor {string} URN of the peer watched
+  # @param refAdapter {object} Adapter that wants to unwatch a peer
+  #
+  h_unwatchPeer: (actor, refAdapter) ->
+    nbWatchActor = 0
+    index = 0
+    for watching in @watchingsTab
+      if validator.getBareURN(watching.actor) is validator.getBareURN(actor)
+        if watching.adapter is refAdapter
+          cb = watching.cb
+          cb.call(watching.adapter)
+          indexToRemove = index
+        else
+          nbWatchActor++
+      index++
+
+    @watchingsTab.splice(indexToRemove, 1)
+    if nbWatchActor is 0
+      @removePeer(actor)
+
+  #
+  # ---------------------------------------- messages building
+  #
 
   #
   # Method called to build correct hMessage
@@ -1019,45 +1097,6 @@ class Actor extends EventEmitter
     @buildMessage actor, "hResult", hResult, options
 
   #
-  # Called by an adapter that wants to register as a "watcher" for a peer
-  # @private
-  # @param actor {string} URN of the peer watched
-  # @param refAdapter {object} Adapter that wants to watch a peer
-  # @param cb {function} Function to call when unwatching
-  #
-  h_watchPeer: (actor, refAdapter, cb) ->
-    if @watchingsTab.length is 0 and @tracker
-      @subscribe @tracker.trackerChannel, actor, () ->
-    watching =
-      actor: actor,
-      adapter: refAdapter,
-      cb: cb
-    @watchingsTab.push(watching)
-
-  #
-  # Called by an adapter that wants to unregister as a "watcher" for a peer
-  # @private
-  # @param actor {string} URN of the peer watched
-  # @param refAdapter {object} Adapter that wants to unwatch a peer
-  #
-  h_unwatchPeer: (actor, refAdapter) ->
-    nbWatchActor = 0
-    index = 0
-    for watching in @watchingsTab
-      if validator.getBareURN(watching.actor) is validator.getBareURN(actor)
-        if watching.adapter is refAdapter
-          cb = watching.cb
-          cb.call(watching.adapter)
-          indexToRemove = index
-        else
-          nbWatchActor++
-      index++
-
-    @watchingsTab.splice(indexToRemove, 1)
-    if nbWatchActor is 0
-      @removePeer(actor)
-
-  #
   # Called by an adapter that wants to be removed from actor's adapters lists
   # @private
   # @param refAdapter {object} Adapter to be removed
@@ -1078,6 +1117,10 @@ class Actor extends EventEmitter
       if inboundAdapterToRemove isnt undefined
         inboundAdapterToRemove.stop()
         @inboundAdapters.splice(index, 1)
+
+  #
+  # ---------------------------------------- logs management
+  #
 
   #
   # Log a message with specified data. Enhance the message with actor urn.

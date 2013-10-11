@@ -40,6 +40,7 @@ hFilter = require "./../hFilter"
 factory = require "../factory"
 UUID = require "../UUID"
 utils = require "../utils"
+builders = require "../builders"
 
 _.mixin toDict: (arr, key) ->
   throw new Error('_.toDict takes an Array') unless _.isArray arr
@@ -81,8 +82,6 @@ class Actor extends EventEmitter
   msgToBeAnswered: undefined
   # @property {object} Contains the timeout launch to forget an outbound adapter if it not use
   timerOutAdapter: undefined
-  # @property {object} Contains the id and message of actor's errors
-  error: undefined
   # @property {object} Interval set between 2 touchTracker
   timerTouch: undefined
   # @property {Actor} The actor which create this actor
@@ -129,7 +128,6 @@ class Actor extends EventEmitter
     @_h_initFilter(topology)
     @msgToBeAnswered = {}
     @timerOutAdapter = {}
-    @error = {}
     @touchDelay = 60000
     @status = STATUS_STOPPED
     @_h_initProperties(topology)
@@ -351,6 +349,7 @@ class Actor extends EventEmitter
   # @option cb hResult {object} hMessage with hResult payload
   #
   send: (hMessage, cb) ->
+    @h_fillAttribut(hMessage, cb)
     unless _.isString(hMessage.actor)
       if cb
         cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "actor is missing")
@@ -418,7 +417,6 @@ class Actor extends EventEmitter
   # @param outboundAdapter {object} adapter used to send hMessage
   #
   h_sending: (hMessage, cb, outboundAdapter) ->
-    @h_fillAttribut(hMessage, cb)
 
     errorCode = undefined
     errorMsg = undefined
@@ -624,22 +622,15 @@ class Actor extends EventEmitter
   # @param status {string} New status to apply
   #
   h_setStatus: (status) ->
-    unless status is STATUS_READY and Object.keys(@error).length > 0
-      # alter the state
-      @status = status
-      if @timerTouch
-        clearInterval(@timerTouch)
-      @_h_touchTracker()
+    @status = status
+    if @timerTouch then clearInterval(@timerTouch)
+    @_h_touchTracker()
 
-      unless status is STATUS_STOPPED
-        @timerTouch = setInterval(=>
-          @_h_touchTracker()
-        , @touchDelay)
+    if status isnt STATUS_STOPPED
+      @timerTouch = setInterval (=> @_h_touchTracker()), @touchDelay
 
-      # advertise
-      @emit "hStatus", status
-      # Log
-      @log "debug", "new status:#{status}"
+    @emit "hStatus", status
+    @_h_makeLog "debug", "hub-115", "new status:#{status}"
 
   #
   # Function that starts the actor, including its inbound adapters
@@ -658,7 +649,6 @@ class Actor extends EventEmitter
         unless status is codes.hResultStatus.OK
           @log "debug", "Subscription to #{adapterProps.channel} failed cause #{result}"
           errorID = UUID.generate()
-          @raiseError(errorID, "Subscription to #{adapterProps.channel} failed")
           @h_autoSubscribe(adapterProps, 500, errorID)
 
     try
@@ -724,28 +714,6 @@ class Actor extends EventEmitter
     @removeAllListeners()
     @listenersInited = false
     done()
-
-  #
-  # ---------------------------------------- errors management
-  #
-
-  #
-  # Method called to when a error occur in the actor
-  # @param id {string} error id of the error to raise
-  # @param message {string} error's message which describe the error
-  #
-  raiseError: (id, message) ->
-    @h_setStatus STATUS_ERROR
-    @error[id] = message
-
-  #
-  # Method called to when a error can be close
-  # @param id {string} error id of the error to close
-  #
-  closeError: (id) ->
-    delete @error[id]
-    if Object.keys(@error).length is 0
-      @h_setStatus STATUS_READY
 
   #
   # ---------------------------------------- filters management
@@ -919,8 +887,6 @@ class Actor extends EventEmitter
           else
             delay = 60000
           @h_autoSubscribe(adapterProps, delay, errorID)
-        else
-          @closeError(errorID)
     , delay)
 
   #
@@ -940,6 +906,28 @@ class Actor extends EventEmitter
       adapter.update(properties)
     else
       @log "error", "Can't find adapter #{name} for update"
+
+  #
+  # Called by an adapter that wants to be removed from actor's adapters lists
+  # @private
+  # @param refAdapter {object} Adapter to be removed
+  #
+  h_removeAdapter: (refadapter) ->
+    unless refadapter is undefined
+      index = -1
+      outboundAdapterToRemove = _.find @outboundAdapters, (outbound) =>
+        index++
+        outbound is refadapter
+      if outboundAdapterToRemove isnt undefined
+        outboundAdapterToRemove.stop()
+        @outboundAdapters.splice(index, 1)
+      index = -1
+      inboundAdapterToRemove = _.find @inboundAdapters, (inbound) =>
+        index++
+        inbound is refadapter
+      if inboundAdapterToRemove isnt undefined
+        inboundAdapterToRemove.stop()
+        @inboundAdapters.splice(index, 1)
 
   #
   # ---------------------------------------- peers management
@@ -1005,118 +993,33 @@ class Actor extends EventEmitter
   #
 
   #
-  # Method called to build correct hMessage
-  # @param actor {string} URN of the target of the hMessage
-  # @param type {string} Type of the hMessage
-  # @param payload {object} Content of the hMessage
-  # @param options {object} Optionals attributs of the hMessage
+  # Builds hMessage
+  # @alias builders.message
   #
   buildMessage: (actor, type, payload, options) ->
-    options = options or {}
-    hMessage = {}
-    unless actor
-      throw new Error("missing actor")
-    hMessage.publisher = @actor
-    hMessage.msgid = UUID.generate()
-    hMessage.published = hMessage.published or new Date().getTime()
-    hMessage.actor = actor
-    hMessage.ref = options.ref  if options.ref
-    hMessage.convid = options.convid  if options.convid
-    hMessage.type = type  if type
-    hMessage.priority = options.priority  if options.priority
-    hMessage.relevance = options.relevance  if options.relevance
-    if options.relevanceOffset
-      currentDate = new Date().getTime()
-      hMessage.relevance = new Date(currentDate + options.relevanceOffset).getTime()
-    if options.persistent isnt null or options.persistent isnt undefined
-      hMessage.persistent = options.persistent
-    if hMessage.persistent is null or hMessage.persistent is undefined
-      hMessage.persistent = false
-    hMessage.location = options.location  if options.location
-    hMessage.author = options.author  if options.author
-    hMessage.published = options.published  if options.published
-    hMessage.headers = options.headers  if options.headers
-    hMessage.payload = payload  if payload
-    hMessage.timeout = options.timeout  if options.timeout
-    hMessage.sent = new Date().getTime()
-    hMessage
+    return builders.message(actor, type, payload, options)
 
   #
-  # Method called to build correct hSignal
-  # @private
-  # @param actor {string} URN of the target of the hMessage
-  # @param name {string} The name of the hSignal
-  # @param params {object} The parameters of the hSignal
-  # @param options {object} Optionals attributs of the hMessage
-  #
-  h_buildSignal: (actor, name, params, options) ->
-    params = params or {}
-    options = options or {}
-    options.persistent = options.persistent or false
-    throw new Error("missing cmd")  unless name
-    hSignal =
-      name: name
-      params: params
-
-    @buildMessage actor, "hSignal", hSignal, options
-
-  #
-  # Method called to build correct hCommand
-  # @param actor {string} URN of the target of the hMessage
-  # @param cmd {string} Type of the hCommand
-  # @param params {object} The parameters of the hCommand
-  # @param options {object} Optionals attributs of the hMessage
+  # Builds hCommand
+  # @alias builders.command
   #
   buildCommand: (actor, cmd, params, options) ->
-    params = params or {}
-    options = options or {}
-    throw new Error("missing cmd")  unless cmd
-    hCommand =
-      cmd: cmd
-      params: params
-
-    @buildMessage actor, "hCommand", hCommand, options
+    return builders.command(actor, cmd, params, options)
 
   #
-  # Method called to build correct hResult
-  # @param actor {string} URN of the target of the hMessage
-  # @param ref {string} The msgid of the message refered to
-  # @param status {number} The status of the operation
-  # @param result {object, array, string, number, boolean} The result of a command operation
-  # @param options {object} Optionals attributs of the hMessage
+  # Builds hResult
+  # @alias builders.result
   #
   buildResult: (actor, ref, status, result, options) ->
-    options = options or {}
-    throw new Error("missing status")  if status is undefined or status is null
-    throw new Error("missing ref")  unless ref
-    hResult =
-      status: status
-      result: result
-
-    options.ref = ref
-    @buildMessage actor, "hResult", hResult, options
+    return builders.result(actor, ref, status, result, options)
 
   #
-  # Called by an adapter that wants to be removed from actor's adapters lists
+  # Builds hSignal
+  # @alias builders.signal
   # @private
-  # @param refAdapter {object} Adapter to be removed
   #
-  h_removeAdapter: (refadapter) ->
-    unless refadapter is undefined
-      index = -1
-      outboundAdapterToRemove = _.find @outboundAdapters, (outbound) =>
-        index++
-        outbound is refadapter
-      if outboundAdapterToRemove isnt undefined
-        outboundAdapterToRemove.stop()
-        @outboundAdapters.splice(index, 1)
-      index = -1
-      inboundAdapterToRemove = _.find @inboundAdapters, (inbound) =>
-        index++
-        inbound is refadapter
-      if inboundAdapterToRemove isnt undefined
-        inboundAdapterToRemove.stop()
-        @inboundAdapters.splice(index, 1)
+  h_buildSignal: (actor, name, params, options) ->
+    return builders.signal(actor, name, params, options)
 
   #
   # ---------------------------------------- logs management
@@ -1151,7 +1054,7 @@ class Actor extends EventEmitter
     for logger in @loggers
       loggerLevel = logLevels[logger.logLevel]
       # TODO check loggerLevel type (number) in topology validation
-      if not typeof loggerLevel is "number" or not loggerLevel >= logLevels.trace then loggerLevel = logLevels.info
+      if typeof loggerLevel isnt "number" or loggerLevel < logLevels.trace then loggerLevel = logLevels.info
       if level >= loggerLevel
         if errid is -1 then errid = UUID.generate()
         logger.log type, @actor, errid, msgs
@@ -1163,7 +1066,7 @@ class Actor extends EventEmitter
   # @param msgs {object} the log messages (with the actor which raise it)
   # @return {string} error uuid
   #
-  log: (type) -> # log("toto")
+  log: (type) ->
     args = Array.prototype.slice.call(arguments)
     if _.contains(['trace', 'debug', 'info', 'warn', 'error'], type)
       args.shift()

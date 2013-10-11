@@ -147,7 +147,8 @@ class Channel extends Actor
   #   @private
   #
   h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
+    if not hMessage.publisher
+      hMessage.publisher = @actor
     hMessage.sent = new Date().getTime()
 
 

@@ -45,7 +45,7 @@ class SocketIO_Connector
     then @owner = properties.owner
     else throw new Error("You must pass an actor as reference")
 
-    levels = ["error", "warn", "info", "debug"]
+    levels = ["error", "warn", "info", "debug", "trace"]
     IOLogger = () ->
     IOLogger.prototype.log = (type) =>
       @owner.log.apply(@owner, arguments)
@@ -56,7 +56,7 @@ class SocketIO_Connector
         @log.apply(@, argsCopy)
 
     iologger = new IOLogger()
-    ioOpts = {logger: iologger, "log level":"debug"}
+    ioOpts = {logger: iologger, "log level":"trace"}
 
     if properties.security
       server_options =
@@ -70,12 +70,6 @@ class SocketIO_Connector
     io.set "close timeout", 21
     io.set "heartbeat timeout", 15
     io.set  "heartbeat interval", 10
-
-    logLevels =
-      DEBUG: 3
-      INFO: 2
-      WARN: 1
-      ERROR: 0
 
     io.on("connection", (socket) =>
       id = socket.id
@@ -100,7 +94,7 @@ class SocketIO_Connector
     unless client
       @owner.log "warn", "A client sent an invalid ID with data", data
       return
-    @owner.log "info", "Client ID " + client.id + " sent connection data", data
+    @owner.log "trace", "Client ID " + client.id + " sent connection data", data
     if not data or not data.login or not data.password
       @owner.log "info", "Client ID " + client.id + " is trying to connect without mandatory attribute", data
       return

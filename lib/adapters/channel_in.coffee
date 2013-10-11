@@ -155,7 +155,6 @@ class ChannelInboundAdapter extends InboundAdapter
               unless status is codes.hResultStatus.OK
                 @owner.log "debug", "Resubscription to #{adapterProps.channel} failed cause #{result}"
                 errorID = UUID.generate()
-                @owner.raiseError(errorID, "Resubscription to #{adapterProps.channel} failed")
                 @owner.h_autoSubscribe(adapterProps, 500, errorID)
           @destroy()
         @h_watchPeer(@channel, cb)

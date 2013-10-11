@@ -28,6 +28,37 @@ _ = require "underscore"
 lodash = require "lodash"
 
 
+exports.urn =
+
+  isBare: (urn) ->
+    components = exports.urn.components(urn)
+    return lodash.isEmpty(components.resource)
+
+  isFull: (urn) ->
+    return not exports.urn.isBare(urn)
+
+  bare: (urn) ->
+    components = exports.urn.components(urn)
+    return "urn:#{components.domain}:#{components.resource}"
+
+  domain: (urn) ->
+    return exports.urn.components(urn)["domain"]
+
+  user: (urn) ->
+    return exports.urn.components(urn)["user"]
+
+  resource: (urn) ->
+    return exports.urn.components(urn)["resource"]
+
+  components: (urn) ->
+    splitted = urn.split(/:|\//)
+    return {
+      domain: splitted[1] or ""
+      user: splitted[2] or ""
+      resource: splitted[3] or ""
+    }
+
+
 exports.ip = () ->
   interfaces = os.networkInterfaces()
   if interfaces

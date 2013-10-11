@@ -22,9 +22,11 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+
 OutboundAdapter = require "./OutboundAdapter"
 zmq = require "zmq"
 validator = require "../validator"
+utils = require "../utils"
 
 #
 # Class that defines a Socket Outbound Adapter.
@@ -65,9 +67,9 @@ class SocketOutboundAdapter extends OutboundAdapter
     @owner.log "trace", "#{@sock.identity} writing on #{@url}"
     dontWatch = not @owner.tracker or
     @owner.type is "tracker" or # is tracker
-    validator.getBareURN(@owner.actor) is @owner.tracker.trackerChannel or # is trackChannel
+    utils.urn.bare(@owner.actor) is @owner.tracker.trackerChannel or # is trackChannel
     @targetActorAid is @owner.tracker.trackerId or # target is tracker
-    validator.getBareURN(@targetActorAid) is @owner.tracker.trackerChannel # target is trackChannel
+    utils.urn.bare(@targetActorAid) is @owner.tracker.trackerChannel # target is trackChannel
     unless dontWatch
       cb = () ->
         delete @owner.timerOutAdapter[@targetActorAid]
@@ -91,10 +93,10 @@ class SocketOutboundAdapter extends OutboundAdapter
       @owner.type isnt "tracker" and
       @owner.actor isnt @owner.tracker.trackerChannel and
       @targetActorAid isnt @owner.tracker.trackerId and
-      validator.getBareURN(@targetActorAid) isnt @owner.tracker.trackerChannel
+      utils.urn.bare(@targetActorAid) isnt @owner.tracker.trackerChannel
       if doUnwatch
         @h_unwatchPeer(@targetActorAid)
-      if @owner.tracker and validator.getBareURN(@targetActorAid) is @owner.tracker.trackerChannel
+      if @owner.tracker and utils.urn.bare(@targetActorAid) is @owner.tracker.trackerChannel
         index = 0
         for outbound in @owner.outboundAdapters
           if outbound is @

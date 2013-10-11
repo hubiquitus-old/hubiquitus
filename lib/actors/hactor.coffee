@@ -123,14 +123,17 @@ class Actor extends EventEmitter
       return console.warn "hub-1", "topology syntax error", result.error
 
     @_h_initLoggers(topology)
-    @_h_initActor(topology)
+    @actor = topology.actor
+    if utils.urn.isBare(@actor) then @actor += "/#{UUID.generate()}" # generate resource if needed
+    @resource = utils.urn.resource(@actor)
     @type = @type or "actor"
     @_h_initFilter(topology)
     @msgToBeAnswered = {}
     @timerOutAdapter = {}
     @touchDelay = 60000
     @status = STATUS_STOPPED
-    @_h_initProperties(topology)
+    @sharedProperties = topology.sharedProperties or {}
+    @properties = lodash.extend(lodash.cloneDeep(@sharedProperties), topology.properties)
     @children = []
     @inboundAdapters = []
     @outboundAdapters = []
@@ -162,20 +165,6 @@ class Actor extends EventEmitter
         console.error "hub-2", "loggers init error", err
 
   #
-  # Init actor
-  # @private
-  # @param topology {object} the topology
-  #
-  _h_initActor: (topology) -> # TODO delegate urn validation to topology validator
-    if(validator.validateFullURN(topology.actor))
-      @actor = topology.actor
-    else if(validator.validateURN(topology.actor))
-      @actor = "#{topology.actor}/#{UUID.generate()}"
-    else
-      throw new Error "invalid actor URN" # TODO still valid ?
-    @resource = @actor.replace(/^.*\//, "")
-
-  #
   # Init filter
   # @private
   # @param topology {object} the topology
@@ -187,18 +176,6 @@ class Actor extends EventEmitter
         if status isnt codes.hResultStatus.OK
           # TODO stop actor
           @_h_makeLog "error", "hub-100", "invalid filter"
-
-  #
-  # Init properties
-  # @private
-  # @param topology {object} the topology
-  #
-  _h_initProperties: (topology) ->
-    @sharedProperties = topology.sharedProperties or {}
-    # Deep copy JSON object (value only, no reference)
-    @properties = JSON.parse(JSON.stringify(@sharedProperties)) or {} # TODO -> lodash.deepClone
-    for prop of topology.properties # TODO -> lodash.extend
-      @properties[prop] = topology.properties[prop]
 
   #
   # Init tracker
@@ -235,14 +212,13 @@ class Actor extends EventEmitter
   # @private
   #
   h_initListeners: () ->
-    unless @listenersInited
-      @listenersInited = true
-      @on "message", @onHMessage
+    if @listenersInited then return
+    @listenersInited = true
 
-      # Adding children once started
-      @on "hStatus", (status) ->
-        if status is "started"
-          @initChildren(@topology.children)
+    @on "message", @onHMessage
+
+    @on "hStatus", (status) ->
+      if status is "started" then @initChildren(@topology.children)
 
   #
   # ---------------------------------------- handlers
@@ -288,7 +264,7 @@ class Actor extends EventEmitter
         #Empty location and headers should not be sent/saved.
         validator.cleanEmptyAttrs hMessage, ["headers", "location"]
 
-        if hMessage.type is "hSignal" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
+        if hMessage.type is "hSignal" and utils.urn.bare(hMessage.actor) is utils.urn.bare(@actor)
           switch hMessage.payload.name
             when "start"
               @h_start()
@@ -336,7 +312,7 @@ class Actor extends EventEmitter
       index = -1
       inboundAdapterToRemove = _.find @inboundAdapters, (inbound) =>
         index++
-        inbound.channel is validator.getBareURN hMessage.payload.params
+        inbound.channel is utils.urn.bare hMessage.payload.params
       if inboundAdapterToRemove isnt undefined
         inboundAdapterToRemove.stop()
 
@@ -361,10 +337,10 @@ class Actor extends EventEmitter
     outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
     unless outboundAdapter
       outboundAdapter = _.find @outboundAdapters, (outbound) =>
-        validator.getBareURN(outbound.targetActorAid) is hMessage.actor and outbound.type is "socket_out"
+        utils.urn.bare(outbound.targetActorAid) is hMessage.actor and outbound.type is "socket_out"
       unless outboundAdapter
         outboundAdapter = _.find @outboundAdapters, (outbound) =>
-          validator.getBareURN(outbound.targetActorAid) is hMessage.actor
+          utils.urn.bare(outbound.targetActorAid) is hMessage.actor
       if outboundAdapter
         hMessage.actor = outboundAdapter.targetActorAid
     if outboundAdapter
@@ -601,7 +577,7 @@ class Actor extends EventEmitter
 
     @send @h_buildSignal(@tracker.trackerId, "peer-info", {
       peerType: @type
-      peerId: validator.getBareURN(@actor)
+      peerId: utils.urn.bare(@actor)
       peerStatus: @status
       peerInbox: inboundAdapters
       peerIP: @ip
@@ -609,7 +585,7 @@ class Actor extends EventEmitter
       peerMemory: process.memoryUsage()
       peerUptime: process.uptime()
       peerLoadAvg: os.loadavg()
-      peerResource: validator.getResource(@actor)
+      peerResource: utils.urn.resource(@actor)
     })
 
   #
@@ -770,7 +746,7 @@ class Actor extends EventEmitter
       quickFilter = ""
 
     for channel in @subscriptions
-      if validator.getBareURN(channel) is hChannel
+      if utils.urn.bare(channel) is hChannel
         _.forEach @inboundAdapters, (inbound) =>
           if inbound.channel is hChannel
             findfilter = false
@@ -830,7 +806,7 @@ class Actor extends EventEmitter
     index = 0
     subs = false
     for channel in @subscriptions
-      if validator.getBareURN(channel) is hChannel
+      if utils.urn.bare(channel) is hChannel
         subs = true
         if quickFilter is undefined
           @subscriptions.splice(index, 1)
@@ -842,7 +818,7 @@ class Actor extends EventEmitter
     else
       index = 0
       _.forEach @inboundAdapters, (inbound) =>
-        if inbound.channel is validator.getBareURN(hChannel)
+        if inbound.channel is utils.urn.bare(hChannel)
           if inbound.started
             if quickFilter
               inbound.removeFilter quickFilter, (result) =>
@@ -975,7 +951,7 @@ class Actor extends EventEmitter
     nbWatchActor = 0
     index = 0
     for watching in @watchingsTab
-      if validator.getBareURN(watching.actor) is validator.getBareURN(actor)
+      if utils.urn.bare(watching.actor) is utils.urn.bare(actor)
         if watching.adapter is refAdapter
           cb = watching.cb
           cb.call(watching.adapter)

@@ -28,6 +28,7 @@ factory = require "../factory"
 _ = require "underscore"
 codes = require("../codes").hResultStatus
 validator = require "../validator"
+utils = require "../utils"
 
 #
 # Class that defines a tracker actor
@@ -55,7 +56,7 @@ class Tracker extends Actor
     if topology.properties.channel
       chan = topology.properties.channel
     else
-      namespace_id = validator.splitURN(topology.actor)[1]
+      namespace_id = utils.urn.domain(topology.actor)
       chan =
         actor: "urn:"+namespace_id+":trackChannel",
         type: "hchannel"
@@ -188,11 +189,11 @@ class Tracker extends Actor
       sameHost = []
       outTab = []
       _.forEach @peers, (peers) =>
-        if peers.peerId is validator.getBareURN(actor) and peers.peerPID is pid and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+        if peers.peerId is utils.urn.bare(actor) and peers.peerPID is pid and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
           samePID.push(peers)
-        else if peers.peerId is validator.getBareURN(actor) and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+        else if peers.peerId is utils.urn.bare(actor) and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
           sameHost.push(peers)
-        else if peers.peerId is validator.getBareURN(actor) and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+        else if peers.peerId is utils.urn.bare(actor) and peers.peerStatus is "ready" and peers.peerInbox.length > 0
           outTab.push(peers)
       if samePID.length > 0
         outTab = samePID

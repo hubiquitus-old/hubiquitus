@@ -34,6 +34,7 @@ codes = require "../codes"
 hFilter = require "../hFilter"
 factory = require "../factory"
 UUID = require "../UUID"
+utils = require "../utils"
 
 #
 # Class that defines a session actor
@@ -72,7 +73,7 @@ class Session extends Actor
 
     @send @h_buildSignal(@tracker.trackerId, "peer-info", {
       peerType: @type
-      peerId: validator.getBareURN(@actor)
+      peerId: utils.urn.bare(@actor)
       peerStatus: @status
       peerInbox: @trackInbox
       peerIP: @ip
@@ -80,7 +81,7 @@ class Session extends Actor
       peerMemory: process.memoryUsage()
       peerUptime: process.uptime()
       peerLoadAvg: os.loadavg()
-      peerResource: validator.getResource(@actor)
+      peerResource: utils.urn.resource(@actor)
     })
 
   #
@@ -91,7 +92,7 @@ class Session extends Actor
   #
   #
   validateFilter: (hMessage) ->
-    unless validator.getBareURN(hMessage.publisher) is validator.getBareURN(@actor)
+    unless utils.urn.bare(hMessage.publisher) is utils.urn.bare(@actor)
       return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
     return {result: true, error: ""}
 
@@ -115,7 +116,7 @@ class Session extends Actor
   #
   onMessage: (hMessage) ->
     # If hCommand, execute it
-    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor) and hMessage.publisher is @actor
+    if hMessage.type is "hCommand" and utils.urn.bare(hMessage.actor) is utils.urn.bare(@actor) and hMessage.publisher is @actor
       switch hMessage.payload.cmd
         when "hSetFilter"
           @setFilter hMessage.payload.params, (status, result) =>

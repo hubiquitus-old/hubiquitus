@@ -22,12 +22,14 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+
 Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "../validator"
 codes = require "../codes"
 factory = require "../factory"
+utils = require "../utils"
 
 #
 # Class that defines a channel actor
@@ -55,7 +57,7 @@ class Channel extends Actor
   #
   onMessage: (hMessage) ->
     # If hCommand, execute it
-    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
+    if hMessage.type is "hCommand" and utils.urn.bare(hMessage.actor) is utils.urn.bare(@actor)
       switch hMessage.payload.cmd
         when "hSubscribe"
           command = require("./../hcommands/hSubscribe").Command

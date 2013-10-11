@@ -30,6 +30,7 @@ forker = require "child_process"
 zmq = require "zmq"
 winston = require "winston"
 _ = require "underscore"
+lodash = require "lodash"
 os = require "os"
 # Hactor modules
 validator = require "../validator"
@@ -38,7 +39,7 @@ logLevels = codes.logLevels
 hFilter = require "./../hFilter"
 factory = require "../factory"
 UUID = require "../UUID"
-lodash = require "lodash"
+utils = require "../utils"
 
 _.mixin toDict: (arr, key) ->
   throw new Error('_.toDict takes an Array') unless _.isArray arr
@@ -141,7 +142,7 @@ class Actor extends EventEmitter
     @watchingsTab = []
     @topology = topology
     @listenersInited = false
-    @h_setIP(topology)
+    @ip = @topology.ip or utils.ip()
     @_h_initTracker(topology)
     @h_initListeners()
     @_h_initAdapters(topology)
@@ -168,7 +169,7 @@ class Actor extends EventEmitter
   # @private
   # @param topology {object} the topology
   #
-  _h_initActor: (topology) ->
+  _h_initActor: (topology) -> # TODO delegate urn validation to topology validator
     if(validator.validateFullURN(topology.actor))
       @actor = topology.actor
     else if(validator.validateURN(topology.actor))
@@ -198,8 +199,8 @@ class Actor extends EventEmitter
   _h_initProperties: (topology) ->
     @sharedProperties = topology.sharedProperties or {}
     # Deep copy JSON object (value only, no reference)
-    @properties = JSON.parse(JSON.stringify(@sharedProperties)) or {}
-    for prop of topology.properties
+    @properties = JSON.parse(JSON.stringify(@sharedProperties)) or {} # TODO -> lodash.deepClone
+    for prop of topology.properties # TODO -> lodash.extend
       @properties[prop] = topology.properties[prop]
 
   #
@@ -1011,7 +1012,7 @@ class Actor extends EventEmitter
   #
   buildResult: (actor, ref, status, result, options) ->
     options = options or {}
-    throw new Error("missing status")  if status is `undefined` or status is null
+    throw new Error("missing status")  if status is undefined or status is null
     throw new Error("missing ref")  unless ref
     hResult =
       status: status
@@ -1080,49 +1081,6 @@ class Actor extends EventEmitter
       if inboundAdapterToRemove isnt undefined
         inboundAdapterToRemove.stop()
         @inboundAdapters.splice(index, 1)
-
-  #
-  # Method called by the constructor to find the actor's IP adress
-  #
-  h_setIP: (topology) ->
-    if topology.ip
-      @ip = topology.ip
-      return
-    interfaces = os.networkInterfaces()
-    if interfaces
-      sortIntName = Object.getOwnPropertyNames(interfaces).sort (int1, int2) =>
-        regxType = /^([^0-9]+)([0-9]+)$/
-        regx1 = int1.match regxType
-        regx2 = int2.match regxType
-        if regx1
-          type1 = regx1[1]
-          num1 = regx1[2]
-        else
-          type1 = int1
-          num1 = 0
-        if regx2
-          type2 = regx2[1]
-          num2 = regx2[2]
-        else
-          type2 = int2
-          num2 = 0
-
-        if type1 is type2
-          if num1 > num2 then return 1
-          else return -1
-        else
-          list = ["eth", "en", "wlan", "vmnet", "ppp", "lo"]
-          if list.indexOf(type1) > list.indexOf(type2) then return 1
-          else return -1
-
-      for intName in sortIntName
-        if interfaces[intName]
-          for net in interfaces[intName]
-            if net.family is "IPv4"
-              @ip = net.address
-              return
-    else
-      @ip = "127.0.0.1"
 
   #
   # Log a message with specified data. Enhance the message with actor urn.
@@ -1197,7 +1155,7 @@ class Actor extends EventEmitter
   #
   # Call log with error level.
   #
-  error: () ->
+  err: () ->
     @log("error", Array.prototype.slice.call(arguments))
 
 

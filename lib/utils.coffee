@@ -39,7 +39,7 @@ exports.urn =
 
   bare: (urn) ->
     components = exports.urn.components(urn)
-    return "urn:#{components.domain}:#{components.resource}"
+    return "urn:#{components.domain}:#{components.user}"
 
   domain: (urn) ->
     return exports.urn.components(urn)["domain"]

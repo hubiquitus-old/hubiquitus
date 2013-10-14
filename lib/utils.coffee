@@ -30,6 +30,9 @@ lodash = require "lodash"
 
 exports.urn =
 
+  isValid: (urn) ->
+    return /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/.test(urn)
+
   isBare: (urn) ->
     components = exports.urn.components(urn)
     return lodash.isEmpty(components.resource)

@@ -40,7 +40,7 @@ hFilter = require "./../hFilter"
 factory = require "../factory"
 UUID = require "../UUID"
 utils = require "../utils"
-builders = require "../builders"
+builder = require "../builder"
 
 _.mixin toDict: (arr, key) ->
   throw new Error('_.toDict takes an Array') unless _.isArray arr
@@ -973,21 +973,21 @@ class Actor extends EventEmitter
   # @alias builders.message
   #
   buildMessage: (actor, type, payload, options) ->
-    return builders.message(actor, type, payload, options)
+    return builder.message(actor, type, payload, options)
 
   #
   # Builds hCommand
   # @alias builders.command
   #
   buildCommand: (actor, cmd, params, options) ->
-    return builders.command(actor, cmd, params, options)
+    return builder.command(actor, cmd, params, options)
 
   #
   # Builds hResult
   # @alias builders.result
   #
   buildResult: (actor, ref, status, result, options) ->
-    return builders.result(actor, ref, status, result, options)
+    return builder.result(actor, ref, status, result, options)
 
   #
   # Builds hSignal
@@ -995,7 +995,7 @@ class Actor extends EventEmitter
   # @private
   #
   h_buildSignal: (actor, name, params, options) ->
-    return builders.signal(actor, name, params, options)
+    return builder.signal(actor, name, params, options)
 
   #
   # ---------------------------------------- logs management

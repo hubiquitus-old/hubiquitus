@@ -63,6 +63,6 @@ class FileLogger extends Logger
   # @param msgs {function} message to log
   #
   log: (level, urn, errid, msgs) ->
-    @logger[level] @makeLogMsg urn, errid, msgs
+    @logger[level] @makeLogMsg level, urn, errid, msgs
 
 module.exports = FileLogger

@@ -463,7 +463,7 @@ class Actor extends EventEmitter
     _.forEach children, (childProps) =>
       if not childProps.method then childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps, (err) =>
-        if err then @_h_makeLog("error", "hub-111", {msg: "initChildren err", actor: @actor, err: err, childProps: childProps})
+        if err then @_h_makeLog("error", "hub-111", {actor: @actor, childProps: childProps, err: err})
 
   #
   # Create and start an actor
@@ -476,13 +476,13 @@ class Actor extends EventEmitter
   #
   createChild: (classname, method, topology, cb) ->
     if not lodash.isFunction(cb)
-      return @_h_makeLog("error", "hub-106", {msg: "createChild arg error", cb: cb}, "'cb' should be a function")
+      return @_h_makeLog("error", "hub-106", {cb: cb}, "'cb' should be a function")
     if not lodash.isString(classname)
-      return cb(@_h_makeLog("warn", "hub-103", {msg: "createChild arg error", classname: classname}, "'classname' parameter must be a string"))
+      return cb(@_h_makeLog("warn", "hub-103", {classname: classname}, "'classname' parameter must be a string"))
     if not lodash.isString(method)
-      return cb(@_h_makeLog("warn", "hub-104", {msg: "createChild arg error", method: method}, "'method' parameter must be a string"))
+      return cb(@_h_makeLog("warn", "hub-104", {method: method}, "'method' parameter must be a string"))
     if not lodash.isObject(topology)
-      return cb(@_h_makeLog("warn", "hub-105", {msg: "createChild arg error", topology: topology}, "'topology' parameter must be an object"))
+      return cb(@_h_makeLog("warn", "hub-105", {topology: topology}, "'topology' parameter must be an object"))
 
     # prepare child topology
     childTopology = lodash.cloneDeep(topology)
@@ -501,7 +501,7 @@ class Actor extends EventEmitter
       when "inproc" then @_h_createChildInProc(classname, childTopology, cb)
       when "fork" then @_h_forkChild(classname, childTopology, cb)
       else
-        cb(@_h_makeLog("error", "hub-109", {msg: "createChild invalid method", method: method, childTopology: childTopology}, "invalid method"))
+        cb(@_h_makeLog("error", "hub-109", {method: method, childTopology: childTopology}, "invalid method"))
     return
 
   #
@@ -521,7 +521,7 @@ class Actor extends EventEmitter
       childRef.parent = @
       @send @h_buildSignal(childTopology.actor, "start", {})
     catch err
-      return cb(@_h_makeLog("error", "hub-107", {msg: "createChildInProc err", err: err, topology: childTopology}, err))
+      return cb(@_h_makeLog("error", "hub-107", {topology: childTopology, err: err}, err))
     @children.push childTopology.actor # adding aid to referenced children
     cb(null, childRef)
 
@@ -547,14 +547,14 @@ class Actor extends EventEmitter
     childRef.on "message", (msg) =>
       if msg.type isnt "status" then return
       if msg.err
-        return singleShotCb(@_h_makeLog("error", "hub-108", {msg: "forkChild err", err: msg.err, topology: childTopology}, msg.err))
+        return singleShotCb(@_h_makeLog("error", "hub-108", {topology: childTopology, err: msg.err}, msg.err))
       @outboundAdapters.push factory.make("fork", owner: @, targetActorAid: childTopology.actor, ref: childRef)
       @send @h_buildSignal(childTopology.actor, "start", {})
       @children.push childTopology.actor # adding aid to referenced children
       singleShotCb(null, childRef)
 
     childRef.on "error", (err) =>
-      singleShotCb(@_h_makeLog("error", "hub-108", {msg: "forkChild err", err: err, topology: childTopology}, err))
+      singleShotCb(@_h_makeLog("error", "hub-108", {topology: childTopology, err: err}, err))
 
   #
   # ---------------------------------------- tracker management

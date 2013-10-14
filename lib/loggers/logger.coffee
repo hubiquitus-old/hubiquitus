@@ -61,14 +61,17 @@ class Logger
   # @param errid {string} unique error id
   # @param msgs {function} messages to log (stringify should be done at logger level if needed)
   #
-  makeLogMsg: (urn, errid, msgs) ->
+  makeLogMsg: (level, urn, errid, msgs) ->
     logMsg = ""
     for msg in msgs
       if typeof msg is "string"
         logMsg += msg + " "
       else
         logMsg += util.inspect(msg, {colors: true, depth: 10})
-    return (new Date()) + " | #{urn} | #{errid} | #{logMsg}"
+    log = (new Date()) + " | #{urn} | #{errid} | #{logMsg}"
+    if level is "error" or level is "warn"
+      log += "\nStack #{new Error().stack}"
+    return log
 
   #
   # @param level {string} log level of the message. Available levels are : trace, debug, info, warn, error

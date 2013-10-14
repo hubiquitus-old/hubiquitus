@@ -27,6 +27,7 @@ codes = require("./codes").hResultStatus
 log = require("winston")
 tv4 = require('tv4').tv4
 schemas = require("./schemas")
+lodash = require("lodash")
 
 ###
 Checks if an hMessage is correctly formatted and has all the correct attributes
@@ -35,13 +36,12 @@ result is an object
 ###
 exports.validateHMessage = (hMessage, callback) ->
   result = tv4.validateResult(hMessage, schemas.hMessage)
-  if typeof callback is 'function'
+  if lodash.isFunction(callback)
     if result.valid
       callback null, hMessage
     else
       callback result.error, null
-
-  result
+  return result
 
 ###
 Checks if a topology is correctly formatted and has all the correct attributes
@@ -49,9 +49,14 @@ Checks if a topology is correctly formatted and has all the correct attributes
 @param cb - Function (err, result) where err is from hResult.status or nothing and
 result is a string or nothing
 ###
-exports.validateTopology = (topology) ->
-
-  return tv4.validateResult(topology, schemas.topology)
+exports.validateTopology = (topology, callback) ->
+  result = tv4.validateResult(topology, schemas.topology)
+  if lodash.isFunction(callback)
+    if result.valid
+      callback null, topology
+    else
+      callback result.error, null
+  return result
 
 ###
 Removes attributes that are strings and that are empty (ie. "") in hLocation

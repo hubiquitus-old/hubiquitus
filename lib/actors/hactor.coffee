@@ -324,29 +324,25 @@ class Actor extends EventEmitter
   # @param cb {function} callback to call when a answer is receive
   # @option cb hResult {object} hMessage with hResult payload
   #
-  send: (hMessage, cb = () -> return) ->
+  send: (hMessage, cb) ->
     @_h_preSend(hMessage, cb)
 
     if not validator.validateHMessage(hMessage)
-      return cb(@_h_makeLog "error", "hub-116", {hMessage: hMessage}, "invalid hMessage")
+      return @_h_makeLog "error", "hub-116", {hMessage: hMessage}, "invalid hMessage"
 
     # first looking up for a cached adapter
     outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
-    unless outboundAdapter
+    if not outboundAdapter
       outboundAdapter = _.find @outboundAdapters, (outbound) =>
         utils.urn.bare(outbound.targetActorAid) is hMessage.actor and outbound.type is "socket_out"
-      unless outboundAdapter
+      if not outboundAdapter
         outboundAdapter = _.find @outboundAdapters, (outbound) =>
           utils.urn.bare(outbound.targetActorAid) is hMessage.actor
       if outboundAdapter
         hMessage.actor = outboundAdapter.targetActorAid
     if outboundAdapter
-      if @timerOutAdapter[outboundAdapter.targetActorAid]
-        clearTimeout(@timerOutAdapter[outboundAdapter.targetActorAid])
-        @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
-          outboundAdapter.stop()
-        , 90000)
-      @h_sending(hMessage, cb, outboundAdapter)
+      @_h_resetAdapterTimeout(outboundAdapter)
+      @_h_send(hMessage, cb, outboundAdapter)
       # if don't have cached adapter, send lookup demand to the tracker
     else
       if @tracker
@@ -363,74 +359,18 @@ class Actor extends EventEmitter
             unless found
               outboundAdapter = factory.make(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
               @outboundAdapters.push outboundAdapter
-            @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
-              outboundAdapter.stop()
-            , 90000)
+            @_h_setupAdapterTimeout(outboundAdapter)
             hMessage.actor = hResult.payload.result.targetActorAid
-            @h_sending hMessage, cb, outboundAdapter
+            @_h_send hMessage, cb, outboundAdapter
           else
             if cb
               cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : " + hResult.payload.result)
             else
               @log "debug", "Can't send hMessage : ", hResult.payload.result
       else if @type isnt "tracker"
-        if cb
-          cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't find actor")
-          return
-        else
-          throw new Error "Don't have any tracker for peer-searching"
-
-  #
-  # Private method called for sending hMessage
-  # Complete hMessage by override some attribut, then send the hMessage from outboundAdapter
-  # @private
-  # @param hMessage {object} the hMessage to send
-  # @param cb {function} callback to call when a answer is receive
-  # @option cb hResult {object} hMessage with hResult payload
-  # @param outboundAdapter {object} adapter used to send hMessage
-  #
-  h_sending: (hMessage, cb, outboundAdapter) ->
-
-    errorCode = undefined
-    errorMsg = undefined
-
-    #Verify if well formatted
-    unless hMessage.actor
-      errorCode = codes.hResultStatus.MISSING_ATTR
-      errorMsg = "the actor attribute is missing"
-
-    unless errorCode
-      #if there is a callback and no timeout, timeout is set to default value of 30s
-      #Add it to the open message to call cb later
-      if cb
-        if hMessage.timeout > 0
-          msgid = hMessage.msgid
-          @msgToBeAnswered[msgid] = cb
-          timeout = hMessage.timeout
-          self = this
-
-          #if no response in time we call a timeout
-          setTimeout (->
-            if self.msgToBeAnswered[msgid]
-              delete self.msgToBeAnswered[msgid]
-              errCode = codes.hResultStatus.EXEC_TIMEOUT
-              errMsg = "No response was received within the " + timeout + " timeout"
-              resultMsg = self.buildResult(hMessage.publisher, hMessage.msgid, errCode, errMsg)
-              cb resultMsg
-          ), timeout
-        else
-          hMessage.timeout = 0
-
-      #Send it to transport
-      @log "trace", "Sending message:", hMessage
-      result = validator.validateHMessage hMessage
-      unless result.valid
-        @log "debug", "syntax error in hMessage : ", result.error
-      outboundAdapter.h_send hMessage
-    else if cb
-      actor = hMessage.actor or "Unknown"
-      resultMsg = @buildResult(actor, hMessage.msgid, errorCode, errorMsg)
-      cb resultMsg
+        errMsg = @_h_makeLog "trace", "hub-118", {hMessage: hMessage}, "cannot find actor, no tracker provided"
+        result = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, errMsg
+        if cb then cb result
 
   #
   # Method called to override some hMessage's attributs before sending
@@ -442,6 +382,29 @@ class Actor extends EventEmitter
     hMessage.publisher = @actor
     hMessage.msgid = hMessage.msgid or UUID.generate()
     hMessage.sent = new Date().getTime()
+
+  #
+  # Private method called for sending hMessage
+  # Complete hMessage by override some attribut, then send the hMessage from outboundAdapter
+  # @private
+  # @param hMessage {object} the hMessage to send
+  # @param cb {function} callback to call when a answer is receive
+  # @option cb hResult {object} hMessage with hResult payload
+  # @param outboundAdapter {object} adapter used to send hMessage
+  #
+  _h_send: (hMessage, cb, outboundAdapter) ->
+    if cb
+      if not hMessage or hMessage.timeout < 0 then hMessage.timeout = 0
+      @msgToBeAnswered[hMessage.msgid] = cb
+      if hMessage.timeout > 0 then setTimeout (=>
+        if not @msgToBeAnswered[hMessage.msgid] then return # already answered msg
+        delete @msgToBeAnswered[hMessage.msgid]
+        errMsg = "no response was received within the #{hMessage.timeout} timeout"
+        cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.EXEC_TIMEOUT, errMsg)
+      ), hMessage.timeout
+
+    @_h_makeLog "trace", "hub-117", {msg: "sending message", hMessage: hMessage}
+    outboundAdapter.h_send hMessage
 
   #
   # ---------------------------------------- children management
@@ -897,6 +860,26 @@ class Actor extends EventEmitter
       if inboundAdapterToRemove isnt undefined
         inboundAdapterToRemove.stop()
         @inboundAdapters.splice(index, 1)
+
+  #
+  # Setup adapter timeout
+  # @private
+  # @param adapter {object} adapter whose timeout has to be setup
+  #
+  _h_setupAdapterTimeout: (adapter) ->
+    @timerOutAdapter[adapter.targetActorAid] = setTimeout (=>
+      adapter.stop()
+    ), 90000
+
+  #
+  # Reset adapter timeout
+  # @private
+  # @param adapter {object} adapter whose timeout has to be reset
+  #
+  _h_resetAdapterTimeout: (adapter) ->
+    if @timerOutAdapter[adapter.targetActorAid]
+      clearTimeout(@timerOutAdapter[adapter.targetActorAid])
+      @_h_setupAdapterTimeout(adapter)
 
   #
   # ---------------------------------------- peers management

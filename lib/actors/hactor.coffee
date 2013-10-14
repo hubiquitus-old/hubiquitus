@@ -144,7 +144,7 @@ class Actor extends EventEmitter
     @listenersInited = false
     @ip = @topology.ip or utils.ip()
     @_h_initTracker(topology)
-    @h_initListeners()
+    @_h_initListeners()
     @_h_initAdapters(topology)
 
   #
@@ -211,7 +211,7 @@ class Actor extends EventEmitter
   # Init Listeners for node.js events
   # @private
   #
-  h_initListeners: () ->
+  _h_initListeners: () ->
     if @listenersInited then return
     @listenersInited = true
 
@@ -324,14 +324,11 @@ class Actor extends EventEmitter
   # @param cb {function} callback to call when a answer is receive
   # @option cb hResult {object} hMessage with hResult payload
   #
-  send: (hMessage, cb) ->
-    @h_fillAttribut(hMessage, cb)
-    unless _.isString(hMessage.actor)
-      if cb
-        cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.MISSING_ATTR, "actor is missing")
-        return
-      else
-        throw new Error "'aid' parameter must be a string"
+  send: (hMessage, cb = () -> return) ->
+    @_h_preSend(hMessage, cb)
+
+    if not validator.validateHMessage(hMessage)
+      return cb(@_h_makeLog "error", "hub-116", {hMessage: hMessage}, "invalid hMessage")
 
     # first looking up for a cached adapter
     outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
@@ -441,13 +438,9 @@ class Actor extends EventEmitter
   # @param hMessage {object} the hMessage update
   # @param cb {function} callback to define which attribut must be override
   #
-  h_fillAttribut: (hMessage, cb) ->
-    #Complete hMessage
+  _h_preSend: (hMessage, cb) ->
     hMessage.publisher = @actor
-    if cb
-      hMessage.msgid = UUID.generate()
-    else
-      hMessage.msgid = hMessage.msgid or UUID.generate()
+    hMessage.msgid = hMessage.msgid or UUID.generate()
     hMessage.sent = new Date().getTime()
 
   #
@@ -614,7 +607,7 @@ class Actor extends EventEmitter
   #
   h_start: ()->
     @h_setStatus STATUS_STARTING
-    @h_initListeners()
+    @_h_initListeners()
 
     _.invoke @inboundAdapters, "start"
     _.invoke @outboundAdapters, "start"

@@ -238,17 +238,5 @@ class Session extends Actor
     @emit "hStatus", {status:statuses.CONNECTED, errorCode:errors.NO_ERROR}
     @emit "connect"
 
-  # @overload h_fillAttribut(hMessage, cb)
-  #   Method called to override some hMessage's attributs before sending in any cases.
-  #   @private
-  #   @param hMessage {object} the hMessage update
-  #   @param cb {function}
-  #
-  h_fillAttribut: (hMessage, cb) ->
-    #Complete hMessage
-    hMessage.publisher = @actor
-    hMessage.msgid = hMessage.msgid or UUID.generate()
-    hMessage.sent = new Date().getTime()
-
 
 module.exports = Session

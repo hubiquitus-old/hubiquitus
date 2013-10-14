@@ -143,12 +143,12 @@ class Channel extends Actor
       @send(@buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 
   #
-  # @overload h_fillAttribut(hMessage, cb)
+  # @overload _h_preSend(hMessage, cb)
   #   Method called to override some hMessage's attributs before sending.
   #   Overload the hActor method with an empty function to not altering a hMessage publish in a channel
   #   @private
   #
-  h_fillAttribut: (hMessage, cb) ->
+  _h_preSend: (hMessage, cb) ->
     if not hMessage.publisher
       hMessage.publisher = @actor
     hMessage.sent = new Date().getTime()

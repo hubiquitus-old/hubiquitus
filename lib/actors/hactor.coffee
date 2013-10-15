@@ -32,6 +32,7 @@ winston = require "winston"
 _ = require "underscore"
 lodash = require "lodash"
 os = require "os"
+async = require "async"
 # Hactor modules
 validator = require "../validator"
 codes = require "../codes"
@@ -189,7 +190,7 @@ class Actor extends EventEmitter
   # @param topology {object} the topology
   #
   _h_initAdapters: (topology) ->
-    _.forEach topology.adapters, (adapterProps) =>
+    lodash.forEach topology.adapters, (adapterProps) =>
       adapterProps.owner = @
       if adapterProps.type is 'channel_in'
         @channelToSubscribe.push adapterProps
@@ -418,7 +419,7 @@ class Actor extends EventEmitter
   # @param children {Array<Object>} Actor's children and their topology
   #
   initChildren: (children)->
-    _.forEach children, (childProps) =>
+    lodash.forEach children, (childProps) =>
       if not childProps.method then childProps.method = "inproc"
       @createChild childProps.type, childProps.method, childProps, (err) =>
         if err then @_h_makeLog("error", "hub-111", {actor: @actor, childProps: childProps, err: err})
@@ -555,7 +556,7 @@ class Actor extends EventEmitter
   # @private
   # @param status {string} New status to apply
   #
-  h_setStatus: (status) ->
+  _h_setStatus: (status) ->
     @status = status
     if @timerTouch then clearInterval(@timerTouch)
     @_h_touchTracker()
@@ -564,34 +565,31 @@ class Actor extends EventEmitter
       @timerTouch = setInterval (=> @_h_touchTracker()), @touchDelay
 
     @emit "hStatus", status
-    @_h_makeLog "debug", "hub-115", "new status:#{status}"
+    @_h_makeLog "debug", "hub-115", "status: #{status}"
 
   #
   # Function that starts the actor, including its inbound adapters
   # @private
   #
   h_start: ()->
-    @h_setStatus STATUS_STARTING
+    @_h_setStatus STATUS_STARTING
     @_h_initListeners()
+    lodash.invoke @inboundAdapters, "start"
+    lodash.invoke @outboundAdapters, "start"
 
-    _.invoke @inboundAdapters, "start"
-    _.invoke @outboundAdapters, "start"
-    @h_setStatus STATUS_STARTED
-
-    _.forEach @channelToSubscribe, (adapterProps) =>
+    @_h_setStatus STATUS_STARTED
+    lodash.forEach @channelToSubscribe, (adapterProps) =>
       @subscribe adapterProps.channel, adapterProps.quickFilter, (status, result) =>
-        unless status is codes.hResultStatus.OK
-          @log "debug", "Subscription to #{adapterProps.channel} failed cause #{result}"
-          errorID = UUID.generate()
-          @h_autoSubscribe(adapterProps, 500, errorID)
+        if status isnt codes.hResultStatus.OK
+          res = @_h_makeLog "debug", "hub-130", "subscription to #{adapterProps.channel} failed cause #{result}"
+          @h_autoSubscribe(adapterProps, 500, res.errid)
 
     try
       @initialize () =>
-        @h_setStatus STATUS_READY
+        @_h_setStatus STATUS_READY
     catch err
-      @log "error", "An error occured on initialize ", err, err.stack
+      @_h_makeLog "error", "hub-131", {msg: "initialization error", err: err}
       @h_tearDown()
-
 
   #
   # Method to override if you need a specific initialization before considering your actor ready
@@ -605,11 +603,12 @@ class Actor extends EventEmitter
   # @private
   #
   h_tearDown: () ->
-    @h_setStatus STATUS_STOPPED
-    @preStop ( =>
-      @h_stop ( =>
-        @postStop ( =>
-          )))
+    @_h_setStatus STATUS_STOPPED
+    async.series([
+      @preStop
+      @h_stop
+      @postStop
+    ])
 
   #
   # Method to override if you need specifics treatments before stopping the actor.
@@ -625,19 +624,18 @@ class Actor extends EventEmitter
   #
   h_stop: (done) ->
     # Stop children first
-    _.forEach @children, (childAid) =>
+    lodash.forEach @children, (childAid) =>
       @send @h_buildSignal(childAid, "stop", {})
-
     # Copy adapters arrays to keep loop safe, as stop method may remove adapters from these arrays
     outboundsTabCopy = []
     inboundsTabCopy = []
-    _.forEach @outboundAdapters, (outbound) =>
+    lodash.forEach @outboundAdapters, (outbound) =>
       outboundsTabCopy.push (outbound)
-    _.forEach @inboundAdapters, (inbound) =>
+    lodash.forEach @inboundAdapters, (inbound) =>
       inboundsTabCopy.push (inbound)
     # Stop adapters with "true" option so channel_in adapters don't try to re-subscribe
-    _.invoke inboundsTabCopy, "stop", true
-    _.invoke outboundsTabCopy, "stop"
+    lodash.invoke inboundsTabCopy, "stop", true
+    lodash.invoke outboundsTabCopy, "stop"
     done()
 
   #
@@ -679,7 +677,7 @@ class Actor extends EventEmitter
   # @param hMessage {object} hMessage to check with the actor's filter
   #
   validateFilter: (hMessage) ->
-    return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
+    return hFilter.checkFilterValidity(hMessage, @filter, {actor: @actor})
 
   #
   # ---------------------------------------- channels management
@@ -1031,7 +1029,7 @@ class Actor extends EventEmitter
   #
   log: (type) ->
     args = Array.prototype.slice.call(arguments)
-    if _.contains(['trace', 'debug', 'info', 'warn', 'error'], type)
+    if lodash.contains(['trace', 'debug', 'info', 'warn', 'error'], type)
       args.shift()
     else
       type = "info"

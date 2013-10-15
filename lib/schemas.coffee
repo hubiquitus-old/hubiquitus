@@ -52,7 +52,7 @@ exports.topology = {
       "default": "inproc"
     },
     "tracker" : {
-      "type" : "object",
+      "type" : ["object","null"],
       "description": "List the properties of all the hTracker of the system.",
       "properties" : {
         "trackerId" : {

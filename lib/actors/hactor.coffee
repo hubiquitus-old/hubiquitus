@@ -113,7 +113,8 @@ class Actor extends EventEmitter
   # @param topology {object} Launch topology of the actor
   #
   constructor: (topology) ->
-    if not validator.validateTopology(topology).valid
+    result = validator.validateTopology(topology)
+    if not result.valid
       return console.warn "hub-1", "topology syntax error", result.error
 
     @_h_initLoggers(topology)
@@ -246,7 +247,8 @@ class Actor extends EventEmitter
   h_onMessageInternal: (hMessage, callback) ->
     @_h_makeLog "trace", "hub-126", {msg: "message received", hMessage: hMessage}
     try
-      if not validator.validateHMessage(hMessage).valid
+      result = validator.validateHMessage(hMessage)
+      if not result.valid
         @_h_makeLog "debug", "hub-127", {msg: "invalid hMessage", hMessage: hMessage, err: result.error}
       else
         if not hMessage.convid then hMessage.convid = hMessage.msgid
@@ -319,8 +321,9 @@ class Actor extends EventEmitter
   send: (hMessage, cb) ->
     @_h_preSend(hMessage, cb)
 
-    if not validator.validateHMessage(hMessage).valid
-      return @_h_makeLog "error", "hub-116", {hMessage: hMessage}, "invalid hMessage"
+    result = validator.validateHMessage(hMessage)
+    if not result.valid
+      return @_h_makeLog "error", "hub-116", {hMessage: hMessage, err: result.error}, "invalid hMessage"
 
     @_h_searchOutboundAdapterInCache hMessage, (outboundAdapter) =>
       if outboundAdapter

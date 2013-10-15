@@ -152,11 +152,6 @@ describe "hSubscribe", ->
               listenOn: "tcp://127.0.0.1",
               broadcastOn: "tcp://127.0.0.1",
               subscribers: [],
-              db:{
-                host: "localhost",
-                port: 27017,
-                name: "admin"
-              },
               collection: "trackChannel"
             }
           }
@@ -171,11 +166,11 @@ describe "hSubscribe", ->
           {type: "socket_in", url: "tcp://127.0.0.1:2992" },
           {type: "channel_in", channel: "urn:localhost:channel"}
         ],
-        trackers: [{
+        tracker: {
           trackerId: "urn:localhost:tracker",
           trackerUrl: "tcp://127.0.1:2997",
           trackerChannel: "urn:localhost:trackChannel"
-          }]
+        }
       }
 
       hchannelProps = {
@@ -183,18 +178,13 @@ describe "hSubscribe", ->
         type: "hchannel",
         properties: {
           subscribers: [],
-          db:{
-            host: "localhost",
-            port: 27017,
-            name: "admin"
-            },
           collection: "channel"
         },
-      trackers: [{
-        trackerId: "urn:localhost:tracker",
-        trackerUrl: "tcp://127.0.1:2997",
-        trackerChannel: "urn:localhost:trackChannel"
-        }]
+        tracker: {
+          trackerId: "urn:localhost:tracker",
+          trackerUrl: "tcp://127.0.1:2997",
+          trackerChannel: "urn:localhost:trackChannel"
+        }
       }
 
       hTracker = new Tracker htrackerProps

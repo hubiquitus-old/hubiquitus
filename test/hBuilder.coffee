@@ -41,16 +41,8 @@ describe "builder", ->
   #
   describe "#buildMessage()", ->
     actor = "chan"
-    it "should throw an error if actor not provided", (done) ->
-      try
-        hActor.buildMessage()
-      catch error
-        should.exist error.message
-        done()
 
     it "should create a message if actor provided", (done) ->
       try
         hActor.buildMessage actor
         done()
-
-

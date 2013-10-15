@@ -605,9 +605,9 @@ class Actor extends EventEmitter
   h_tearDown: () ->
     @_h_setStatus STATUS_STOPPED
     async.series([
-      @preStop
-      @h_stop
-      @postStop
+      ((cb) => @preStop(cb)),
+      ((cb) => @h_stop(cb)),
+      ((cb) => @postStop(cb))
     ])
 
   #

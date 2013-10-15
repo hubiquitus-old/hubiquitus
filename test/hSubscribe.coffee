@@ -54,24 +54,16 @@ describe "hSubscribe", ->
         name: "test"
       },
       collection: existingCHID.replace(/[-.]/g, "")
-    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (err, child) =>
       hChannel = child
 
   after () ->
     hActor.h_tearDown()
     hActor = null
 
-  it "should return hResult error MISSING_ATTR when actor is missing", (done) ->
-    try
-      hActor.subscribe undefined, "", (statuses, result) ->
-    catch error
-      should.exist error.message
-      done()
-
-  it "should return hResult error INVALID_ATTR with actor not a channel", (done) ->
+  it "should return hResult error NOT_AVAILABLE with actor not a channel", (done) ->
     hActor.subscribe hActor.actor, "", (statuses, result) ->
       statuses.should.be.equal(status.NOT_AVAILABLE)
-      result.should.match(/actor/)
       done()
 
 
@@ -129,7 +121,7 @@ describe "hSubscribe", ->
           name: "test",
         }
         collection: existingCHID.replace(/[-.]/g, "")
-      hActor2.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
+      hActor2.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (err, child) =>
         hChannel2 = child
 
     after () ->
@@ -207,9 +199,9 @@ describe "hSubscribe", ->
 
       hTracker = new Tracker htrackerProps
       hTracker.h_start()
-      hTracker.createChild "hchannel", "inproc", hchannelProps, (child) =>
+      hTracker.createChild "hchannel", "inproc", hchannelProps, (err, child) =>
         hChannel = child
-      hTracker.createChild "hactor", "inproc", hactorProps, (child) =>
+      hTracker.createChild "hactor", "inproc", hactorProps, (err, child) =>
         hActor = child
 
     after () ->

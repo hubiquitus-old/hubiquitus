@@ -50,7 +50,7 @@ describe "hSession", ->
         name: "test"
       },
       collection: existingCHID.replace(/[-.]/g, "")
-    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (err, child) =>
       hChannel = child
 
   before (done) ->

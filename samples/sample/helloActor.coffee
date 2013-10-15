@@ -7,9 +7,12 @@ class HelloActor extends Actor
     @type = 'helloActor'
 
   onMessage: (hMessage, callback) ->
-    @info "HelloActor receives a message", hMessage
-    response = @buildResult hMessage.publisher, hMessage.msgid, 0, {"hello": "world"}
-    @info "HelloActor sends a response", response
-    callback response
+    if hMessage.type is "hAlert"
+      @info "HelloActor received an alert", hMessage
+    else
+      @info "HelloActor received a message", hMessage
+      response = @buildResult hMessage.publisher, hMessage.msgid, 0, {"hello": "world"}
+      @info "HelloActor sends a response", response
+      callback response
 
 module.exports = HelloActor

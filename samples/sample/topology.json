@@ -42,7 +42,10 @@
       "actor": "urn:localhost:helloActor",
       "type": "helloActor",
       "method": "inproc",
-      "adapters": [{"type": "socket_in"}]
+      "adapters": [
+        {"type": "socket_in"},
+        {"type": "timerAdapter", "properties": {"alert": "timer", "mode": "crontab", "crontab": "0 * * * * *"}}
+      ]
     },
     {
       "actor": "urn:localhost:channel",

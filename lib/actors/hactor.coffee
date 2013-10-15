@@ -256,7 +256,7 @@ class Actor extends EventEmitter
         if hMessage.type is "hSignal" and utils.urn.bare(hMessage.actor) is utils.urn.bare(@actor)
           @_h_onSignal(hMessage)
         else
-          if @validateFilter(hMessage)
+          if @validateFilter(hMessage).result
             @onMessage hMessage, callback
           else
             @_h_makeLog "trace", "hub-128", {msg: "message rejected (filtered)", hMessage: hMessage}

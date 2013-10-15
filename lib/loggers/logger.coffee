@@ -70,7 +70,7 @@ class Logger
         logMsg += util.inspect(msg, {colors: true, depth: 10})
     log = (new Date()) + " | #{urn} | #{errid} | #{logMsg}"
     if level is "error" or level is "warn"
-      log += "\nStack #{new Error().stack}"
+      log += "\nLog Stack #{new Error().stack}"
     return log
 
   #

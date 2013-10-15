@@ -949,21 +949,21 @@ class Actor extends EventEmitter
   # @alias builders.message
   #
   buildMessage: (actor, type, payload, options) ->
-    return builder.message(actor, type, payload, options)
+    return @_h_completeMessage(builder.message(actor, type, payload, options))
 
   #
   # Builds hCommand
   # @alias builders.command
   #
   buildCommand: (actor, cmd, params, options) ->
-    return builder.command(actor, cmd, params, options)
+    return @_h_completeMessage(builder.command(actor, cmd, params, options))
 
   #
   # Builds hResult
   # @alias builders.result
   #
   buildResult: (actor, ref, status, result, options) ->
-    return builder.result(actor, ref, status, result, options)
+    return @_h_completeMessage(builder.result(actor, ref, status, result, options))
 
   #
   # Builds hSignal
@@ -971,7 +971,16 @@ class Actor extends EventEmitter
   # @private
   #
   h_buildSignal: (actor, name, params, options) ->
-    return builder.signal(actor, name, params, options)
+    return @_h_completeMessage(builder.signal(actor, name, params, options))
+
+  #
+  # hMessage post building
+  # @alias builders.signal
+  # @private
+  #
+  _h_completeMessage: (hMessage) ->
+    hMessage.publisher = @actor
+    return hMessage
 
   #
   # ---------------------------------------- logs management

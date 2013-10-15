@@ -118,8 +118,7 @@ class Actor extends EventEmitter
   # @param topology {object} Launch topology of the actor
   #
   constructor: (topology) ->
-    result = validator.validateTopology topology
-    if not result.valid
+    if not validator.validateTopology(topology).valid
       return console.warn "hub-1", "topology syntax error", result.error
 
     @_h_initLoggers(topology)
@@ -327,50 +326,21 @@ class Actor extends EventEmitter
   send: (hMessage, cb) ->
     @_h_preSend(hMessage, cb)
 
-    if not validator.validateHMessage(hMessage)
+    if not validator.validateHMessage(hMessage).valid
       return @_h_makeLog "error", "hub-116", {hMessage: hMessage}, "invalid hMessage"
 
-    # first looking up for a cached adapter
-    outboundAdapter = _.toDict(@outboundAdapters, "targetActorAid")[hMessage.actor]
-    if not outboundAdapter
-      outboundAdapter = _.find @outboundAdapters, (outbound) =>
-        utils.urn.bare(outbound.targetActorAid) is hMessage.actor and outbound.type is "socket_out"
-      if not outboundAdapter
-        outboundAdapter = _.find @outboundAdapters, (outbound) =>
-          utils.urn.bare(outbound.targetActorAid) is hMessage.actor
+    @_h_searchOutboundAdapterInCache hMessage, (outboundAdapter) =>
       if outboundAdapter
-        hMessage.actor = outboundAdapter.targetActorAid
-    if outboundAdapter
-      @_h_resetAdapterTimeout(outboundAdapter)
-      @_h_send(hMessage, cb, outboundAdapter)
-      # if don't have cached adapter, send lookup demand to the tracker
-    else
-      if @tracker
-        msg = @h_buildSignal(@tracker.trackerId, "peer-search", {actor: hMessage.actor, pid: process.pid, ip: @ip}, {timeout: 5000})
-        @send msg, (hResult) =>
-          if hResult.payload.status is codes.hResultStatus.OK
-            # Subscribe to trackChannel to be alerting when actor disconnect
-            found = false
-            _.forEach @outboundAdapters, (outbound) =>
-              if outbound.targetActorAid is hResult.payload.result.targetActorAid
-                found = true
-                hMessage.actor = outbound.targetActorAid
-                outboundAdapter = outbound
-            unless found
-              outboundAdapter = factory.make(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
-              @outboundAdapters.push outboundAdapter
+        @_h_resetAdapterTimeout(outboundAdapter)
+        @_h_send(hMessage, cb, outboundAdapter)
+      else
+        @_h_askTrackerForOutboundAdapter hMessage, (err, outboundAdapter) =>
+          if err
+            result = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, err
+            if cb then cb result
+          else if outboundAdapter
             @_h_setupAdapterTimeout(outboundAdapter)
-            hMessage.actor = hResult.payload.result.targetActorAid
-            @_h_send hMessage, cb, outboundAdapter
-          else
-            if cb
-              cb @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "Can't send hMessage : " + hResult.payload.result)
-            else
-              @log "debug", "Can't send hMessage : ", hResult.payload.result
-      else if @type isnt "tracker"
-        errMsg = @_h_makeLog "trace", "hub-118", {hMessage: hMessage}, "cannot find actor, no tracker provided"
-        result = @buildResult hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, errMsg
-        if cb then cb result
+            @_h_send(hMessage, cb, outboundAdapter)
 
   #
   # Method called to override some hMessage's attributs before sending
@@ -405,6 +375,46 @@ class Actor extends EventEmitter
 
     @_h_makeLog "trace", "hub-117", {msg: "sending message", hMessage: hMessage}
     outboundAdapter.h_send hMessage
+
+  #
+  # Search in cache the suitable outbound adapter to send the given message
+  # @param hMessage {object} message to be sent
+  # @param cb {function} callback to invoke at the end of the search
+  #
+  _h_searchOutboundAdapterInCache: (hMessage, cb) ->
+    outboundAdapter = lodash.find @outboundAdapters, (outbound) =>
+      outbound.targetActorAid is hMessage.actor
+    if not outboundAdapter
+      outboundAdapter = lodash.find @outboundAdapters, (outbound) =>
+        utils.urn.bare(outbound.targetActorAid) is hMessage.actor and outbound.type is "socket_out"
+      if not outboundAdapter
+        outboundAdapter = lodash.find @outboundAdapters, (outbound) =>
+          utils.urn.bare(outbound.targetActorAid) is hMessage.actor
+      if outboundAdapter
+        hMessage.actor = outboundAdapter.targetActorAid
+    return cb outboundAdapter
+
+  #
+  # Ask tracker the suitable outbound adapter to send the given message
+  # @param hMessage {object} message to be sent
+  # @param cb {function} callback to invoke at the end of the search
+  #
+  _h_askTrackerForOutboundAdapter: (hMessage, cb) ->
+    if @tracker
+      msg = @h_buildSignal(@tracker.trackerId, "peer-search", {actor: hMessage.actor, pid: process.pid, ip: @ip}, {timeout: 5000})
+      @send msg, (hResult) =>
+        if hResult.payload.status is codes.hResultStatus.OK
+          outboundAdapter = lodash.find @outboundAdapters, (outbound) =>
+            outbound.targetActorAid is hResult.payload.result.targetActorAid
+          if not outboundAdapter
+            outboundAdapter = factory.make(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
+            @outboundAdapters.push outboundAdapter
+          hMessage.actor = hResult.payload.result.targetActorAid
+          cb null, outboundAdapter
+        else
+          cb @_h_makeLog "trace", "hub-119", {hMessage: hMessage, hResult: hResult}, "cannot send hMessage #{hResult.payload.result}"
+    else if @type isnt "tracker"
+      cb @_h_makeLog "trace", "hub-118", {hMessage: hMessage}, "cannot find actor, no tracker provided"
 
   #
   # ---------------------------------------- children management

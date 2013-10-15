@@ -42,12 +42,6 @@ UUID = require "../UUID"
 utils = require "../utils"
 builder = require "../builder"
 
-_.mixin toDict: (arr, key) ->
-  throw new Error('_.toDict takes an Array') unless _.isArray arr
-  _.reduce arr, ((dict, obj) ->
-    dict[ obj[key] ] = obj if obj[key]?
-    return dict), {}
-
 #
 # Class that defines an Actor
 #
@@ -214,7 +208,7 @@ class Actor extends EventEmitter
     if @listenersInited then return
     @listenersInited = true
 
-    @on "message", @onHMessage
+    @on "message", @_h_onHMessage
 
     @on "hStatus", (status) ->
       if status is "started" then @initChildren(@topology.children)
@@ -225,10 +219,11 @@ class Actor extends EventEmitter
 
   #
   # Method called when  hMessage is received by an adapter.
+  # @private
   # @param hMessage {object} the hMessage receive
   # @param callback {function} callback to call
   #
-  onHMessage: (hMessage, callback) =>
+  _h_onHMessage: (hMessage, callback) =>
     #complete msgid
     unless hMessage.msgid
       hMessage.msgid = UUID.generate()

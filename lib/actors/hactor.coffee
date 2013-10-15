@@ -224,17 +224,15 @@ class Actor extends EventEmitter
   # @param callback {function} callback to call
   #
   _h_onHMessage: (hMessage, callback) =>
-    #complete msgid
-    unless hMessage.msgid
+    if not hMessage.msgid
       hMessage.msgid = UUID.generate()
-    ref = hMessage.ref
-    if ref
-      cb = @msgToBeAnswered[ref]
+    if hMessage.ref
+      cb = @msgToBeAnswered[hMessage.ref]
     if cb
-      delete @msgToBeAnswered[ref]
+      delete @msgToBeAnswered[hMessage.ref]
       cb hMessage
     else
-      @h_onMessageInternal hMessage, callback || (hMessageResult) =>
+      @h_onMessageInternal hMessage, callback or (hMessageResult) =>
         @send hMessageResult
 
   #
@@ -245,38 +243,24 @@ class Actor extends EventEmitter
   # @param callback {function} callback to call
   #
   h_onMessageInternal: (hMessage, callback) ->
-    @log "trace", "onMessage :", hMessage
+    @_h_makeLog "trace", "hub-126", {msg: "message received", hMessage: hMessage}
     try
-      result = validator.validateHMessage hMessage
-      unless result.valid
-        @log "debug", "syntax error in hMessage : ", result.error
+      if not validator.validateHMessage(hMessage).valid
+        @_h_makeLog "debug", "hub-127", {msg: "invalid hMessage", hMessage: hMessage, err: result.error}
       else
-        #Complete missing values
-        hMessage.convid = (if not hMessage.convid or hMessage.convid is hMessage.msgid then hMessage.msgid else hMessage.convid)
+        if not hMessage.convid then hMessage.convid = hMessage.msgid
         hMessage.published = hMessage.published or new Date().getTime()
-
-        #Empty location and headers should not be sent/saved.
         validator.cleanEmptyAttrs hMessage, ["headers", "location"]
 
         if hMessage.type is "hSignal" and utils.urn.bare(hMessage.actor) is utils.urn.bare(@actor)
-          switch hMessage.payload.name
-            when "start"
-              @h_start()
-            when "stop"
-              @h_tearDown()
-            else
-              @h_onSignal(hMessage)
+          @_h_onSignal(hMessage)
         else
-          #Check if hMessage respect filter
-          checkValidity = @validateFilter(hMessage)
-          if checkValidity.result is true
+          if @validateFilter(hMessage)
             @onMessage hMessage, callback
           else
-            @log "trace", "#{@actor} Rejecting a message because its filtered :", hMessage
-
-    catch error
-      @log "warn", "An error occured while processing incoming message: ", error, error.stack
-
+            @_h_makeLog "trace", "hub-128", {msg: "message rejected (filtered)", hMessage: hMessage}
+    catch err
+      @_h_makeLog "warn", "hub-129", {msg: "error while processing incoming message: ", err: err}
 
   #
   # Method that processes the incoming message.
@@ -285,10 +269,9 @@ class Actor extends EventEmitter
   # @param callback {function} callback to call
   #
   onMessage: (hMessage, callback) ->
-    @log "trace", "Message reveived:", hMessage
     if hMessage.timeout > 0
       hMessageResult = @buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.NOT_AVAILABLE, "This actor doesn't answer")
-      unless callback
+      if not callback
         @send hMessageResult
       else
         callback hMessageResult
@@ -299,15 +282,25 @@ class Actor extends EventEmitter
   # @private
   # @param hMessage {object} the hSignal receive
   #
-  h_onSignal: (hMessage) ->
-    @log "trace", "Actor received a hSignal:", hMessage
+  _h_onSignal: (hMessage) ->
+    switch hMessage.payload.name
+      when "start" then @h_start()
+      when "stop" then @h_tearDown()
+      else @_h_onCustomSignal(hMessage)
+
+  #
+  # Private method that processes custom hSignal message.
+  # To be override to handle custom actors
+  # The hSignal are service's message
+  # @private
+  # @param hMessage {object} the hSignal receive
+  #
+  _h_onCustomSignal: (hMessage) ->
     if hMessage.payload.name is "hStopAlert"
-      @removePeer hMessage.payload.params
-      index = -1
-      inboundAdapterToRemove = _.find @inboundAdapters, (inbound) =>
-        index++
-        inbound.channel is utils.urn.bare hMessage.payload.params
-      if inboundAdapterToRemove isnt undefined
+      @removePeer(hMessage.payload.params)
+      inboundAdapterToRemove = lodash.find @inboundAdapters, (inbound) =>
+        inbound.channel is utils.urn.bare(hMessage.payload.params)
+      if inboundAdapterToRemove
         inboundAdapterToRemove.stop()
 
   #

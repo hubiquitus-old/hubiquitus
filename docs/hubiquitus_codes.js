@@ -32,5 +32,9 @@ codes["hub-122"] = ["OutboundAdapter", ""];
 codes["hub-123"] = ["OutboundAdapter", ""];
 codes["hub-124"] = ["OutboundAdapter", ""];
 codes["hub-125"] = ["OutboundAdapter", ""];
+codes["hub-126"] = ["hactor", ""];
+codes["hub-127"] = ["hactor", ""];
+codes["hub-128"] = ["hactor", ""];
+codes["hub-129"] = ["hactor", ""];
 
 module.exports = codes;

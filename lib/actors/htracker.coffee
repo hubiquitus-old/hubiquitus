@@ -85,13 +85,13 @@ class Tracker extends Actor
   _h_touchTracker: -> return
 
   #
-  # @overload h_onSignal(hMessage)
+  # @overload _h_onCustomSignal(hMessage)
   #   Private method that processes hSignal message.
   #   The hSignal are service's message
   #   @private
   #   @param hMessage {object} the hSignal receive
   #
-  h_onSignal: (hMessage) ->
+  _h_onCustomSignal: (hMessage) ->
     @log "trace", "Tracker received a hSignal:", hMessage
     if hMessage.payload.name is "peer-info"
       existPeer = false

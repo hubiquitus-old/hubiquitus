@@ -81,13 +81,13 @@ class Channel extends Actor
         @send hMessageResult
 
   #
-  # @overload h_onSignal(hMessage)
+  # @overload _h_onCustomSignal(hMessage)
   #   Private method that processes hSignal message.
   #   The hSignal are service's message
   #   @private
   #   @param hMessage {object} the hSignal receive
   #
-  h_onSignal: (hMessage) ->
+  _h_onCustomSignal: (hMessage) ->
     @log "trace", "Channel received a hSignal:", hMessage
     if hMessage.payload.name is "hStopAlert"
       hMessage.actor = @actor

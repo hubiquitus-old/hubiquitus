@@ -316,6 +316,10 @@ class Actor extends EventEmitter
         inboundAdapterToRemove.stop()
 
   #
+  # ---------------------------------------- message sending management
+  #
+
+  #
   # Method called for sending hMessage
   # Check for an outboundAdapter, then ask to the tracker if needed
   # This method could be override to specified an actor

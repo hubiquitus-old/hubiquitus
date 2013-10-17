@@ -7,22 +7,6 @@
   },
   "children": [
     {
-      "actor": "urn:localhost:pubChannel",
-      "type": "hchannel",
-      "properties": {
-        "subscribers": [],
-        "persistentAid": "urn:localhost:mongo"
-      },
-      "adapters": [{
-        "type": "mongo_out",
-        "targetActorAid": "urn:localhost:mongo",
-        "properties": {
-          "name": "hubiquitus",
-          "collection": "pubChannel"
-        }
-      }]
-    },
-    {
       "actor": "urn:localhost:gateway",
       "type": "hgateway",
       "method": "fork",
@@ -44,6 +28,7 @@
       "method": "inproc",
       "adapters": [
         {"type": "socket_in"},
+        {"type": "channel_in", "channel": "urn:localhost:channel"},
         {"type": "timerAdapter", "properties": {"alert": "timer", "mode": "crontab", "crontab": "0 * * * * *"}}
       ]
     },
@@ -62,8 +47,7 @@
       "properties": {
         "subscribers": []
       }
-    },
-    "pubChannel": "urn:localhost:pubChannel"
+    }
   },
   "adapters": [{ "type": "socket_in"}]
 }

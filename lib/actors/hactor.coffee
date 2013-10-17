@@ -574,7 +574,7 @@ class Actor extends EventEmitter
   # Function that starts the actor, including its inbound adapters
   # @private
   #
-  h_start: ()->
+  h_start: () ->
     @_h_setStatus STATUS_STARTING
     @_h_initListeners()
     lodash.invoke @inboundAdapters, "start"
@@ -584,7 +584,7 @@ class Actor extends EventEmitter
     lodash.forEach @channelToSubscribe, (adapterProps) =>
       @subscribe adapterProps.channel, adapterProps.quickFilter, (status, result) =>
         if status isnt codes.hResultStatus.OK
-          res = @_h_makeLog "debug", "hub-130", "subscription to #{adapterProps.channel} failed cause #{result}"
+          res = @_h_makeLog "debug", "hub-130", "subscription to #{adapterProps.channel} failed cause", result
           @h_autoSubscribe(adapterProps, 500, res.errid)
 
     try
@@ -816,7 +816,7 @@ class Actor extends EventEmitter
     setTimeout(=>
       @subscribe adapterProps.channel, adapterProps.quickFilter, (status2, result2) =>
         unless status2 is codes.hResultStatus.OK
-          @log "debug", "Subscription attempt failed cause #{result2}"
+          @log "debug", "Subscription attempt failed cause", result2
           if delay < 60000
             delay *= 2
           else

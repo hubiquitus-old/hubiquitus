@@ -28,6 +28,7 @@ factory = require "../factory"
 _ = require "underscore"
 codes = require("../codes").hResultStatus
 validator = require "../validator"
+utils = require "../utils"
 
 #
 # Class that defines a tracker actor
@@ -55,7 +56,7 @@ class Tracker extends Actor
     if topology.properties.channel
       chan = topology.properties.channel
     else
-      namespace_id = validator.splitURN(topology.actor)[1]
+      namespace_id = utils.urn.domain(topology.actor)
       chan =
         actor: "urn:"+namespace_id+":trackChannel",
         type: "hchannel"
@@ -67,20 +68,30 @@ class Tracker extends Actor
       topology.children = []
 
     topology.children.unshift chan
-    
+
     @timerPeers = {}
     @timeoutDelay = 180000
-    super
     @type = "tracker"
+    super
 
   #
-  # @overload h_onSignal(hMessage)
+  # @overload _h_initTracker
+  #
+  _h_initTracker: -> return
+
+  #
+  # @overload _h_touchTracker
+  #
+  _h_touchTracker: -> return
+
+  #
+  # @overload _h_onCustomSignal(hMessage)
   #   Private method that processes hSignal message.
   #   The hSignal are service's message
   #   @private
   #   @param hMessage {object} the hSignal receive
   #
-  h_onSignal: (hMessage) ->
+  _h_onCustomSignal: (hMessage) ->
     @log "trace", "Tracker received a hSignal:", hMessage
     if hMessage.payload.name is "peer-info"
       existPeer = false
@@ -146,15 +157,16 @@ class Tracker extends Actor
   #   @param children {Array<Object>} Actor's children and their topology
   #
   initChildren: (children)->
+    tracker = {
+      trackerId: @actor
+      trackerUrl: @inboundAdapters[0].url
+      trackerChannel: @trackerChannelAid
+    }
     _.forEach children, (childProps) =>
-      childProps.trackers = [{
-        trackerId : @actor,
-        trackerUrl : @inboundAdapters[0].url,
-        trackerChannel : @trackerChannelAid
-      }]
-      unless childProps.method
-        childProps.method = "inproc"
-      @createChild childProps.type, childProps.method, childProps
+      childProps.tracker = tracker
+      if not childProps.method then childProps.method = "inproc"
+      @createChild childProps.type, childProps.method, childProps, (err) =>
+        if err then @_h_makeLog("error", "hub-112", {actor: @actor, childProps: childProps, err: err})
 
   #
   # Method called to search an adress for a specific peer)
@@ -177,11 +189,11 @@ class Tracker extends Actor
       sameHost = []
       outTab = []
       _.forEach @peers, (peers) =>
-        if peers.peerId is validator.getBareURN(actor) and peers.peerPID is pid and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+        if peers.peerId is utils.urn.bare(actor) and peers.peerPID is pid and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
           samePID.push(peers)
-        else if peers.peerId is validator.getBareURN(actor) and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+        else if peers.peerId is utils.urn.bare(actor) and peers.peerIP is ip and peers.peerStatus is "ready" and peers.peerInbox.length > 0
           sameHost.push(peers)
-        else if peers.peerId is validator.getBareURN(actor) and peers.peerStatus is "ready" and peers.peerInbox.length > 0
+        else if peers.peerId is utils.urn.bare(actor) and peers.peerStatus is "ready" and peers.peerInbox.length > 0
           outTab.push(peers)
       if samePID.length > 0
         outTab = samePID

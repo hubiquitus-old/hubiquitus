@@ -1444,7 +1444,7 @@ describe "hActor", ->
         },
         sharedProperties: {v4: "t4"}
       }
-      hActor.createChild "hactor", "inproc", childProp, (child) =>
+      hActor.createChild "hactor", "inproc", childProp, (err, child) =>
         actorChild = child
 
     after () ->
@@ -1485,10 +1485,10 @@ describe "hActor", ->
         ]
       hActor = new Actor(topology)
 
-      hActor.createChild "hactor", "inproc", { actor: "urn:localhost:child1", type: "hactor", ip:"127.0.0.1" }, (child) =>
+      hActor.createChild "hactor", "inproc", { actor: "urn:localhost:child1", type: "hactor", ip:"127.0.0.1" }, (err, child) =>
         child1 = child
 
-      child1.createChild "hactor", "inproc", { actor: "urn:localhost:child2", type: "hactor" }, (child) =>
+      child1.createChild "hactor", "inproc", { actor: "urn:localhost:child2", type: "hactor" }, (err, child) =>
         child2 = child
 
     after () ->

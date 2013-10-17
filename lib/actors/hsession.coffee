@@ -34,6 +34,7 @@ codes = require "../codes"
 hFilter = require "../hFilter"
 factory = require "../factory"
 UUID = require "../UUID"
+utils = require "../utils"
 
 #
 # Class that defines a session actor
@@ -57,29 +58,32 @@ class Session extends Actor
     @hClient = undefined
 
   #
-  # @overload h_touchTrackers()
+  # @overload _h_touchTracker()
   #   Method called every minuts to inform the tracker about the actor state.
   #   The session give his gateway address until his own
   #   @private
   #
-  h_touchTrackers: ->
-    _.forEach @trackers, (trackerProps) =>
-      @log "trace", "touching tracker #{trackerProps.trackerId}"
-      if @status is "stopping"
-        @trackInbox = []
+  _h_touchTracker: ->
+    if not @tracker then return
 
-      @send @h_buildSignal(trackerProps.trackerId, "peer-info",
-        peerType: @type
-        peerId: validator.getBareURN(@actor)
-        peerStatus: @status
-        peerInbox: @trackInbox
-        peerIP: @ip
-        peerPID: process.pid
-        peerMemory: process.memoryUsage()
-        peerUptime: process.uptime()
-        peerLoadAvg: os.loadavg()
-        peerResource: validator.getResource(@actor)
-      )
+    @_h_makeLog "trace", "hub-114", {msg: "touching tracker #{@tracker.trackerId}", actor: @actor, tracker: @tracker}
+
+    if @status is "stopping"
+      @trackInbox = []
+
+    @send @h_buildSignal(@tracker.trackerId, "peer-info", {
+      peerType: @type
+      peerId: utils.urn.bare(@actor)
+      peerStatus: @status
+      peerInbox: @trackInbox
+      peerIP: @ip
+      peerPID: process.pid
+      peerMemory: process.memoryUsage()
+      peerUptime: process.uptime()
+      peerLoadAvg: os.loadavg()
+      peerResource: utils.urn.resource(@actor)
+    })
+
   #
   # @overload validateFilter(hMessage)
   #   Method called on incoming message to check if the hMessage respect the actor's filter
@@ -88,7 +92,7 @@ class Session extends Actor
   #
   #
   validateFilter: (hMessage) ->
-    unless validator.getBareURN(hMessage.publisher) is validator.getBareURN(@actor)
+    unless utils.urn.bare(hMessage.publisher) is utils.urn.bare(@actor)
       return hFilter.checkFilterValidity(hMessage, @filter, {actor:@actor})
     return {result: true, error: ""}
 
@@ -112,7 +116,7 @@ class Session extends Actor
   #
   onMessage: (hMessage) ->
     # If hCommand, execute it
-    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor) and hMessage.publisher is @actor
+    if hMessage.type is "hCommand" and utils.urn.bare(hMessage.actor) is utils.urn.bare(@actor) and hMessage.publisher is @actor
       switch hMessage.payload.cmd
         when "hSetFilter"
           @setFilter hMessage.payload.params, (status, result) =>
@@ -233,18 +237,6 @@ class Session extends Actor
     #  client.socket.emit "hMessage", hMessage
     @emit "hStatus", {status:statuses.CONNECTED, errorCode:errors.NO_ERROR}
     @emit "connect"
-
-  # @overload h_fillAttribut(hMessage, cb)
-  #   Method called to override some hMessage's attributs before sending in any cases.
-  #   @private
-  #   @param hMessage {object} the hMessage update
-  #   @param cb {function}
-  #
-  h_fillAttribut: (hMessage, cb) ->
-    #Complete hMessage
-    hMessage.publisher = @actor
-    hMessage.msgid = hMessage.msgid or UUID.generate()
-    hMessage.sent = new Date().getTime()
 
 
 module.exports = Session

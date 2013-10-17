@@ -27,6 +27,7 @@ codes = require("./codes").hResultStatus
 log = require("winston")
 tv4 = require('tv4').tv4
 schemas = require("./schemas")
+lodash = require("lodash")
 
 ###
 Checks if an hMessage is correctly formatted and has all the correct attributes
@@ -35,13 +36,12 @@ result is an object
 ###
 exports.validateHMessage = (hMessage, callback) ->
   result = tv4.validateResult(hMessage, schemas.hMessage)
-  if typeof callback is 'function'
+  if lodash.isFunction(callback)
     if result.valid
       callback null, hMessage
     else
       callback result.error, null
-
-  result
+  return result
 
 ###
 Checks if a topology is correctly formatted and has all the correct attributes
@@ -49,23 +49,14 @@ Checks if a topology is correctly formatted and has all the correct attributes
 @param cb - Function (err, result) where err is from hResult.status or nothing and
 result is a string or nothing
 ###
-exports.validateTopology = (topology) ->
-
-  return tv4.validateResult(topology, schemas.topology)
-
-###
-Returns true or false if it is a valid URN following hubiquitus standards
-@param urn - the urn string to validate
-###
-exports.validateURN = (urn) ->
-  /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+(\/.+)?$)/.test(urn)
-
-###
-Returns true or false if it is a valid URN with resource following hubiquitus standards
-@param urn - the urn string to validate
-###
-exports.validateFullURN = (urn) ->
-  /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/.+$)/.test(urn)
+exports.validateTopology = (topology, callback) ->
+  result = tv4.validateResult(topology, schemas.topology)
+  if lodash.isFunction(callback)
+    if result.valid
+      callback null, topology
+    else
+      callback result.error, null
+  return result
 
 ###
 Removes attributes that are strings and that are empty (ie. "") in hLocation
@@ -106,9 +97,30 @@ exports.cleanEmptyAttrs = (obj, attrs) ->
 
   obj #Make it chainable
 
+#
+# ---------------------------------------- URN management - deprecated : see utils.urn
+#
+
+###
+Returns true or false if it is a valid URN following hubiquitus standards
+@param urn - the urn string to validate
+@deprecated
+###
+exports.validateURN = (urn) ->
+  /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+(\/.+)?$)/.test(urn)
+
+###
+Returns true or false if it is a valid URN with resource following hubiquitus standards
+@param urn - the urn string to validate
+@deprecated
+###
+exports.validateFullURN = (urn) ->
+  /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/.+$)/.test(urn)
+
 ###
 Splits a VALID URN in three parts: (user)(domain)(resource), the third part can be empty
 @param urn - URN to split
+@deprecated
 ###
 exports.splitURN = (urn) ->
   splitted = urn.split(":")  if typeof urn is "string"
@@ -123,6 +135,7 @@ exports.splitURN = (urn) ->
 ###
 Return the bare urn of an actor
 @param urn - full URN
+@deprecated
 ###
 exports.getBareURN = (urn) ->
   urnParts = exports.splitURN(urn)
@@ -131,6 +144,7 @@ exports.getBareURN = (urn) ->
 ###
 Return the resource of an actor
 @param urn - full URN
+@deprecated
 ###
 exports.getResource = (urn) ->
   if exports.validateFullURN(urn)
@@ -147,6 +161,7 @@ Compares two URNs. Can use modifiers to ignore certain parts
 @param mod - String with modifiers. Accepted:
 r: considers resource
 @return {Boolean} true if equal.
+@deprecated
 ###
 exports.compareURNs = (urn1, urn2, mod) ->
   return false  if not exports.validateURN(urn1) or not exports.validateURN(urn2)
@@ -163,6 +178,7 @@ exports.compareURNs = (urn1, urn2, mod) ->
 Returns the domain from a well formed URN, or null if domain not found.
 @param urn - The bare/full URN to parse
 @return a domain in the form of a string
+@deprecated
 ###
 exports.getDomainURN = (urn) ->
   exports.splitURN(urn)[0]

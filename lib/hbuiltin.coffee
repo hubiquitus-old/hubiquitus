@@ -25,7 +25,6 @@ exports.builtinActorNames =
   Actor: "hactor"
   Auth: "hauth"
   Channel: "hchannel"
-  Dispatcher: "hdispatcher"
   Gateway: "hgateway"
   Session: "hsession"
   Tracker: "htracker"

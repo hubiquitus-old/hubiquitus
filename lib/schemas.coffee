@@ -51,33 +51,27 @@ exports.topology = {
       "enum": [ "inproc", "fork" ],
       "default": "inproc"
     },
-    "trackers" : {
-      "type" : "array",
+    "tracker" : {
+      "type" : ["object","null"],
       "description": "List the properties of all the hTracker of the system.",
-      "items" : [
-        {
-          "type" : "object",
-          "properties": {
-            "trackerId" : {
-              "type" : "string",
-              "description": "URN of the hTracker.",
-              "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
-            },
-            "trackerUrl" : {
-              "type" : "string",
-              "description": "The url use to communicate with the hTracker."
-            },
-            "trackerChannel" : {
-              "type" : "string",
-              "description": "URN of the hTracker's channel.",
-              "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
-            }
-          },
-          "required" : ["trackerId", "trackerUrl", "trackerChannel"],
-          "additionalProperties" : false
+      "properties" : {
+        "trackerId" : {
+          "type" : "string",
+          "description": "URN of the hTracker.",
+          "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
+        },
+        "trackerUrl" : {
+          "type" : "string",
+          "description": "The url use to communicate with the hTracker."
+        },
+        "trackerChannel" : {
+          "type" : "string",
+          "description": "URN of the hTracker's channel.",
+          "pattern": /(^urn:[a-zA-Z0-9]{1}[a-zA-Z0-9\-.]+:[a-zA-Z0-9_,=@;!'%/#\(\)\+\-\.\$\*\?]+\/?.+$)/
         }
-      ],
-      "additionalItems" : true
+      },
+      "required" : ["trackerId", "trackerUrl", "trackerChannel"],
+      "additionalProperties" : false
     },
     "loggers" : {
       "type" : "array",

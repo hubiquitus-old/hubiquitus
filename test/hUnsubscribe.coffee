@@ -54,7 +54,7 @@ describe "hUnsubscribe", ->
         name: "test"
       },
       collection: existingCHID.replace(/[-.]/g, "")
-    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (err, child) =>
       hChannel = child
 
     properties =
@@ -67,7 +67,7 @@ describe "hUnsubscribe", ->
         name: "test"
       },
       collection: existingCHID2.replace(/[-.]/g, "")
-    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (child) =>
+    hActor.createChild "hchannel", "inproc", {actor: existingCHID, type : "hActor", properties: properties}, (err, child) =>
       hChannel = child
 
   after () ->

@@ -1,0 +1,53 @@
+{
+  "actor": "urn:localhost:tracker",
+  "loggers": [{"type": "console", "logLevel": "debug"}],
+  "type": "htracker",
+  "sharedProperties": {
+    "authActor": "urn:localhost:auth"
+  },
+  "children": [
+    {
+      "actor": "urn:localhost:gateway",
+      "type": "hgateway",
+      "method": "fork",
+      "children": [
+        {
+          "actor": "urn:localhost:auth",
+          "type": "hauth"
+        }
+      ],
+      "adapters": [ { "type": "socket_in"} ],
+      "properties": {
+        "socketIOPort": 8080,
+        "authTimeout": 3000
+      }
+    },
+    {
+      "actor": "urn:localhost:helloActor",
+      "type": "helloActor",
+      "method": "inproc",
+      "adapters": [
+        {"type": "socket_in"},
+        {"type": "channel_in", "channel": "urn:localhost:channel"},
+        {"type": "timerAdapter", "properties": {"alert": "timer", "mode": "crontab", "crontab": "0 * * * * *"}}
+      ]
+    },
+    {
+      "actor": "urn:localhost:channel",
+      "type": "hchannel",
+      "properties": {
+        "subscribers": []
+      }
+    }
+  ],
+  "properties":{
+    "channel": {
+      "actor": "urn:localhost:trackChannel",
+      "type": "hchannel",
+      "properties": {
+        "subscribers": []
+      }
+    }
+  },
+  "adapters": [{ "type": "socket_in"}]
+}

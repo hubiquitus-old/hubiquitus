@@ -68,7 +68,7 @@ describe "hChannel", ->
         method: "inproc"
         adapters: [ { type: "channel_in", channel: "urn:localhost:channel" , quickFilter: "unit"} ]
       }
-      hActor.createChild "hactor", "inproc", topology, (child) =>
+      hActor.createChild "hactor", "inproc", topology, (err, child) =>
         hChildFilter = child
 
     before () ->
@@ -78,7 +78,7 @@ describe "hChannel", ->
         method: "inproc"
         adapters: [ { type: "channel_in", channel: "urn:localhost:channel" } ]
       }
-      hActor.createChild "hactor", "inproc", topology, (child) =>
+      hActor.createChild "hactor", "inproc", topology, (err, child) =>
         hChild = child
 
     after () ->

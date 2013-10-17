@@ -22,12 +22,14 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+
 Actor = require "./hactor"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "../validator"
 codes = require "../codes"
 factory = require "../factory"
+utils = require "../utils"
 
 #
 # Class that defines a channel actor
@@ -55,7 +57,7 @@ class Channel extends Actor
   #
   onMessage: (hMessage) ->
     # If hCommand, execute it
-    if hMessage.type is "hCommand" and validator.getBareURN(hMessage.actor) is validator.getBareURN(@actor)
+    if hMessage.type is "hCommand" and utils.urn.bare(hMessage.actor) is utils.urn.bare(@actor)
       switch hMessage.payload.cmd
         when "hSubscribe"
           command = require("./../hcommands/hSubscribe").Command
@@ -79,13 +81,13 @@ class Channel extends Actor
         @send hMessageResult
 
   #
-  # @overload h_onSignal(hMessage)
+  # @overload _h_onCustomSignal(hMessage)
   #   Private method that processes hSignal message.
   #   The hSignal are service's message
   #   @private
   #   @param hMessage {object} the hSignal receive
   #
-  h_onSignal: (hMessage) ->
+  _h_onCustomSignal: (hMessage) ->
     @log "trace", "Channel received a hSignal:", hMessage
     if hMessage.payload.name is "hStopAlert"
       hMessage.actor = @actor
@@ -141,13 +143,14 @@ class Channel extends Actor
       @send(@buildResult(hMessage.publisher, hMessage.msgid, codes.hResultStatus.TECH_ERROR, "error processing message : " + err))
 
   #
-  # @overload h_fillAttribut(hMessage, cb)
+  # @overload _h_preSend(hMessage, cb)
   #   Method called to override some hMessage's attributs before sending.
   #   Overload the hActor method with an empty function to not altering a hMessage publish in a channel
   #   @private
   #
-  h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
+  _h_preSend: (hMessage, cb) ->
+    if not hMessage.publisher
+      hMessage.publisher = @actor
     hMessage.sent = new Date().getTime()
 
 

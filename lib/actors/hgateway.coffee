@@ -28,6 +28,7 @@ SocketIO_Connector = require "../client_connector/socketio_connector"
 zmq = require "zmq"
 _ = require "underscore"
 validator = require "../validator"
+utils = require "../utils"
 
 #
 # Class that defines a gateway actor
@@ -51,18 +52,19 @@ class Gateway extends Actor
   #   @param hMessage {Object} the hMessage receive
   #
   onMessage: (hMessage) ->
-    if validator.getBareURN(hMessage.actor) isnt validator.getBareURN(@actor)
+    if utils.urn.bare(hMessage.actor) isnt utils.urn.bare(@actor)
       @log "trace", "Gateway received a message to send to #{hMessage.actor}:", hMessage
       @send hMessage
 
   #
-  # @overload h_fillAttribut(hMessage, cb)
+  # @overload _h_preSend(hMessage, cb)
   #   Method called to override some hMessage's attributs before sending.
   #   Overload the hActor method with an empty function to not altering a hMessage publish in a channel
   #   @private
   #
-  h_fillAttribut: (hMessage, cb) ->
-    #Override with empty function to not altering hMessage
+  _h_preSend: (hMessage, cb) ->
+    if not hMessage.publisher
+      hMessage.publisher = @actor
     hMessage.sent = new Date().getTime()
 
 

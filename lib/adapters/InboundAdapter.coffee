@@ -43,10 +43,10 @@ class InboundAdapter extends Adapter
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
-    @direction = "in"
     super
+    @direction = "in"
 
-    args = [];
+    args = []
     if @authenticator then args.push @authenticator.authorize
     if @codec then args.push @codec.decode
     args.push @makeHMessage
@@ -57,7 +57,7 @@ class InboundAdapter extends Adapter
 
     @onMessage = async.compose.apply null, args.reverse()
 
-    args = [];
+    args = []
     args.push @h_fillMessage
     args.push validator.validateHMessage
     args.push @makeData
@@ -71,18 +71,16 @@ class InboundAdapter extends Adapter
   receive: (buffer, metadata, callback) =>
     @onMessage buffer, metadata, (err, hMessage) =>
       if err
-        @owner.log "error", if typeof err is 'string' then "adapter onMessage error : " + err else "adapter onMessage error : " + err.toString() + "   " + JSON.stringify(err)
+        return @owner._h_makeLog "error", "hub-120", {msg: "adapter onMessage error", hMessage: hMessage, err: err}
+      if callback
+        @owner._h_onHMessage hMessage, (hMessageResult) =>
+          if not hMessageResult then return
+          hMessageResult.ref = hMessage.msgid
+          @reply hMessageResult, (err, buffer, metadata) ->
+            if err
+              return @owner._h_makeLog "error", "hub-121", {hMessageResult: hMessageResult, err: err}
+            callback buffer, metadata
       else
-        if callback
-          @owner.onHMessage hMessage, (hMessageResult) =>
-            if hMessageResult
-              hMessageResult.ref = hMessage.msgid
-              @reply hMessageResult, (err, buffer, metadata) ->
-                if err
-                  @owner.log "error", err
-                else
-                  callback buffer, metadata
-        else
-          @owner.onHMessage hMessage
+        @owner._h_onHMessage hMessage
 
 module.exports = InboundAdapter

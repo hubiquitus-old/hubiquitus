@@ -47,9 +47,10 @@ class ConsoleLogger extends Logger
   #
   # @param level {string} log level of the message. Available levels are : trace, debug, info, warn, error
   # @param urn {string} urn of the logger's owner.
+  # @param errid {string} unique error id
   # @param msgs {function} message to log
   #
-  log: (level, urn, msgs) ->
-    logger[level] @makeLogMsg urn, msgs
+  log: (level, urn, errid, msgs) ->
+    logger[level] @makeLogMsg level, urn, errid, msgs
 
 module.exports = ConsoleLogger

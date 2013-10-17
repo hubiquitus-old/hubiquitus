@@ -22,9 +22,11 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+
 OutboundAdapter = require "./OutboundAdapter"
 zmq = require "zmq"
 validator = require "../validator"
+utils = require "../utils"
 
 #
 # Class that defines a Socket Outbound Adapter.
@@ -63,11 +65,11 @@ class SocketOutboundAdapter extends OutboundAdapter
     @h_initSocket()
     @sock.connect @url
     @owner.log "trace", "#{@sock.identity} writing on #{@url}"
-    dontWatch = not @owner.trackers[0] or
+    dontWatch = not @owner.tracker or
     @owner.type is "tracker" or # is tracker
-    validator.getBareURN(@owner.actor) is @owner.trackers[0].trackerChannel or # is trackChannel
-    @targetActorAid is @owner.trackers[0].trackerId or # target is tracker
-    validator.getBareURN(@targetActorAid) is @owner.trackers[0].trackerChannel # target is trackChannel
+    utils.urn.bare(@owner.actor) is @owner.tracker.trackerChannel or # is trackChannel
+    @targetActorAid is @owner.tracker.trackerId or # target is tracker
+    utils.urn.bare(@targetActorAid) is @owner.tracker.trackerChannel # target is trackChannel
     unless dontWatch
       cb = () ->
         delete @owner.timerOutAdapter[@targetActorAid]
@@ -87,14 +89,14 @@ class SocketOutboundAdapter extends OutboundAdapter
       super
       @sock.on "message", ()=>
       @sock = null
-      doUnwatch = @owner.trackers[0] and
+      doUnwatch = @owner.tracker and
       @owner.type isnt "tracker" and
-      @owner.actor isnt @owner.trackers[0].trackerChannel and
-      @targetActorAid isnt @owner.trackers[0].trackerId and
-      validator.getBareURN(@targetActorAid) isnt @owner.trackers[0].trackerChannel
+      @owner.actor isnt @owner.tracker.trackerChannel and
+      @targetActorAid isnt @owner.tracker.trackerId and
+      utils.urn.bare(@targetActorAid) isnt @owner.tracker.trackerChannel
       if doUnwatch
         @h_unwatchPeer(@targetActorAid)
-      if @owner.trackers[0] and validator.getBareURN(@targetActorAid) is @owner.trackers[0].trackerChannel
+      if @owner.tracker and utils.urn.bare(@targetActorAid) is @owner.tracker.trackerChannel
         index = 0
         for outbound in @owner.outboundAdapters
           if outbound is @

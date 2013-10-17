@@ -22,11 +22,13 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+
 InboundAdapter = require "./InboundAdapter"
 zmq = require "zmq"
 validator = require "../validator"
 codes = require "../codes"
 UUID = require "../UUID"
+utils = require "../utils"
 
 #
 # Class that defines a Channel Inbound Adapter.
@@ -137,15 +139,15 @@ class ChannelInboundAdapter extends InboundAdapter
       @addFilter(@filter)
       @owner.log "debug", "#{@owner.actor} subscribe to #{@channel} on #{@url}"
       super
-      dontWatch = not @owner.trackers[0] or
+      dontWatch = not @owner.tracker or
       @owner.type is "tracker" or # actor is tracker
-      validator.getBareURN(@owner.actor) is @owner.trackers[0].trackerChannel or # actor is trackChannel
-      validator.getBareURN(@channel) is @owner.trackers[0].trackerChannel # links to trackChannel
+      utils.urn.bare(@owner.actor) is @owner.tracker.trackerChannel or # actor is trackChannel
+      utils.urn.bare(@channel) is @owner.tracker.trackerChannel # links to trackChannel
       unless dontWatch
         cb = () ->
           index = 0
           for subscription in @owner.subscriptions
-            if validator.getBareURN(subscription) is @channel
+            if utils.urn.bare(subscription) is @channel
               @owner.subscriptions.splice(index, 1)
             index++
           adapterProps = new Object()
@@ -155,7 +157,6 @@ class ChannelInboundAdapter extends InboundAdapter
               unless status is codes.hResultStatus.OK
                 @owner.log "debug", "Resubscription to #{adapterProps.channel} failed cause #{result}"
                 errorID = UUID.generate()
-                @owner.raiseError(errorID, "Resubscription to #{adapterProps.channel} failed")
                 @owner.h_autoSubscribe(adapterProps, 500, errorID)
           @destroy()
         @h_watchPeer(@channel, cb)
@@ -173,19 +174,19 @@ class ChannelInboundAdapter extends InboundAdapter
       super
       @sock.on "message", () =>
       @sock = null
-      doUnwatch = @owner.trackers[0] and
+      doUnwatch = @owner.tracker and
       @owner.type isnt "tracker" and
-      validator.getBareURN(@owner.actor) isnt @owner.trackers[0].trackerChannel and
-      validator.getBareURN(@channel) isnt @owner.trackers[0].trackerChannel # is not trackChannel
+      utils.urn.bare(@owner.actor) isnt @owner.tracker.trackerChannel and
+      utils.urn.bare(@channel) isnt @owner.tracker.trackerChannel # is not trackChannel
       if doUnwatch
         @h_unwatchPeer @channel
       index = 0
       for subscription in @owner.subscriptions
-        if validator.getBareURN(subscription) is @channel
+        if utils.urn.bare(subscription) is @channel
           break
         index++
       @owner.subscriptions.splice(index, 1)
-      if @owner.trackers[0] and validator.getBareURN(@channel) is @owner.trackers[0].trackerChannel
+      if @owner.tracker and utils.urn.bare(@channel) is @owner.tracker.trackerChannel
         index = 0
         for inbound in @owner.inboundAdapters
           if inbound is @

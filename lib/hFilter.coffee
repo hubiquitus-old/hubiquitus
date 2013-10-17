@@ -22,10 +22,12 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
+
 errors = require("./codes").errors
 codes = require("./codes")
 validator = require("./validator")
 log = require("winston")
+utils = require("./utils")
 
 exports.checkFilterFormat = (hCondition) ->
   if not hCondition or (hCondition not instanceof Object)
@@ -507,8 +509,8 @@ exports.checkFilterValidity = (hMessage, hCondition, context) ->
               error: "Attribute of operand \"domain\" must be a string"
             }
           if filter.domain is "$mydomain"
-            filter.domain = validator.splitURN(context.actor)[0]
-          if filter.domain is validator.splitURN(hMessage.publisher)[0]
+            filter.domain = utils.urn.domain(context.actor)
+          if filter.domain is utils.urn.domain(hMessage.publisher)
             return {
               result: true
               error: ""

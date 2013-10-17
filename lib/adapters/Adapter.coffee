@@ -85,7 +85,7 @@ class Adapter
     else
       @codec = factory.make 'json'
 
-    @filters = [];
+    @filters = []
     if properties.filters
       properties.filters.forEach (filter) ->
         if typeof filter is 'string'
@@ -146,13 +146,13 @@ class Adapter
   #
   h_fillMessage: (hMessage, callback) ->
     if hMessage
-      unless hMessage.sent
+      if not hMessage.sent
         hMessage.sent = new Date().getTime()
-      unless hMessage.msgid
+      if not hMessage.msgid
         hMessage.msgid = UUID.generate()
       callback null, hMessage
     else
-      callback "Undefined hMessage", hMessage
+      callback "undefined hMessage", hMessage
 
   #
   # Make an hMessage from decoded data and provided metadata
@@ -175,8 +175,6 @@ class Adapter
   #
   makeData: (hMessage, callback) ->
     callback null, hMessage, null
-
-
 
 
 module.exports = Adapter

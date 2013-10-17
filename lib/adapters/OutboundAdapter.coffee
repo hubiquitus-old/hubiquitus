@@ -53,16 +53,15 @@ class OutboundAdapter extends Adapter
   # @param properties {object} Launch properties of the adapter
   #
   constructor: (properties) ->
+    super
     @starting = false
     @queue = []
     @direction = "out"
-    if properties.targetActorAid
-      @targetActorAid = properties.targetActorAid
-    else
-      throw new Error "You must provide the AID of the targeted actor"
-    super
+    if not properties.targetActorAid
+      return @owner._h_makeLog "error", "hub-122", {msg: "AID of targeted actor mandatory", properties: properties}
+    @targetActorAid = properties.targetActorAid
 
-    args = [];
+    args = []
     @filters.forEach (filter) ->
       args.push filter.validate
     args.push validator.validateHMessage
@@ -72,7 +71,7 @@ class OutboundAdapter extends Adapter
 
     @prepareMessage = async.compose.apply null, args.reverse()
 
-    args = [];
+    args = []
     if @authenticator then args.push @authenticator.authorize
     if @codec then args.push @codec.decode
     args.push @makeHMessage
@@ -88,9 +87,9 @@ class OutboundAdapter extends Adapter
   # @param hMessage {object}
   #
   h_send: (hMessage) ->
-    unless @started
+    if not @started
       @queue.push hMessage
-      unless @starting
+      if not @starting
         @starting = true
         @start () =>
           @started = true
@@ -99,10 +98,9 @@ class OutboundAdapter extends Adapter
             @h_send hMessage
     else
       @prepareMessage hMessage, (err, buffer, metadata) =>
-        unless err
-          @send buffer, metadata
-        else
-          @owner.log "error", err
+        if err
+          return @owner._h_makeLog "error", "hub-123", err
+        @send buffer, metadata
 
   #
   # @param buffer {buffer}
@@ -110,9 +108,8 @@ class OutboundAdapter extends Adapter
   receive: (buffer, metadata) =>
     @onMessage buffer, metadata, (err, hMessage) =>
       if err
-        @owner.log "error", err
-      else
-        @owner.emit "message", hMessage
+        return @owner._h_makeLog "error", "hub-124", err
+      @owner.emit "message", hMessage
 
   #
   # Method which has to be override to specify an outbound adapter
@@ -120,7 +117,7 @@ class OutboundAdapter extends Adapter
   # @param metadata {object} metadata extracted from hMessage
   #
   send: (buffer, metadata) ->
-    throw new Error "Send method should be overriden"
+    @owner._h_makeLog "error", "hub-125", "send method should be overriden"
 
 
 module.exports = OutboundAdapter

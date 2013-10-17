@@ -11,7 +11,7 @@
 # *    subject to the following conditions:
 # *
 # *    The above copyright notice and this permission notice shall be included in all copies
-# *    or substantial portions of the Software.
+# *    or substantilal portions of the Software.
 # *
 # *    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 # *    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -22,25 +22,22 @@
 # *    You should have received a copy of the MIT License along with Hubiquitus.
 # *    If not, see <http://opensource.org/licenses/mit-license.php>.
 #
-require "coffee-script"
-factory = require "./factory"
 
-main = ->
+{Actor} = require "../../lib/hubiquitus"
 
-  args = process.argv.slice(2)
+class HelloActor extends Actor
 
-  actorProps = JSON.parse args[1]
-  try
-    actor = factory.make args[0], actorProps
-  catch err
-    process.send({type: "status", err: err})
-    process.exit()
+  constructor: (topology) ->
+    super #This instruction is mandatory to correctly start your actor
+    @type = 'helloActor'
 
-  # Acknowledging parent process that the job has been done
-  process.send({type: "status"})
+  onMessage: (hMessage, callback) ->
+    if hMessage.type is "hAlert"
+      @info "HelloActor received an alert", hMessage
+    else
+      @info "HelloActor received a message", hMessage
+      response = @buildResult hMessage.publisher, hMessage.msgid, 0, {"hello": "world"}
+      @info "HelloActor sends a response", response
+      callback response
 
-  # Transmitting any message from parent actor to child actor
-  process.on "message" , (msg) ->
-    actor.emit "message", msg
-
-main()
+module.exports = HelloActor

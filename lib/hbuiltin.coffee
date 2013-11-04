@@ -49,6 +49,7 @@ exports.builtinAdapterNames =
   TwitterInboundAdapter: "twitter_in"
   FilewatcherAdapter: "filewatcherAdapter"
   RestInboundAdapter: "rest_in"
+  TingoOutboundAdapter: "tingo_out"
 
 exports.builtinAuthenticatorNames =
   Authenticator: "hauthenticator"

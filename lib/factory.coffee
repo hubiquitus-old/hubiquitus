@@ -48,6 +48,7 @@ coreTypes =
   'twitter_in': './adapters/twitter_in'
   'filewatcherAdapter': './adapters/filewatcherAdapter'
   'rest_in': './adapters/rest_in'
+  'tingo_out': '.adapters/tingo_out'
 # ---------------------------------------- Authenticators
   'simple': './authenticators/simple'
 # ---------------------------------------- Filters

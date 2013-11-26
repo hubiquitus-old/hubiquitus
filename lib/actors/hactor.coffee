@@ -357,6 +357,7 @@ class Actor extends EventEmitter
             unless found
               outboundAdapter = factory.make(hResult.payload.result.type, { targetActorAid: hResult.payload.result.targetActorAid, owner: @, url: hResult.payload.result.url })
               @outboundAdapters.push outboundAdapter
+            @timerOutAdapter[outboundAdapter.targetActorAid] and clearTimeout(@timerOutAdapter[outboundAdapter.targetActorAid]);
             @timerOutAdapter[outboundAdapter.targetActorAid] = setTimeout(=>
               outboundAdapter.stop()
             , 90000)

@@ -1,41 +1,18 @@
 {
   "name": "hubiquitus",
-  "author": "Alexis Lesage",
   "description": "Actor model for Hubiquitus",
-  "version": "0.7.0",
-  "homepage": "www.hubiquitus.com",
+  "version": "0.8.0-beta1",
+  "homepage": "http://www.hubiquitus.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/hubiquitus/hubiquitus"
   },
-  "maintainers": [{"name": "Gauthier Boivin"
-		 ,"email":"gauthierboivin@gmail.com"
-		 }],
-  "main": "./lib/hubiquitus",
+  "main": "./index",
   "engines": {
-    "node": ">0.8.0"
+    "node": ">0.10.0"
   },
   "dependencies": {
-      "underscore": ">=1.4.4",
-      "lodash": "1.3.1",
-      "zmq": "git://github.com/hubiquitus/zeromq.node.git",
-      "cron": "=1.0.1",
-      "time": "=0.9.0",
-      "ntwitter": "git://github.com/hubiquitus/ntwitter.git",
-      "winston" : ">=0.6.2",
-      "tv4" : "=1.0.3",
-      "socket.io" : "=0.9.14",
-      "mongodb" : "=1.2.14",
-      "request": "=2.21.0",
-      "async": "~0.2.5"
-  },
-  "devDependencies": {
-      "should" : "=1.2.2",
-      "mocha" : "=1.8.2",
-      "coffee-script" : "=1.6.2",
-      "socket.io-client": "=0.9.11"
-  },
-   "scripts": {
-      "test": "mocha --compilers coffee:coffee-script -R spec test/*"
+    "hubiquitus-core": "0.8.0-beta1",
+    "hubiquitus-addons": "0.8.0-beta1"
   }
 }

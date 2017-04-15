@@ -7,8 +7,7 @@
             "actor": "urn:localhost:pubChannel",
             "type": "hchannel",
             "properties": {
-                "subscribers": [],
-                "persistentAid": "urn:localhost:mongo"
+                "subscribers": []
             },
             "adapters": [{
                 "type": "mongo_out",
